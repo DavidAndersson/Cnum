@@ -90,7 +90,6 @@ public:
 	}
 
 	void Concatenate(DynamicArray<T>& other, int axis = 0); 
-
 	bool Contains(DynamicArray<T>& point);
 
 	// Getters
@@ -100,6 +99,16 @@ public:
 	std::vector<T> raw()const { return m_data; };
 	T min() { return *std::min_element(m_data.begin(), m_data.end());}
 	T max() { return *std::max_element(m_data.begin(), m_data.end()); }
+
+	// Not tested very well
+	DynamicArray<T> getRow(int row) {
+
+		int rowLength = m_shape[1];
+		int startIdx = row * rowLength;
+		std::vector<T> test = std::vector<T>(m_data.begin() + startIdx, m_data.begin() + startIdx + rowLength);
+		return DynamicArray<T>(test); 
+
+	}
 
 	static void ToFile(std::string_view filename, DynamicArray<T>& data, char writeMode = 'w', char delimiter = ' ');
 

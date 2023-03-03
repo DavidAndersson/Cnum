@@ -1,15 +1,14 @@
 #pragma once
-#include "Rect.h"
-#include "Vec2.h"
 #include <vector>
 #include <memory>
+#include "Cnum.h"
 
-template<typename T>
+template<typename objType, typename posType>
 class kdTree
 {
 public:
 
-	kdTree(int dim, Rect& bdry)
+	kdTree(int dim, Cnum::Rect<posType>& bdry)
 		: m_boundary(bdry), m_dim(dim)
 	{
 		for (int i = 0; i < std::pow(2, dim); i++) {
@@ -17,7 +16,7 @@ public:
 		}
 	};
 
-	void Insert(T& object, Vec2& pos) {
+	void Insert(objType& object, DynamicArray<posType>& pos) {
 		if (!m_boundary.Contains(pos)) {
 			return;
 		}
@@ -36,12 +35,12 @@ public:
 		}
 	}
 
-	std::vector<T> Query(Rect& query_boundary) {
-		std::vector<T> found; 
+	std::vector<objType> Query(Cnum::Rect<posType>& query_boundary) {
+		std::vector<objType> found; 
 		return Query(query_boundary, found);
 	}
 
-	std::vector<T> Query(Rect& query_boundary, std::vector<T>& found)
+	std::vector<objType> Query(Cnum::Rect<posType>& query_boundary, std::vector<objType>& found)
 	{
 
 		if (!m_boundary.IsOverlappingWith(query_boundary)) {
@@ -70,7 +69,7 @@ private:
 	void Subdivide() {
 
 		// Creating the children with smart pointers
-		std::vector<Rect> childrenRects = m_boundary.SubDivide();
+		std::vector<Cnum::Rect> childrenRects = m_boundary.SubDivide();
 		for (int i = 0; i < std::pow(2, m_dim); i++)
 			m_children[i] = std::make_unique<kdTree>(m_dim, childrenRects[i]);
 
@@ -87,10 +86,10 @@ private:
 	}
 
 private:
-	Rect m_boundary;
+	Cnum::Rect<posType> m_boundary;
 	int m_capacity = 1; 
-	std::vector<T> m_objects;
-	std::vector<Vec2> m_positions;
+	std::vector<objType> m_objects;
+	std::vector<DynamicArray<posType>> m_positions;
 	bool m_divided = false;
 	int m_dim = 0;
 

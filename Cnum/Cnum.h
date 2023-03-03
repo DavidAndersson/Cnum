@@ -11,12 +11,12 @@ class Cnum
 public:
 
 	template<typename T>
-	class Patch;
+	class Rect;
 
 
 	template<typename T>
-	static Cnum::Patch<T> GetPatch(DynamicArray<T> lowPoint, DynamicArray<T> highPoint) {
-		return Patch(lowPoint, highPoint);
+	static Cnum::Rect<T> GetRect(DynamicArray<T> lowPoint, DynamicArray<T> highPoint) {
+		return Rect(lowPoint, highPoint);
 	}
 
 

@@ -18,6 +18,16 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Cnum.h" />
+    <ClInclude Include="DynamicArray.h" />
+    <ClInclude Include="kdTree.h" />
+    <ClInclude Include="Rect.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="DynamicArray.cpp" />
+    <ClCompile Include="main.cpp" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
@@ -127,16 +137,6 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClInclude Include="..\..\kdTree\kdTree\Cnum.h" />
-    <ClInclude Include="..\..\kdTree\kdTree\DynamicArray.h" />
-    <ClInclude Include="..\..\kdTree\kdTree\kdTree.h" />
-    <ClInclude Include="..\..\kdTree\kdTree\Patch.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\..\kdTree\kdTree\DynamicArray.cpp" />
-    <ClCompile Include="..\..\kdTree\kdTree\main.cpp" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
