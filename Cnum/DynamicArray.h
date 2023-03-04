@@ -14,6 +14,8 @@ class DynamicArray
 
 public:
 
+	DynamicArray() = default;
+
 	// Constructors
 	DynamicArray(std::vector<T>& initializer, std::vector<int>& shape)
 		: m_data{ initializer }, m_shape{shape}
@@ -58,18 +60,23 @@ public:
 
 	// Operators
 	T& operator[](std::vector<int> indices); 
+	//T& operator[](DynamicArray<T> indices);
 	T& operator[](int index);
 
 	DynamicArray<T> operator+(const DynamicArray& rhs)const; 
+	DynamicArray<T> operator+(const T value)const;
 	void operator+=(const DynamicArray& rhs); 
 
 	DynamicArray<T> operator-(const DynamicArray& rhs)const;
+	DynamicArray<T> operator-(const T value)const;
 	void operator-=(const DynamicArray& rhs);
 
 	DynamicArray<T> operator*(const DynamicArray& rhs)const;
+	DynamicArray<T> operator*(const T value)const;
 	void operator*=(const DynamicArray& rhs);
 
 	DynamicArray<T> operator/(const DynamicArray& rhs)const;
+	DynamicArray<T> operator/(const T value)const;
 	void operator/=(const DynamicArray& rhs);
 
 public:
@@ -89,7 +96,9 @@ public:
 		return std::accumulate(m_data.begin(), m_data.end(), initVal, op);
 	}
 
-	void Concatenate(DynamicArray<T>& other, int axis = 0); 
+	DynamicArray<T> ReduceAlongAxis(int axis)const;
+
+	void Concatenate(DynamicArray<T> other, int axis = 0, int offset=-1); 
 	bool Contains(DynamicArray<T>& point);
 
 	// Getters
@@ -99,16 +108,6 @@ public:
 	std::vector<T> raw()const { return m_data; };
 	T min() { return *std::min_element(m_data.begin(), m_data.end());}
 	T max() { return *std::max_element(m_data.begin(), m_data.end()); }
-
-	// Not tested very well
-	DynamicArray<T> getRow(int row) {
-
-		int rowLength = m_shape[1];
-		int startIdx = row * rowLength;
-		std::vector<T> test = std::vector<T>(m_data.begin() + startIdx, m_data.begin() + startIdx + rowLength);
-		return DynamicArray<T>(test); 
-
-	}
 
 	static void ToFile(std::string_view filename, DynamicArray<T>& data, char writeMode = 'w', char delimiter = ' ');
 

@@ -18,9 +18,7 @@ int main() {
 		std::cout << "Hello" << std::endl;
 	}
 
-
-	iArray bla = Cnum::Array<int>({ 1,2,3,4,5,6 }, { 2,3 }); 
-	iArray gla = bla.getRow(1);
+	auto children = other.Subdivide();
 
 
 }

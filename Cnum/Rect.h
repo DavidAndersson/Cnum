@@ -7,10 +7,9 @@ template<typename T>
 class Cnum::Rect
 {
 public: 
-	Rect(DynamicArray<T>& lowPoint, DynamicArray<T>& highPoint)
+	Rect(DynamicArray<T> lowPoint, DynamicArray<T> highPoint)
 		:m_dim{ lowPoint.shape()[1] }, m_coordinates{ Cnum::Concatenate(lowPoint, highPoint) }
 	{}
-
 
 	bool isOverlappingWith(Cnum::Rect<T>& other)const {
 
@@ -24,30 +23,36 @@ public:
 	}
 
 	// Not tested
-	DynamicArray<T> Center() {
-		return DynamicArray<T>((m_coordinates.getRow(0) + m_coordinates.getRow(1)) / 2);
+	DynamicArray<T> Center()const {
+		return DynamicArray<T>( m_coordinates.ReduceAlongAxis(0) / (T)2 );
 	}
 
-	std::vector<Rect> Subdivide() const{
+	std::vector<Rect> Subdivide(){
 
-		int nChildren = std::pow(2, m_dim);
-		int x, y, z = 0;
+		int nChildren = (int)std::pow(2, m_dim);
 		std::vector<Rect> children;
-		DynamicArray<T> coords = m_coordinates.getRow(0).Concatenate(this->Center()).Concatenate(m_coordinates.getRow(0));
+
+		// Place center coords in between the two other coords
+		DynamicArray<T> coords = Cnum::Concatenate(m_coordinates, this->Center(), 0, 1);
+
+		auto table = Cnum::GetBinaryTable<T>(m_dim);
 
 		for (int i = 0; i < nChildren; i++) {
+			auto indices = table.ExtractAxis(1, i); 
 
-			if (i % 4)
-				x++;
-			if (i % 3)
-				y++;
-			if (i % 2)
-				z++;
+			std::vector<T> low; 
+			std::vector<T> high;
 
-			
+			for (int j = 0; j < indices.size(); j++) {
+				low.push_back(coords[{ (int)indices[j], j }]);
+				high.push_back(coords[{(int)indices[j]+1, j }]);
+			}
 
+			Cnum::Rect<T> child = Rect<T>(DynamicArray<T>(low), DynamicArray<T>(high));
+			children.push_back(child);
 		}
 
+		return children;
 	}
 
 private:

@@ -106,6 +106,13 @@ DynamicArray<T> DynamicArray<T>::operator+(const DynamicArray& rhs) const
 }
 
 template<typename T>
+DynamicArray<T> DynamicArray<T>::operator+(const T value) const
+{
+	DynamicArray<T> other = DynamicArray<T>(m_shape, value);
+	return *this + other;
+}
+
+template<typename T>
 void DynamicArray<T>::operator+=(const DynamicArray& rhs)
 {
 	*this = *this + rhs;
@@ -114,9 +121,16 @@ void DynamicArray<T>::operator+=(const DynamicArray& rhs)
 template<typename T>
 DynamicArray<T> DynamicArray<T>::operator-(const DynamicArray& rhs) const
 {
-	DynamicArray<T> sum = rhs;
-	std::transform(m_data.begin(), m_data.end(), rhs.m_data.begin(), sum.m_data.begin(), std::minus<T>());
-	return sum;
+	DynamicArray<T> difference = rhs;
+	std::transform(m_data.begin(), m_data.end(), rhs.m_data.begin(), difference.m_data.begin(), std::minus<T>());
+	return difference;
+}
+
+template<typename T>
+DynamicArray<T> DynamicArray<T>::operator-(const T value) const
+{
+	DynamicArray<T> other = DynamicArray<T>(m_shape, value);
+	return *this - other;
 }
 
 template<typename T>
@@ -128,9 +142,16 @@ void DynamicArray<T>::operator-=(const DynamicArray& rhs)
 template<typename T>
 DynamicArray<T> DynamicArray<T>::operator*(const DynamicArray& rhs) const
 {
-	DynamicArray<T> sum = rhs;
-	std::transform(m_data.begin(), m_data.end(), rhs.m_data.begin(), sum.m_data.begin(), std::multiplies<T>());
-	return sum;
+	DynamicArray<T> product = rhs;
+	std::transform(m_data.begin(), m_data.end(), rhs.m_data.begin(), product.m_data.begin(), std::multiplies<T>());
+	return product;
+}
+
+template<typename T>
+DynamicArray<T> DynamicArray<T>::operator*(const T value) const
+{
+	DynamicArray<T> other = DynamicArray<T>(m_shape, value);
+	return *this * other;
 }
 
 template<typename T>
@@ -142,9 +163,16 @@ void DynamicArray<T>::operator*=(const DynamicArray& rhs)
 template<typename T>
 DynamicArray<T> DynamicArray<T>::operator/(const DynamicArray& rhs) const
 {
-	DynamicArray<T> sum = rhs;
-	std::transform(m_data.begin(), m_data.end(), rhs.m_data.begin(), sum.m_data.begin(), std::divides<T>());
-	return sum;
+	DynamicArray<T> result = rhs;
+	std::transform(m_data.begin(), m_data.end(), rhs.m_data.begin(), result.m_data.begin(), std::divides<T>());
+	return result;
+}
+
+template<typename T>
+DynamicArray<T> DynamicArray<T>::operator/(const T value) const
+{
+	DynamicArray<T> other = DynamicArray<T>(m_shape, value);
+	return *this / other;
 }
 
 template<typename T>
@@ -255,9 +283,25 @@ DynamicArray<T> DynamicArray<T>::abs()
 }
 
 
+template<typename T>
+DynamicArray<T> DynamicArray<T>::ReduceAlongAxis(int axis) const
+{
+	// The axis which the sum is along gets reduced to 1
+	std::vector<int> returnShape = m_shape;
+	returnShape[axis] = 1;
+	DynamicArray<T> returnArray = DynamicArray<T>(returnShape, 0);
+
+	for (int i = 0; i < getNumberOfElements(returnShape); i++) {
+
+		returnArray[i] = this->ExtractAxis(axis, i).Reduce(0, std::plus());
+
+	}
+	return returnArray;
+}
+
 // Only tested in 2 dimensions
 template<typename T>
-void DynamicArray<T>::Concatenate(DynamicArray<T>& other, int axis)
+void DynamicArray<T>::Concatenate(DynamicArray<T> other, int axis, int offset)
 {
 	// The off-axis dimensions must all be the same for a valid concatenation
 	for (int i = 0; i < m_shape.size(); i++) {
@@ -268,20 +312,30 @@ void DynamicArray<T>::Concatenate(DynamicArray<T>& other, int axis)
 		}		
 	}
 
+	int stride = getStride(axis);
+
 	if (axis == 0) {
-		m_data.insert(m_data.end(), other.m_data.begin(), other.m_data.end());
+		auto startPoint = (offset == -1) ? m_data.end() : m_data.begin() + offset * stride;
+		m_data.insert(startPoint, other.m_data.begin(), other.m_data.end());
 		m_shape[axis] += other.shape()[axis]; 
 	}
 		
 	else {
-		int stride = getStride(axis);
-		int startIndex = stride;
-		int j = 0; 
-		for (int i = startIndex; i < m_data.size(); i += stride) {
-			m_data.insert(m_data.begin() + i + j, other[j]);
+
+		int newNumberOfElements = getNumberOfElements(m_shape) + other.m_data.size();
+
+		// Update the shape first so that the stepLength can be computed correctly
+		m_shape[axis] += other.shape()[axis];
+		int stepLength = stride * m_shape[axis];
+
+		int startIndex = (offset == -1) ? stepLength - 1 : offset;
+
+		int j = 0;
+		for (int i = startIndex; i < newNumberOfElements; i += stepLength) {
+			m_data.insert(m_data.begin() + i, other[j]);
 			j++;
 		}
-		m_shape[axis] += other.shape()[axis];
+		
 	}
 
 }

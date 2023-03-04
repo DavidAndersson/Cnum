@@ -108,17 +108,45 @@ public:
 	}
 
 	template<typename T>
-	static DynamicArray<T> Concatenate(DynamicArray<T>& arr1, DynamicArray<T>& arr2, int axis=0) {
+	static DynamicArray<T> Concatenate(DynamicArray<T> arr1, DynamicArray<T> arr2, int axis=0, int offset=-1) {
 		
 		try {
-			auto copy = arr1;
-			copy.Concatenate(arr2, axis);
-			return copy;
+			arr1.Concatenate(arr2, axis, offset);
+			return arr1;
 		}
 		catch (const std::invalid_argument& err) {
 			std::cout << err.what() << std::endl;
 			exit(0);
 		}
+	}
+
+	template<typename T>
+	static DynamicArray<T> GetBinaryTable(int nDims) {
+		
+		int nRows = (int)std::pow(2, nDims);
+		int nCols = nDims;
+		int stride = nRows / 2;
+		DynamicArray<T> table;
+
+		// Loop column for column. The first column has first half 0 and second 1. Second column has first quarter 0 second 1 etc etc...
+
+		for (int col = 0; col < nDims; col++) {
+
+			DynamicArray<T> column = Cnum::UniformArray<T>({ nRows, 1 }, 0);
+
+			int value = 0;
+			for (int i = stride; i < nRows; i+=2*stride) {
+				for (int j = i; j < i + stride; j++) {
+					column[j] = 1;
+				}
+			}
+			if (col == 0)
+				table = column;
+			else
+				table.Concatenate(column, 1);
+			stride /= 2;
+		}
+		return table;
 	}
 
 };
