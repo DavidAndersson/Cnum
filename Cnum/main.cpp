@@ -10,15 +10,7 @@
 int main() {
 
 
-	auto test = Cnum::GetRect(Cnum::Array<float>({0,0}), Cnum::Array<float>({1, 1}));
-
-	auto other = Cnum::GetRect(Cnum::Array<float>({0.5, 0.5}), Cnum::Array<float>({1, 1}));
-
-	if (other.isOverlappingWith(test)) {
-		std::cout << "Hello" << std::endl;
-	}
-
-	auto children = other.Subdivide();
+	fArray test = DynamicArray<float>();
 
 
 }

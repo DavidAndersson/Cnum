@@ -8,7 +8,7 @@ class Cnum::Rect
 {
 public: 
 	Rect(DynamicArray<T> lowPoint, DynamicArray<T> highPoint)
-		:m_dim{ lowPoint.shape()[1] }, m_coordinates{ Cnum::Concatenate(lowPoint, highPoint) }
+		:m_dim{ lowPoint.shapeAlong(1) }, m_coordinates{ Cnum::Concatenate(lowPoint, highPoint) }
 	{}
 
 	bool isOverlappingWith(Cnum::Rect<T>& other)const {
@@ -22,7 +22,6 @@ public:
 		return false;
 	}
 
-	// Not tested
 	DynamicArray<T> Center()const {
 		return DynamicArray<T>( m_coordinates.ReduceAlongAxis(0) / (T)2 );
 	}

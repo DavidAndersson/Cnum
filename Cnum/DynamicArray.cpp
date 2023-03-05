@@ -303,11 +303,17 @@ DynamicArray<T> DynamicArray<T>::ReduceAlongAxis(int axis) const
 template<typename T>
 void DynamicArray<T>::Concatenate(DynamicArray<T> other, int axis, int offset)
 {
+	// If the array is uninitialized i.e. empty, the concatenation will simply act as assignment
+	if (m_data.empty()){
+		*this = other;
+		return;
+	}
+
 	// The off-axis dimensions must all be the same for a valid concatenation
 	for (int i = 0; i < m_shape.size(); i++) {
 		if (i == axis)
 			continue;
-		if (other.shape()[i] != m_shape[i]) {
+		if (other.shapeAlong(i) != this->shapeAlong(i)) {
 			throw std::invalid_argument(std::format("Arrays are not of equal length in axis {}", axis));
 		}		
 	}
@@ -317,34 +323,32 @@ void DynamicArray<T>::Concatenate(DynamicArray<T> other, int axis, int offset)
 	if (axis == 0) {
 		auto startPoint = (offset == -1) ? m_data.end() : m_data.begin() + offset * stride;
 		m_data.insert(startPoint, other.m_data.begin(), other.m_data.end());
-		m_shape[axis] += other.shape()[axis]; 
+		m_shape[axis] += other.shapeAlong(axis);
 	}
 		
 	else {
 
-		int newNumberOfElements = getNumberOfElements(m_shape) + other.m_data.size();
+		int newNumberOfElements = this->size() + other.size();
 
 		// Update the shape first so that the stepLength can be computed correctly
-		m_shape[axis] += other.shape()[axis];
-		int stepLength = stride * m_shape[axis];
+		m_shape[axis] += other.shapeAlong(axis);
+		int stepLength = stride * this->shapeAlong(axis);
 
-		int startIndex = (offset == -1) ? stepLength - 1 : offset;
+		int startIndex = (offset == -1) ? stepLength - 1 : offset;  // Most likely wrong. Maybe stride*offset
 
 		int j = 0;
 		for (int i = startIndex; i < newNumberOfElements; i += stepLength) {
 			m_data.insert(m_data.begin() + i, other[j]);
 			j++;
 		}
-		
 	}
-
 }
 
 template<typename T>
 bool DynamicArray<T>::Contains(DynamicArray<T>& point)
 {
-	if (point.shape()[1] != m_shape[1])
-		throw std::invalid_argument(std::format("Point and shape must both be either {} or {} dimensional", m_shape[1], point.shape()[0]));
+	if (point.shapeAlong(1) != this->shapeAlong(1))
+		throw std::invalid_argument(std::format("Point and shape must both be either {} or {} dimensional", this->shapeAlong(1), point.shapeAlong(0)));
 
 	// Goes through the elements of the 1d point, and checks if it is contained by the correct axis in the parent
 	// Note that the method is inclusive at the lower end and exclusive at the upper end

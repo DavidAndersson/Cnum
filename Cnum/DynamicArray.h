@@ -14,6 +14,7 @@ class DynamicArray
 
 public:
 
+	// Alternatively have a flag declaring that the array is uninitialized?
 	DynamicArray() = default;
 
 	// Constructors
@@ -52,7 +53,7 @@ public:
 		: m_data(src.m_data), m_shape(src.m_shape) {};
 
 
-	// Static Creators -- Make private, and friend to Cnum
+	// Static Creators -- Make private, and friend to Cnum?
 	static DynamicArray<T> Arange(T start, T end, T stepSize);
 	static DynamicArray<T> Linspace(T start, T end, int nSteps);
 	static DynamicArray<T> FromFile(std::string_view filePath, char delimiter = ' ');
@@ -103,6 +104,15 @@ public:
 
 	// Getters
 	std::vector<int> shape()const { return m_shape; };
+	int shapeAlong(int axis)const { 
+		if (axis < m_shape.size()) { 
+			return m_shape[axis]; 
+		} 
+		else {
+			std::cerr << std::format("Cannot access axis {} in array of shape {}", axis, toString(m_shape)); 
+			exit(1);
+		}
+	}
 	std::string sshape()const { return toString(m_shape); };
 	int size()const { return getNumberOfElements(); };
 	std::vector<T> raw()const { return m_data; };
