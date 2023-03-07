@@ -121,6 +121,19 @@ public:
 	}
 
 	template<typename T>
+	static DynamicArray<T> Transpose(DynamicArray<T> arr) {
+		arr.Transpose();
+		return arr;
+	}
+
+	template<typename T>
+	static DynamicArray<T> Transpose(DynamicArray<T> arr, DynamicArray<int> permutation) {
+		arr.Transpose(permutation);
+		return arr;
+	}
+
+
+	template<typename T>
 	static DynamicArray<T> GetBinaryTable(int nDims) {
 		
 		int nRows = (int)std::pow(2, nDims);

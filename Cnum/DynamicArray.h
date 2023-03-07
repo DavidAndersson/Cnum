@@ -30,8 +30,8 @@ public:
 			throw std::invalid_argument(std::format("Cannot create array of size {} with shape {}", m_data.size(), toString(shape)));
 		}
 
-		if (shape.size() == 1) {
-			shape = std::vector<int>{ 1, shape[0] };
+		if (m_shape.size() == 1) {
+			m_shape = std::vector<int>{ m_shape[0], 1 };
 		}
 	}
 
@@ -46,8 +46,8 @@ public:
 	{
 		initArray(initialValue);
 
-		if (shape.size() == 1) {
-			shape = std::vector<int>{ 1, shape[0] };
+		if (m_shape.size() == 1) {
+			m_shape = std::vector<int>{ m_shape[0], 1 };
 		}
 	};
 
@@ -205,6 +205,8 @@ public:
 public:
 
 	// Public Interface
+
+
 	void Reshape(const std::vector<int>& newShape)
 	{
 		// Firstly the new shape must have the same number of elements as the previous had
@@ -216,21 +218,34 @@ public:
 		m_shape = newShape;
 	}
 	
-	// Add function in Cnum which copies
-	// Add overload without permutation, where the default then is the identity
-	DynamicArray<T> Transpose(std::vector<int> permutation)
+	// Slightly inefficient that the new shape in Transpose() is known, and then having to be re-structured in Transpose(std::vector<int> permutation)
+	void Transpose() {
+		std::vector<int> permutation = std::vector<int>(m_shape.size());
+		std::iota(permutation.begin(), permutation.end(), 0);
+		std::reverse(permutation.begin(), permutation.end());
+		this->Transpose(permutation);
+	}
+	void Transpose(DynamicArray<int> permutation) {
+		this->Transpose((permutation.raw()));
+	}
+	void Transpose(std::vector<int> permutation)
 	{
 		/*
 			What is a permutation? 
 				A permutation, same size as the shape, tells which axis should move to where. 
 				If the original shape is (2,3,5) and the permutation is (0, 2, 1), then the new shape is (2, 5, 3)
-
-				There are identity permutations, which rolls forwards or backward: 
-					(1, 2, 0) - Backward
-					(2, 0, 1) - Forward
+				
+				The default permutation is to reverse the shape
 		*/
 
 		// Check that permutation has correct size and that it has the correct values etc
+
+		std::vector<int> permValues = std::vector<int>(m_shape.size());
+		std::iota(permValues.begin(), permValues.end(), 0);
+		if (std::is_permutation(permutation.begin(), permutation.end(), permValues.begin(), permValues.end()) == false) {
+			throw std::invalid_argument("Incorrectly specifed permutation"); 
+			exit(1);
+		}
 
 		std::vector<T> newData = std::vector<T>(m_data.size(), 0);
 		std::vector<int> newShape = std::vector<int>(this->shape().size(), 0);
@@ -250,7 +265,6 @@ public:
 		}
 
 		m_data = newData;  m_shape = newShape;
-		return *this;
 	} 
 	
 	DynamicArray<T> Flatten()
@@ -400,6 +414,7 @@ public:
 	}
 
 
+
 	// Getters
 	std::vector<int> shape()const { return m_shape; };
 	int shapeAlong(int axis)const { 
@@ -416,6 +431,10 @@ public:
 	std::vector<T> raw()const { return m_data; };
 	T min() { return *std::min_element(m_data.begin(), m_data.end());}
 	T max() { return *std::max_element(m_data.begin(), m_data.end()); }
+	
+	int nDims()const {
+		return std::count_if(m_shape.begin(), m_shape.end(), [](int dim) {return dim > 1; });
+	}
 
 	static void ToFile(std::string_view filename, DynamicArray<T>& data, char writeMode = 'w', char delimiter = ' ')
 
@@ -532,6 +551,7 @@ private:
 		ss << ")";
 		return ss.str();
 	}
+
 
 	void PrintDim(DynamicArray<int>& index, int dim) 
 	{
