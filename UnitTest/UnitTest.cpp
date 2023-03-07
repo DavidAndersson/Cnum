@@ -14,9 +14,9 @@ namespace UnitTest
 		TEST_METHOD(Test_Transpose)
 		{
 			dArray arr = Cnum::Array<double>({ 0.47, 0.40, 0.08, 0.12, 0.21, 0.72, 0.62, 0.85 }, { 2,2,2 });
-			dArray arrT = arr.Transpose();
+			arr.Transpose();
 			dArray answer = Cnum::Array<double>({ 0.47, 0.21, 0.08, 0.62, 0.4, 0.72, 0.12, 0.85}, { 2,2,2 });
-			bool isSame = arrT == answer;
+			bool isSame = arr == answer;
 			Assert::IsTrue(isSame);
 
 		}
