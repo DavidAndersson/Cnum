@@ -262,7 +262,7 @@ public:
 			for (int j = 0; j < temp.size(); j++) {
 				temp[j] = indices[permutation[j]];
 			}
-			newData[flattenIndex(temp, newShape)] = m_data[flattenIndex(indices)];
+			newData[flattenIndex(temp, newShape)] = m_data[i];
 		}
 		
 		m_data = newData;  m_shape = newShape;
