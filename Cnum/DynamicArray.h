@@ -23,7 +23,7 @@ public:
 	DynamicArray() = default;
 
 	// Constructors
-	DynamicArray(std::vector<T>& initializer, std::vector<int>& shape)
+	DynamicArray(std::vector<T>& initializer, std::vector<int> shape)
 		: m_data{ initializer }, m_shape{shape}
 	{
 		if (getNumberOfElements(shape) != m_data.size()) {
@@ -144,6 +144,9 @@ public:
 	{
 		*this = *this + rhs;
 	}
+	void operator+=(const T rhs) {
+		*this = *this + rhs;
+	}
 
 	DynamicArray<T> operator-(const DynamicArray& rhs)const
 	{
@@ -160,6 +163,10 @@ public:
 	{
 		*this = *this - rhs;
 	}
+	void operator-=(const T rhs) {
+		*this = *this - rhs;
+	}
+
 
 	DynamicArray<T> operator*(const DynamicArray& rhs)const
 	{
@@ -176,12 +183,20 @@ public:
 	{
 		*this = *this * rhs;
 	}
+	void operator*=(const T rhs) {
+		*this = *this * rhs;
+	}
+
 
 	DynamicArray<T> operator/(const DynamicArray& rhs)const
 	{
-		DynamicArray<T> result = rhs;
-		std::transform(m_data.begin(), m_data.end(), rhs.m_data.begin(), result.m_data.begin(), std::divides<T>());
-		return result;
+		std::vector<T> data = rhs.raw();
+		if (std::find(data.begin(), data.end(), 0) != data.end()) {
+			throw std::invalid_argument("Division by zero encountered"); 
+			exit(1);
+		}
+		std::transform(m_data.begin(), m_data.end(), rhs.m_data.begin(), data.begin(), std::divides<T>());
+		return DynamicArray<T>(data, m_shape);
 	}
 	DynamicArray<T> operator/(const T value)const
 	{
@@ -192,6 +207,10 @@ public:
 	{
 		*this = *this / rhs;
 	}
+	void operator/=(const T rhs) {
+		*this = *this / rhs;
+	}
+
 
 	bool operator==(const DynamicArray& rhs)const
 	{
