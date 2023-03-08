@@ -167,7 +167,6 @@ public:
 		*this = *this - rhs;
 	}
 
-
 	DynamicArray<T> operator*(const DynamicArray& rhs)const
 	{
 		DynamicArray<T> product = rhs;
@@ -186,7 +185,6 @@ public:
 	void operator*=(const T rhs) {
 		*this = *this * rhs;
 	}
-
 
 	DynamicArray<T> operator/(const DynamicArray& rhs)const
 	{
@@ -211,15 +209,39 @@ public:
 		*this = *this / rhs;
 	}
 
+	DynamicArray<bool> operator==(const DynamicArray& rhs)const
+	{
+		if (this->sameShapeAs(rhs) == false) {
+			throw std::invalid_argument(std::format("Shape {} and {} do not match", this->sshape(), rhs.sshape()));
+			exit(1);
+		}
+		std::vector<bool> out(getNumberOfElements(m_shape), false);
+		std::transform(m_data.begin(), m_data.end(), rhs.raw().begin(), out.begin(), [](T v1, T v2) {return v1 == v2; });
+		return DynamicArray<bool>(out, m_shape);
+	}
+	DynamicArray<bool> operator==(const T rhs)const {
+		std::vector<bool> out(getNumberOfElements(m_shape), false); 
+		std::transform(m_data.begin(), m_data.end(), out.begin(), [&](T v) {return v == rhs;});
+		return DynamicArray<bool>(out, m_shape);
+	}
 
-	bool operator==(const DynamicArray& rhs)const
+	DynamicArray<bool> operator!=(const DynamicArray& rhs)const
 	{
-		return std::equal(m_data.begin(), m_data.end(), rhs.m_data.begin());
+		if (this->sameShapeAs(rhs) == false) {
+			throw std::invalid_argument(std::format("Shape {} and {} do not match", this->sshape(), rhs.sshape()));
+			exit(1);
+		}
+		std::vector<bool> out(getNumberOfElements(m_shape), false);
+		std::transform(m_data.begin(), m_data.end(), rhs.raw().begin(), out.begin(), [](T v1, T v2) {return v1 != v2; });
+		return DynamicArray<bool>(out, m_shape);
 	}
-	bool operator!=(const DynamicArray& rhs)const
-	{
-		return !(*this == rhs);
+	DynamicArray<bool> operator!=(const T rhs)const {
+		std::vector<bool> out(getNumberOfElements(m_shape), false);
+		std::transform(m_data.begin(), m_data.end(), out.begin(), [&](T v) {return v != rhs; });
+		return DynamicArray<bool>(out, m_shape);
 	}
+
+
 
 public:
 
@@ -426,6 +448,13 @@ public:
 		return true;
 	}
 
+	bool isEqualTo(DynamicArray<T> other)const {
+		return std::equal(m_data.begin(), m_data.end(), other.m_data.begin());
+	}
+	bool sameShapeAs(DynamicArray<T> other)const {
+		return std::equal(m_shape.begin(), m_shape.end(), other.shape().begin());
+	}
+
 	void Print() {
 		auto indices = std::vector<int>((int)m_shape.size(), 0);
 		std::cout << "Cnum::Array(";
@@ -572,7 +601,6 @@ private:
 		ss << ")";
 		return ss.str();
 	}
-
 
 	void PrintDim(std::vector<int>& index, int dim) 
 	{
