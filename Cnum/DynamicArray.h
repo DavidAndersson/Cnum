@@ -53,10 +53,23 @@ public:
 
 
 	// Copy Constructor
-	template<typename S>
-	DynamicArray(DynamicArray<S>& src)
+	DynamicArray(const DynamicArray<T>& src)
 		: m_data(src.m_data), m_shape(src.m_shape) {};
 
+	template<typename S> // This may not work, we'll see
+	DynamicArray(const DynamicArray<S>& src)
+		: m_data(src.m_data), m_shape(src.m_shape) {};
+
+	// Move Constructor
+	DynamicArray(const DynamicArray<T>&& other) {
+		*this = other; 
+	}
+
+	DynamicArray(const std::vector<T>&& other)
+		: m_data{other}
+	{
+		m_shape = std::vector<int>{ 1, (int)other.size() };
+	}
 
 	// Static Creators -- Make private, and friend to Cnum?
 	static DynamicArray<T> Arange(T start, T end, T stepSize) 
@@ -127,6 +140,15 @@ public:
 	T& operator[](int index)
 	{
 		return m_data[index];
+	}
+
+
+	DynamicArray<T> operator=(const DynamicArray<T> rhs)const {
+		std::swap(*this, rhs); 
+		return *this;
+	}
+	DynamicArray<T> operator=(const std::vector<T> rhs)const {
+		return DynamicArray<T>(rhs); 
 	}
 
 	DynamicArray<T> operator+(const DynamicArray& rhs)const

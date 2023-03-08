@@ -13,8 +13,6 @@ int main() {
 		if (arr.isEqualTo(answer))
 			arr.Print();
 
-		auto test = arr != arr*2;
-
 	}
 
 	
