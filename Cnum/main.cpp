@@ -14,7 +14,5 @@ int main() {
 			arr.Print();
 	}
 
-	
-
 
 }
