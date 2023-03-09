@@ -132,6 +132,18 @@ public:
 		return arr;
 	}
 
+	template<typename T>
+	static DynamicArray<T> Flatten(DynamicArray<T> arr) {
+		arr.Flatten();
+		return arr;
+	}
+
+	template<typename T>
+	static DynamicArray<T> abs(DynamicArray<T> arr) {
+		arr.abs();
+		return arr;
+	}
+
 
 	template<typename T>
 	static DynamicArray<T> GetBinaryTable(int nDims) {

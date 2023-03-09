@@ -19,10 +19,11 @@ class DynamicArray
 {
 public:
 
-	// Alternatively have a flag declaring that the array is uninitialized?
-	DynamicArray() = default;
-
+	//--------------------------
 	// Constructors
+	// -------------------------
+
+	DynamicArray() = default;
 	DynamicArray(std::vector<T>& initializer, std::vector<int> shape)
 		: m_data{ initializer }, m_shape{shape}
 	{
@@ -34,42 +35,38 @@ public:
 			m_shape = std::vector<int>{ m_shape[0], 1 };
 		}
 	}
-
 	DynamicArray(std::vector<T>& initializer)
 		: m_data{ initializer }
 	{
 		m_shape = std::vector<int>{ 1, (int)initializer.size() };
 	};
-
 	DynamicArray(std::vector<int> shape, T initialValue)
 		: m_shape{ shape } 
 	{
-		initArray(initialValue);
+		m_data = std::vector<T>(getNumberOfElements(), initialValue);
 
 		if (m_shape.size() == 1) {
 			m_shape = std::vector<int>{ m_shape[0], 1 };
 		}
 	};
 
-
-	// Copy Constructor
+	// Copy Constructors
 	DynamicArray(const DynamicArray<T>& src)
 		: m_data(src.m_data), m_shape(src.m_shape) {};
-
-	template<typename S> // This may not work, we'll see
+	template<typename S>
 	DynamicArray(const DynamicArray<S>& src)
 		: m_data(src.m_data), m_shape(src.m_shape) {};
 
-	// Move Constructor
+	// Move Constructors
 	DynamicArray(const DynamicArray<T>&& other) {
 		*this = other; 
 	}
-
 	DynamicArray(const std::vector<T>&& other)
 		: m_data{other}
 	{
 		m_shape = std::vector<int>{ 1, (int)other.size() };
 	}
+
 
 	// Static Creators -- Make private, and friend to Cnum?
 	static DynamicArray<T> Arange(T start, T end, T stepSize) 
@@ -131,18 +128,24 @@ public:
 	}
 
 
+	//--------------------------
 	// Operators
+	// -------------------------
+
+	// Indexing
 	T& operator[](std::vector<int> indices)
 	{
 		return m_data.at(flattenIndex(indices));
 	}
-	//T& operator[](DynamicArray<T> indices);
+	T& operator[](DynamicArray<T>& indices) {
+		return m_data.at(flattenIndex(indices.m_data));
+	}
 	T& operator[](int index)
 	{
 		return m_data[index];
 	}
 
-
+	// Assignment
 	DynamicArray<T> operator=(const DynamicArray<T> rhs)const {
 		std::swap(*this, rhs); 
 		return *this;
@@ -151,6 +154,7 @@ public:
 		return DynamicArray<T>(rhs); 
 	}
 
+	// Addition
 	DynamicArray<T> operator+(const DynamicArray& rhs)const
 	{
 		DynamicArray<T> sum = rhs;
@@ -170,6 +174,7 @@ public:
 		*this = *this + rhs;
 	}
 
+	// Subtraction
 	DynamicArray<T> operator-(const DynamicArray& rhs)const
 	{
 		DynamicArray<T> difference = rhs;
@@ -189,6 +194,7 @@ public:
 		*this = *this - rhs;
 	}
 
+	// Multiplication
 	DynamicArray<T> operator*(const DynamicArray& rhs)const
 	{
 		DynamicArray<T> product = rhs;
@@ -208,6 +214,7 @@ public:
 		*this = *this * rhs;
 	}
 
+	// Division
 	DynamicArray<T> operator/(const DynamicArray& rhs)const
 	{
 		std::vector<T> data = rhs.raw();
@@ -231,6 +238,7 @@ public:
 		*this = *this / rhs;
 	}
 
+	// Equailty
 	DynamicArray<bool> operator==(const DynamicArray& rhs)const
 	{
 		if (this->sameShapeAs(rhs) == false) {
@@ -247,6 +255,7 @@ public:
 		return DynamicArray<bool>(out, m_shape);
 	}
 
+	// Anti-Equality
 	DynamicArray<bool> operator!=(const DynamicArray& rhs)const
 	{
 		if (this->sameShapeAs(rhs) == false) {
@@ -264,12 +273,21 @@ public:
 	}
 
 
-
 public:
 
+	//--------------------------
 	// Public Interface
+	// -------------------------
 
-
+	// Mutating methods
+	void Flatten()
+	{
+		m_shape = { getNumberOfElements() };
+	}
+	void abs()
+	{
+		std::transform(m_data.begin(), m_data.end(), m_data.begin(), [](T e) {return std::abs(e); });
+	}
 	void Reshape(const std::vector<int>& newShape)
 	{
 		// Firstly the new shape must have the same number of elements as the previous had
@@ -280,7 +298,49 @@ public:
 
 		m_shape = newShape;
 	}
-	
+	void Concatenate(DynamicArray<T> other, int axis = 0, int offset = -1)
+	{
+		// If the array is uninitialized i.e. empty, the concatenation will simply act as assignment
+		if (m_data.empty()) {
+			*this = other;
+			return;
+		}
+
+		// The off-axis dimensions must all be the same for a valid concatenation
+		for (int i = 0; i < m_shape.size(); i++) {
+			if (i == axis)
+				continue;
+			if (other.shapeAlong(i) != this->shapeAlong(i)) {
+				throw std::invalid_argument(std::format("Arrays are not of equal length in axis {}", axis));
+			}
+		}
+
+		int stride = getStride(axis);
+
+		if (axis == 0) {
+			auto startPoint = (offset == -1) ? m_data.end() : m_data.begin() + offset * stride;
+			m_data.insert(startPoint, other.m_data.begin(), other.m_data.end());
+			m_shape[axis] += other.shapeAlong(axis);
+		}
+
+		else {
+
+			int newNumberOfElements = this->size() + other.size();
+
+			// Update the shape first so that the stepLength can be computed correctly
+			m_shape[axis] += other.shapeAlong(axis);
+			int stepLength = stride * this->shapeAlong(axis);
+
+			int startIndex = (offset == -1) ? stepLength - 1 : offset;  // Most likely wrong. Maybe stride*offset
+
+			int j = 0;
+			for (int i = startIndex; i < newNumberOfElements; i += stepLength) {
+				m_data.insert(m_data.begin() + i, other[j]);
+				j++;
+			}
+		}
+	}
+
 	// Slightly inefficient that the new shape in Transpose() is known, and then having to be re-structured in Transpose(std::vector<int> permutation)
 	void Transpose() {
 		std::vector<int> permutation = std::vector<int>(m_shape.size());
@@ -331,13 +391,27 @@ public:
 		m_data = newData;  m_shape = newShape;
 	} 
 	
-	DynamicArray<T> Flatten()
+	// Reductions
+	template<typename BinaryFunction>
+	T Reduce(T initVal, BinaryFunction op)const {
+		return std::accumulate(m_data.begin(), m_data.end(), initVal, op);
+	}
+	DynamicArray<T> ReduceAlongAxis(int axis)const
 	{
-		DynamicArray<T> copy = *this;
-		copy.m_shape = { getNumberOfElements() };
-		return copy;
+		// The axis which the sum is along gets reduced to 1
+		std::vector<int> returnShape = m_shape;
+		returnShape[axis] = 1;
+		DynamicArray<T> returnArray = DynamicArray<T>(returnShape, 0);
+
+		for (int i = 0; i < getNumberOfElements(returnShape); i++) {
+
+			returnArray[i] = this->ExtractAxis(axis, i).Reduce(0, std::plus());
+
+		}
+		return returnArray;
 	}
 
+	// Extractions
 	DynamicArray<T> ExtractAxis(int axis, std::vector<int>nonAxisLock, int start=0, int end=-1)const
 	{
 		// Error checking
@@ -387,74 +461,8 @@ public:
 	DynamicArray<T> ExtractAxis(int axis, int nonAxisLock, int start = 0, int end = -1)const {
 		return ExtractAxis(axis, std::vector<int>(1, nonAxisLock), start, end);
 	}
-	DynamicArray<T> abs()
-	{
-		std::transform(m_data.begin(), m_data.end(), m_data.begin(), [](T e) {return std::abs(e); });
-		return *this;
-	}
 
-	template<typename BinaryFunction>
-	T Reduce(T initVal, BinaryFunction op)const {
-		return std::accumulate(m_data.begin(), m_data.end(), initVal, op);
-	}
-
-	DynamicArray<T> ReduceAlongAxis(int axis)const
-	{
-		// The axis which the sum is along gets reduced to 1
-		std::vector<int> returnShape = m_shape;
-		returnShape[axis] = 1;
-		DynamicArray<T> returnArray = DynamicArray<T>(returnShape, 0);
-
-		for (int i = 0; i < getNumberOfElements(returnShape); i++) {
-
-			returnArray[i] = this->ExtractAxis(axis, i).Reduce(0, std::plus());
-
-		}
-		return returnArray;
-	}
-
-	void Concatenate(DynamicArray<T> other, int axis = 0, int offset=-1)
-	{
-		// If the array is uninitialized i.e. empty, the concatenation will simply act as assignment
-		if (m_data.empty()) {
-			*this = other;
-			return;
-		}
-
-		// The off-axis dimensions must all be the same for a valid concatenation
-		for (int i = 0; i < m_shape.size(); i++) {
-			if (i == axis)
-				continue;
-			if (other.shapeAlong(i) != this->shapeAlong(i)) {
-				throw std::invalid_argument(std::format("Arrays are not of equal length in axis {}", axis));
-			}
-		}
-
-		int stride = getStride(axis);
-
-		if (axis == 0) {
-			auto startPoint = (offset == -1) ? m_data.end() : m_data.begin() + offset * stride;
-			m_data.insert(startPoint, other.m_data.begin(), other.m_data.end());
-			m_shape[axis] += other.shapeAlong(axis);
-		}
-
-		else {
-
-			int newNumberOfElements = this->size() + other.size();
-
-			// Update the shape first so that the stepLength can be computed correctly
-			m_shape[axis] += other.shapeAlong(axis);
-			int stepLength = stride * this->shapeAlong(axis);
-
-			int startIndex = (offset == -1) ? stepLength - 1 : offset;  // Most likely wrong. Maybe stride*offset
-
-			int j = 0;
-			for (int i = startIndex; i < newNumberOfElements; i += stepLength) {
-				m_data.insert(m_data.begin() + i, other[j]);
-				j++;
-			}
-		}
-	}
+	// Boolean checks
 	bool Contains(DynamicArray<T>& point)
 	{
 		if (point.shapeAlong(1) != this->shapeAlong(1))
@@ -468,8 +476,7 @@ public:
 			}
 		}
 		return true;
-	}
-
+	} 
 	bool isEqualTo(DynamicArray<T> other)const {
 		return std::equal(m_data.begin(), m_data.end(), other.m_data.begin());
 	}
@@ -477,13 +484,13 @@ public:
 		return std::equal(m_shape.begin(), m_shape.end(), other.shape().begin());
 	}
 
+	// Prints
 	void Print() {
 		auto indices = std::vector<int>((int)m_shape.size(), 0);
 		std::cout << "Cnum::Array(";
 		PrintDim(indices, 0);
 		std::cout << ")" << std::endl;
 	}
-
 
 
 	// Getters
@@ -498,15 +505,18 @@ public:
 		}
 	}
 	std::string sshape()const { return toString(m_shape); };
-	int size()const { return getNumberOfElements(); };
-	std::vector<T> raw()const { return m_data; };
-	T min() { return *std::min_element(m_data.begin(), m_data.end());}
-	T max() { return *std::max_element(m_data.begin(), m_data.end()); }
-	
 	int nDims()const {
 		return std::count_if(m_shape.begin(), m_shape.end(), [](int dim) {return dim > 1; });
 	}
+	int size()const { return getNumberOfElements(); };
 
+	std::vector<T> raw()const { return m_data; };
+
+	T min() { return *std::min_element(m_data.begin(), m_data.end());}
+	T max() { return *std::max_element(m_data.begin(), m_data.end()); }
+	
+
+	// Savers
 	static void ToFile(std::string_view filename, DynamicArray<T>& data, char writeMode = 'w', char delimiter = ' ')
 
 	{
@@ -541,7 +551,10 @@ public:
 
 private:
 
+	//--------------------------
 	// Private Interface
+	// -------------------------
+
 	int flattenIndex(std::vector<int>& indices)const
 	{
 		return flattenIndex(indices, m_shape);
@@ -569,7 +582,6 @@ private:
 		index += indices[indices.size() - 1];
 		return index;
 	}
-
 	std::vector<int> reconstructIndex(int index) {
 
 		std::vector<int> indices = std::vector<int>(m_shape.size(), 0);
@@ -591,10 +603,7 @@ private:
 		}
 		return indices;
 	}
-	void initArray(T value)
-	{
-		m_data = std::vector<T>(getNumberOfElements(), value);
-	}
+
 	int getNumberOfElements()const
 	{
 		return getNumberOfElements(m_shape);
@@ -603,6 +612,7 @@ private:
 	{
 		return std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<int>());
 	}
+
 	int getStride(int axis=0)const
 	{
 		/*
@@ -611,6 +621,7 @@ private:
 		*/
 		return std::accumulate(m_shape.begin() + 1 + axis, m_shape.end(), 1, std::multiplies<>());
 	}
+
 	std::string toString(const std::vector<int> shape)const
 	{
 		std::stringstream ss;
@@ -646,12 +657,11 @@ private:
 		std::cout << "[";
 		for (int i = 0; i < m_shape[dim]; i++) {
 			index[dim] = i; 
+			if (dim == 0 && index[dim] != 0) { std::cout << "\t     "; }
 			PrintDim(index, dim + 1);
 			if (i == m_shape[dim] - 1) {
 				std::cout << "]";
-				if (dim > 0 && index[dim - 1] != m_shape[dim - 1] - 1) {
-					std::cout << "," << std::endl;
-				}
+				if (dim > 0 && index[dim - 1] != m_shape[dim - 1] - 1) { std::cout << "," << std::endl; }
 			}
 			else
 				std::cout << std::endl;
@@ -661,6 +671,10 @@ private:
 
 
 private:
+
+	//--------------------------
+	// Member variables
+	// -------------------------
 
 	std::vector<T> m_data; 
 	std::vector<int> m_shape; 

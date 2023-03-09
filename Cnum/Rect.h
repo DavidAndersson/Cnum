@@ -8,8 +8,21 @@ class Cnum::Rect
 {
 public: 
 	Rect(DynamicArray<T> lowPoint, DynamicArray<T> highPoint)
-		:m_dim{ lowPoint.shapeAlong(1) }, m_coordinates{ Cnum::Concatenate(lowPoint, highPoint) }
-	{}
+		:m_dim{ lowPoint.shapeAlong(1) }
+	{
+		if (lowPoint.nDims() != > 1 || highPoint.nDims() > 1) {
+			throw std::invalid_argument("Invalid coordinates. Must be 1 dimensional");
+			exit(1);
+		}
+		if (lowPoint.shapeAlong(0) > 1) {
+			lowPoint.Transpose();
+		}	
+		if (highPoint.shapeAlong(0) > 1) {
+			highPoint.Transpose();
+		}
+			
+		m_coordinates = Cnum::Concatenate(lowPoint, highPoint);
+	}
 
 	bool isOverlappingWith(Cnum::Rect<T>& other)const {
 
