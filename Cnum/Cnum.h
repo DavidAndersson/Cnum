@@ -102,11 +102,19 @@ public:
 	}
 
 	template<typename T>
-	static DynamicArray<T> Concatenate(DynamicArray<T> arr1, DynamicArray<T> arr2, int axis=0, int offset=-1) {
+	static DynamicArray<T> Concatenate(DynamicArray<T>&& arr1, DynamicArray<T>&& arr2, int axis = 0, int offset = -1) {
+		auto copy = arr1;
+		copy.Concatenate(std::move(arr2), axis, offset);
+		return copy;
+	}
+
+	template<typename T>
+	static DynamicArray<T> Concatenate(DynamicArray<T>& arr1, DynamicArray<T>& arr2, int axis=0, int offset=-1) {
 		
 		try {
-			arr1.Concatenate(arr2, axis, offset);
-			return arr1;
+			auto copy = arr1;
+			copy.Concatenate(arr2, axis, offset);
+			return copy;
 		}
 		catch (const std::invalid_argument& err) {
 			std::cout << err.what() << std::endl;
@@ -120,17 +128,24 @@ public:
 		copy.Transpose();
 		return copy;
 	}
-
 	template<typename T>
-	static DynamicArray<T> Transpose(DynamicArray<T> arr, DynamicArray<int> permutation) {
-		arr.Transpose(permutation);
-		return arr;
+	static DynamicArray<T> Transpose(DynamicArray<T>& arr, DynamicArray<int>&& permutation) {
+		auto copy = arr;
+		copy.Transpose(std::move(permutation));
+		return copy;
+	}
+	template<typename T>
+	static DynamicArray<T> Transpose(DynamicArray<T>& arr, std::vector<int>&& permutation) {
+		auto copy = arr;
+		copy.Transpose(permutation);
+		return copy;
 	}
 
 	template<typename T>
-	static DynamicArray<T> Flatten(DynamicArray<T> arr) {
-		arr.Flatten();
-		return arr;
+	static DynamicArray<T> Flatten(DynamicArray<T>& arr) {
+		auto copy = arr;
+		copy.Flatten();
+		return copy;
 	}
 
 	template<typename T>

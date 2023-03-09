@@ -148,10 +148,18 @@ public:
 	{
 		return m_data[index];
 	}
-	DynamicArray<T> operator[](DynamicArray<bool>& logicalIndices) {
+	DynamicArray<T> operator[](DynamicArray<bool>&& logicalIndices) {
 		DynamicArray<T> data;
 		for (int i = 0; i < logicalIndices.size(); i++) {
  			if (logicalIndices.raw()[i] == true)
+				data.append(m_data[i]);
+		}
+		return data;
+	}
+	DynamicArray<T> operator[](DynamicArray<bool>& logicalIndices) {
+		DynamicArray<T> data;
+		for (int i = 0; i < logicalIndices.size(); i++) {
+			if (logicalIndices.raw()[i] == true)
 				data.append(m_data[i]);
 		}
 		return data;
@@ -310,7 +318,13 @@ public:
 
 		m_shape = newShape;
 	}
-	void Concatenate(DynamicArray<T> other, int axis = 0, int offset = -1)
+
+	void Concatenate(DynamicArray<T>&& other, int axis = 0, int offset = -1) {
+		auto arr = other;
+		this->Concatenate(arr, axis, offset);
+	}
+
+	void Concatenate(DynamicArray<T>& other, int axis = 0, int offset = -1)
 	{
 		// If the array is uninitialized i.e. empty, the concatenation will simply act as assignment
 		if (m_data.empty()) {
@@ -358,10 +372,10 @@ public:
 		std::reverse(permutation.begin(), permutation.end());
 		this->Transpose(permutation);
 	}
-	void Transpose(DynamicArray<int> permutation) {
-		this->Transpose((permutation.raw()));
+	void Transpose(DynamicArray<int>&& permutation) {
+		this->Transpose(std::move((permutation.raw())));
 	}
-	void Transpose(std::vector<int> permutation)
+	void Transpose(std::vector<int>&& permutation)
 	{
 		/*
 			What is a permutation? 
@@ -531,7 +545,7 @@ public:
 	}
 	std::string sshape()const { return toString(m_shape); };
 	int nDims()const {
-		return std::count_if(m_shape.begin(), m_shape.end(), [](int dim) {return dim > 1; });
+		return (int)std::count_if(m_shape.begin(), m_shape.end(), [](int dim) {return dim > 1; });
 	}
 	int size()const { return getNumberOfElements(); };
 
