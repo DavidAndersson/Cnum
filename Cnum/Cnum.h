@@ -102,12 +102,6 @@ public:
 	}
 
 	template<typename T>
-	static DynamicArray<T> abs(DynamicArray<T>& arr) {
-		auto copy = arr; 
-		return copy.abs(); 
-	}
-
-	template<typename T>
 	static DynamicArray<T> Concatenate(DynamicArray<T> arr1, DynamicArray<T> arr2, int axis=0, int offset=-1) {
 		
 		try {
@@ -121,9 +115,10 @@ public:
 	}
 
 	template<typename T>
-	static DynamicArray<T> Transpose(DynamicArray<T> arr) {
-		arr.Transpose();
-		return arr;
+	static DynamicArray<T> Transpose(DynamicArray<T>& arr) {
+		auto copy = arr; 
+		copy.Transpose();
+		return copy;
 	}
 
 	template<typename T>

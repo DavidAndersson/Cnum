@@ -133,16 +133,28 @@ public:
 	// -------------------------
 
 	// Indexing
-	T& operator[](std::vector<int> indices)
+	T& operator[](std::vector<int> index)
 	{
-		return m_data.at(flattenIndex(indices));
+		return m_data.at(flattenIndex(index));
 	}
-	T& operator[](DynamicArray<T>& indices) {
-		return m_data.at(flattenIndex(indices.m_data));
+	T& operator[](DynamicArray<int>& index) {
+		if (index.nDims != m_shape.size()) {
+			throw std::invalid_argument(std::format("Index {} is not of the same order as shape {}", index.sshape(), toString(m_shape)));
+			exit(1);
+		}
+		return m_data.at(flattenIndex(index.m_data));
 	}
 	T& operator[](int index)
 	{
 		return m_data[index];
+	}
+	DynamicArray<T> operator[](DynamicArray<bool>& logicalIndices) {
+		DynamicArray<T> data;
+		for (int i = 0; i < logicalIndices.size(); i++) {
+ 			if (logicalIndices.raw()[i] == true)
+				data.append(m_data[i]);
+		}
+		return data;
 	}
 
 	// Assignment
@@ -217,12 +229,12 @@ public:
 	// Division
 	DynamicArray<T> operator/(const DynamicArray& rhs)const
 	{
-		std::vector<T> data = rhs.raw();
-		if (std::find(data.begin(), data.end(), 0) != data.end()) {
+		if (std::find(rhs.raw().begin(), rhs.raw().end(), 0) != rhs.raw().end()) {
 			throw std::invalid_argument("Division by zero encountered"); 
 			exit(1);
 		}
-		std::transform(m_data.begin(), m_data.end(), rhs.m_data.begin(), data.begin(), std::divides<T>());
+		std::vector<T> data; 
+		std::transform(m_data.begin(), m_data.end(), rhs.raw().begin(), data.begin(), std::divides<T>());
 		return DynamicArray<T>(data, m_shape);
 	}
 	DynamicArray<T> operator/(const T value)const
@@ -282,7 +294,7 @@ public:
 	// Mutating methods
 	void Flatten()
 	{
-		m_shape = { getNumberOfElements() };
+		m_shape = { this->size() };
 	}
 	void abs()
 	{
@@ -290,8 +302,8 @@ public:
 	}
 	void Reshape(const std::vector<int>& newShape)
 	{
-		// Firstly the new shape must have the same number of elements as the previous had
-		if (int nIndicesNew = getNumberOfElements(newShape); nIndicesNew != getNumberOfElements()) {
+		// The new shape must have the same number of elements as the previous had
+		if (getNumberOfElements(newShape) != this->size()) {
 			std::cerr << std::format("Invalid shape {}", toString(newShape)) << std::endl;
 			exit(0);
 		}
@@ -340,8 +352,6 @@ public:
 			}
 		}
 	}
-
-	// Slightly inefficient that the new shape in Transpose() is known, and then having to be re-structured in Transpose(std::vector<int> permutation)
 	void Transpose() {
 		std::vector<int> permutation = std::vector<int>(m_shape.size());
 		std::iota(permutation.begin(), permutation.end(), 0);
@@ -360,8 +370,6 @@ public:
 				
 				The default permutation is to reverse the shape
 		*/
-
-		// Check that permutation has correct size and that it has the correct values etc
 
 		std::vector<int> permValues = std::vector<int>(m_shape.size());
 		std::iota(permValues.begin(), permValues.end(), 0);
@@ -484,6 +492,23 @@ public:
 		return std::equal(m_shape.begin(), m_shape.end(), other.shape().begin());
 	}
 
+	void append(const T value) {
+		if (this->nDims() > 1) {
+			throw std::exception("Cannot call append on a multi dimensional array"); 
+			exit(1);
+		}
+		m_data.push_back(value);
+
+		if (m_shape.empty()) {
+			m_shape = std::vector<int>{ 1,1 };
+			return;
+		}
+		if (m_shape[0] == 1)
+			m_shape[1]++;
+		else
+			m_shape[0]++;
+	}
+
 	// Prints
 	void Print() {
 		auto indices = std::vector<int>((int)m_shape.size(), 0);
@@ -510,10 +535,11 @@ public:
 	}
 	int size()const { return getNumberOfElements(); };
 
-	std::vector<T> raw()const { return m_data; };
+	const std::vector<T>& raw()const { return this->m_data; };
+	std::vector<T> raw() { return this->m_data; }
 
 	T min() { return *std::min_element(m_data.begin(), m_data.end());}
-	T max() { return *std::max_element(m_data.begin(), m_data.end()); }
+	T max() { return *std::max_element(m_data.begin(), m_data.end());}
 	
 
 	// Savers
@@ -667,8 +693,6 @@ private:
 				std::cout << std::endl;
 		}
 	}
-
-
 
 private:
 
