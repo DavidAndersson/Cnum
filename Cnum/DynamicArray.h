@@ -42,6 +42,9 @@ public:
 			m_shape = std::vector<int>{ m_shape[0], 1 };
 		}
 	};
+	DynamicArray(std::vector<T>& shape, T initialValue)
+		: DynamicArray(std::move(shape), initialValue)
+	{}
 
 	// Copy Constructors
 	DynamicArray(const DynamicArray<T>& src)
@@ -51,8 +54,9 @@ public:
 		: m_data(src.m_data), m_shape(src.m_shape) {};
 
 	// Move Constructors
-	DynamicArray(const DynamicArray<T>&& other) {
-		*this = other; 
+	DynamicArray(const DynamicArray<T>&& other)
+		: m_data{other.m_data}, m_shape{other.m_shape}
+	{	
 	}
 	DynamicArray(const std::vector<T>&& other)
 		: m_data{other}
@@ -112,21 +116,26 @@ public:
 		return data;
 	}
 
+
 	// Assignment
 	DynamicArray<T> operator=(const DynamicArray<T> rhs)const {
 		std::swap(*this, rhs); 
 		return *this;
 	}
-	DynamicArray<T> operator=(const std::vector<T> rhs)const {
-		return DynamicArray<T>(rhs); 
+	DynamicArray<T> operator=(const std::vector<T>&& rhs)const {
+		return DynamicArray<T>(rhs);
+	}
+	DynamicArray<T> operator=(const std::vector<T>& rhs)const {
+		return DynamicArray<T>(rhs);
 	}
 
 	// Addition
 	DynamicArray<T> operator+(const DynamicArray& rhs)const
 	{
-		DynamicArray<T> sum = rhs;
-		std::transform(m_data.begin(), m_data.end(), rhs.m_data.begin(), sum.m_data.begin(), std::plus<T>());
-		return sum;
+		std::vector<T> sum = m_data;
+		std::transform(m_data.begin(), m_data.end(), rhs.raw().begin(), sum.begin(), std::plus<T>());
+		auto arr = DynamicArray(sum, this->shape());
+		return arr;
 	}
 	DynamicArray<T> operator+(const T value)const
 	{
@@ -136,6 +145,10 @@ public:
 	void operator+=(const DynamicArray& rhs)
 	{
 		*this = *this + rhs;
+	}
+	void operator+=(const DynamicArray&& rhs)
+	{
+		*this = std::move(*this + rhs);
 	}
 	void operator+=(const T rhs) {
 		*this = *this + rhs;
@@ -483,40 +496,6 @@ public:
 
 	T min() { return *std::min_element(m_data.begin(), m_data.end());}
 	T max() { return *std::max_element(m_data.begin(), m_data.end());}
-	
-
-	// Savers
-	static void ToFile(std::string_view filename, DynamicArray<T>& data, char writeMode = 'w', char delimiter = ' ')
-
-	{
-		// Problems:
-		//	Two different delimiters can be used if the write mode is append
-
-
-		if (data.m_shape.size() > 2)
-			throw std::runtime_error("Cannot save data in higher dimension than 2");
-
-		if (writeMode != 'w' && writeMode != 'a')
-			throw std::invalid_argument("Write mode must be either 'w' or 'a'");
-
-		auto mode = (writeMode == 'w') ? std::ios::out : std::ios::app;
-		std::ofstream dataFile(filename.data(), mode);
-
-		int stride = data.getStride();
-
-		for (int i = 0; i < data.getNumberOfElements(); i++) {
-
-			std::string s = std::to_string(data.m_data[i]);
-			dataFile << s;
-
-			if (fmod(i + 1, stride) == 0)
-				dataFile << "\n";
-			else
-				dataFile << delimiter;
-		}
-
-
-	}
 
 private:
 

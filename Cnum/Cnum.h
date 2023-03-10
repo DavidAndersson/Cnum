@@ -109,18 +109,6 @@ public:
 
 
 	// Static Actions
-	template<typename T>
-	static void ToFile(std::string_view filename, DynamicArray<T>& data, char writeMode = 'w', char delimiter = ' ') {
-		try {
-			DynamicArray<T>::ToFile(filename, data, writeMode, delimiter);
-		}
-		catch (const std::runtime_error& err) {
-			std::cout << err.what() << std::endl;
-		}
-		catch (const std::invalid_argument& err) {
-			std::cout << err.what() << std::endl;
-		}
-	}
 
 	template<typename T>
 	static T Dot(DynamicArray<T>& arr1, DynamicArray<T>& arr2) {
@@ -265,6 +253,34 @@ public:
 		return table;
 	}
 
+	template<typename T>
+	static void ToFile(std::string_view filename, DynamicArray<T>& data, char writeMode = 'w', char delimiter = ' ')
+	{
+		// Problems:
+		//	Two different delimiters can be used if the write mode is append
+
+		if (data.nDims() > 2)
+			throw std::runtime_error("Cannot save data in higher dimension than 2");
+
+		if (writeMode != 'w' && writeMode != 'a')
+			throw std::invalid_argument("Write mode must be either 'w' or 'a'");
+
+		auto mode = (writeMode == 'w') ? std::ios::out : std::ios::app;
+		std::ofstream dataFile(filename.data(), mode);
+
+		int stride = data.getStride();
+
+		for (int i = 0; i < data.size(); i++) {
+
+			std::string s = std::to_string(data.raw()[i]);
+			dataFile << s;
+
+			if (fmod(i + 1, stride) == 0)
+				dataFile << "\n";
+			else
+				dataFile << delimiter;
+		}
+	}
 
 private:
 
