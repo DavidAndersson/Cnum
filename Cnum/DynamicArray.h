@@ -299,6 +299,14 @@ public:
 		return DynamicArray<bool>(out, m_shape);
 	}
 
+	// Streaming
+	friend std::ostream& operator << (std::ostream& stream, DynamicArray& arr) {
+		return stream << std::move(arr);
+	}
+	friend std::ostream& operator << (std::ostream& stream, DynamicArray&& arr) {
+		arr.Print();
+		return stream;
+	}
 
 public:
 

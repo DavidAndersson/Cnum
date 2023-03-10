@@ -15,7 +15,7 @@ int main() {
 
 		auto test = arrT == answer;
 		DynamicArray<double> tt = Cnum::Concatenate(arrT[arrT == answer], arrT[test]);
-		tt.Print();
+		std::cout << tt << std::endl;
 
 	}
 
