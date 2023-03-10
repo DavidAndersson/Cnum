@@ -75,66 +75,6 @@ public:
 	{}
 
 
-	// Static Creators -- Make private, and friend to Cnum?
-	static DynamicArray<T> Arange(T start, T end, T stepSize) 
-	{
-		if (std::abs(end - start) < stepSize) {
-			throw std::invalid_argument("Step size cannot be larger than the range");
-		}
-
-		if (start > end)
-			stepSize *= -1;
-
-		std::vector<T> initializer;
-		for (T i = start; i > end; i += stepSize) {
-			initializer.push_back(i);
-		}
-
-		return DynamicArray<T>{initializer};
-	}
-	static DynamicArray<T> Linspace(T start, T end, int nSteps) 
-	{
-		T rangeLength = end - start;
-		T stepSize = rangeLength / (nSteps - 1);
-
-		std::vector<T> initializer;
-		for (int i = 0; i < nSteps; i++) {
-			initializer.push_back(start + i * stepSize);
-		}
-
-		return DynamicArray<T>{initializer};
-	}
-	static DynamicArray<T> FromFile(std::string_view filePath, char delimiter = ' ') 
-	{
-		std::fstream dataFile(filePath.data(), std::ios::in);
-		int rowCount = 0, colCount = 0, finalColCount = 0;
-		std::vector<T> initializer;
-
-		if (dataFile.is_open())
-		{
-			for (std::string line; std::getline(dataFile, line);) {
-				colCount = 0;
-				std::stringstream ss(line);
-				for (std::string element; std::getline(ss, element, delimiter);) {
-					initializer.push_back((T)stod(element));
-					colCount++;
-
-					if (rowCount > 0 && colCount > finalColCount) {
-						throw std::runtime_error("Non consistent column count in file");
-					}
-				}
-				finalColCount = colCount;
-				rowCount++;
-			}
-		}
-		else
-			throw std::runtime_error("Could not open the file");
-
-		std::vector<int> shape = { rowCount, finalColCount };
-		return DynamicArray<T>(initializer, shape);
-	}
-
-
 	//--------------------------
 	// Operators
 	// -------------------------

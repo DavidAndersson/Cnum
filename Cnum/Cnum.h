@@ -8,10 +8,16 @@
 
 class Cnum
 {
-public:
+public: 
 
-	template<typename T>
-	friend class DynamicArray;
+	//--------------------------
+	// Constants
+	// -------------------------
+
+	static constexpr double pi = 3.14159265359;
+	static constexpr double e = 2.71828182846;
+
+public:
 
 
 	template<typename T>
@@ -23,35 +29,56 @@ public:
 		return Rect(lowPoint, highPoint);
 	}
 
-
-
 	Cnum() = delete;
 	
 	// Static Creators
 	template<typename T>
 	static DynamicArray<T> Arange(T start, T end, T stepSize) {
+
 		try {
-			return DynamicArray<T>::Arange(start, end, stepSize);
+			if (isInsideRangeSym(start, end, stepSize)) {
+				if (start > end)
+					stepSize *= -1;
+
+				std::vector<T> initializer;
+				for (T i = start; i <= end; i += stepSize) {
+					initializer.push_back(i);
+				}
+
+				return DynamicArray<T>{initializer};
+			}
 		}
 		catch (const std::invalid_argument& err) {
 			std::cout << err.what() << std::endl;
+			exit(0);
 		}
+		
 	}
 
 	template<typename T>
 	static DynamicArray<T> Linspace(T start, T end, int nSteps) {
-		return DynamicArray<T>::Linspace(start, end, nSteps);
+		T rangeLength = end - start;
+		T stepSize = rangeLength / (nSteps - 1);
+
+		std::vector<T> initializer;
+		for (int i = 0; i < nSteps; i++) {
+			initializer.push_back(start + i * stepSize);
+		}
+
+		return DynamicArray<T>{initializer};
 	}
 
 	template<typename T>
 	static DynamicArray<T> FromFile(std::string_view filePath, char delimiter = ' ') {
+
 		try {
-			return DynamicArray<T>::FromFile(filePath, delimiter);
+			auto dataFile = OpenFile(filePath);
+			return ReadDataFromFile(dataFile, delimiter);
 		}
 		catch (const std::runtime_error& err) {
 			std::cout << err.what() << std::endl;
+			exit(0);
 		}
-		exit(0);
 	}
 
 	template<typename T>
@@ -151,7 +178,7 @@ public:
 
 		else {
 
-			int newNumberOfElements = result.size() + arr2.size();
+			int newNumberOfElements = (int)result.size() + arr2.size();
 
 			// Update the shape first so that the stepLength can be computed correctly
 			result_shape[axis] += arr2.shapeAlong(axis);
@@ -230,6 +257,67 @@ public:
 		}
 		return table;
 	}
+
+
+private:
+
+	//--------------------------
+	// Private Member Functions
+	// -------------------------
+
+	static std::fstream OpenFile(std::string_view filePath) {
+		std::fstream dataFile(filePath.data(), std::ios::in);
+
+		if (dataFile.is_open() == false) {
+			throw std::runtime_error(std::format( "Could not open file: {}", filePath));
+		}
+		else {
+			return dataFile;
+		}
+	}
+
+	template<typename T>
+	static DynamicArray<T> ReadDataFromFile(std::fstream dataFile, char delimiter = ' ') {
+
+		int rowCount = 0, colCount = 0, finalColCount = 0;
+		std::vector<T> initializer;
+
+		for (std::string line; std::getline(dataFile, line);) {
+			colCount = 0;
+			std::stringstream ss(line);
+			for (std::string element; std::getline(ss, element, delimiter);) {
+				initializer.push_back((T)stod(element));
+				colCount++;
+
+				if (rowCount > 0 && colCount > finalColCount) {
+					throw std::runtime_error("Non consistent column count in file");
+				}
+			}
+			finalColCount = colCount;
+			rowCount++;
+		}
+		return DynamicArray<T>(initializer, std::vector<int>{rowCount, finalColCount});
+	}
+
+	template<typename T>
+	static bool isInsideRange(T low, T high, T value) {
+
+		if ((high - low) < value) {
+			throw std::invalid_argument(std::format("Value {} not inside range ({}, {})", value, low, high));
+			exit(0);
+		}
+		return true;
+	}
+	template<typename T>
+	static bool isInsideRangeSym(T low, T high, T value) {
+
+		if (std::abs(high - low) < value) {
+			throw std::invalid_argument(std::format("Value {} not inside range +-({}, {})", value, low, high));
+			exit(0);
+		}
+		return true;
+	}
+
 
 };
 

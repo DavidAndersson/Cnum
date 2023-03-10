@@ -19,5 +19,8 @@ int main() {
 
 	}
 
+	auto test = Cnum::Arange(0, 9, 1);
+	std::cout << test << std::endl;
+
 
 }
