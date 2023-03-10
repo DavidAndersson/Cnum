@@ -37,14 +37,19 @@ public:
 
 		try {
 			if (isInsideRangeSym(start, end, stepSize)) {
-				if (start > end)
-					stepSize *= -1;
-
+				
+				bool toBeReversed = false;
+				if (start > end) {
+					std::swap(start, end);
+					toBeReversed = true;
+				}
 				std::vector<T> initializer;
 				for (T i = start; i <= end; i += stepSize) {
 					initializer.push_back(i);
 				}
-
+				if (toBeReversed) {
+					std::reverse(initializer.begin(), initializer.end());
+				}
 				return DynamicArray<T>{initializer};
 			}
 		}
@@ -199,33 +204,35 @@ public:
 	template<typename T>
 	static DynamicArray<T> Transpose(DynamicArray<T>& arr) {
 		auto copy = arr; 
-		copy.Transpose();
-		return copy;
+		return copy.Transpose();
 	}
 	template<typename T>
 	static DynamicArray<T> Transpose(DynamicArray<T>& arr, DynamicArray<int>&& permutation) {
 		auto copy = arr;
-		copy.Transpose(std::move(permutation));
-		return copy;
+		return copy.Transpose(std::move(permutation));
 	}
 	template<typename T>
 	static DynamicArray<T> Transpose(DynamicArray<T>& arr, std::vector<int>&& permutation) {
 		auto copy = arr;
-		copy.Transpose(permutation);
-		return copy;
+		return copy.Transpose(permutation);
 	}
 
 	template<typename T>
 	static DynamicArray<T> Flatten(DynamicArray<T>& arr) {
 		auto copy = arr;
-		copy.Flatten();
-		return copy;
+		return copy.Flatten();
 	}
 
 	template<typename T>
-	static DynamicArray<T> abs(DynamicArray<T> arr) {
-		arr.abs();
-		return arr;
+	static DynamicArray<T> abs(DynamicArray<T>&& arr) {
+		auto copy = arr;
+		return copy.abs();
+	}
+
+	template<typename T>
+	static DynamicArray<T> abs(DynamicArray<T>& arr) {
+		auto copy = arr; 
+		return copy.abs();
 	}
 
 
@@ -277,7 +284,7 @@ private:
 	}
 
 	template<typename T>
-	static DynamicArray<T> ReadDataFromFile(std::fstream dataFile, char delimiter = ' ') {
+	static DynamicArray<T> ReadDataFromFile(std::fstream& dataFile, char delimiter = ' ') {
 
 		int rowCount = 0, colCount = 0, finalColCount = 0;
 		std::vector<T> initializer;

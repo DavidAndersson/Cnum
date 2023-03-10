@@ -255,15 +255,17 @@ public:
 	// -------------------------
 
 	// Mutating methods
-	void Flatten()
+	DynamicArray<T> Flatten()
 	{
 		m_shape = { this->size() };
+		return *this;
 	}
-	void abs()
+	DynamicArray<T> abs()
 	{
 		std::transform(m_data.begin(), m_data.end(), m_data.begin(), [](T e) {return std::abs(e); });
+		return *this;
 	}
-	void Reshape(const std::vector<int>& newShape)
+	DynamicArray<T> Reshape(const std::vector<int>& newShape)
 	{
 		// The new shape must have the same number of elements as the previous had
 		if (getNumberOfElements(newShape) != this->size()) {
@@ -272,21 +274,26 @@ public:
 		}
 
 		m_shape = newShape;
+		return *this;
 	}
 
-	void Transpose() {
+	DynamicArray<T> Transpose() {
 		std::vector<int> permutation = std::vector<int>(m_shape.size());
 		std::iota(permutation.begin(), permutation.end(), 0);
 		std::reverse(permutation.begin(), permutation.end());
-		this->Transpose(permutation);
+		return this->Transpose(permutation);
+
 	}
-	void Transpose(DynamicArray<int>&& permutation) {
-		this->Transpose(std::move((permutation.raw())));
+	DynamicArray<T> Transpose(DynamicArray<int>&& permutation) {
+		return this->Transpose(std::move((permutation.raw())));
 	}
-	void Transpose(DynamicArray<int>& permutation) {
-		this->Transpose(std::move(permutation));
+	DynamicArray<T> Transpose(DynamicArray<int>& permutation) {
+		return this->Transpose(std::move(permutation));
 	}
-	void Transpose(std::vector<int>&& permutation)
+	DynamicArray<T> Transpose(std::vector<int>& permutation) {
+		return this->Transpose(std::move(permutation));
+	}
+	DynamicArray<T> Transpose(std::vector<int>&& permutation)
 	{
 		/*
 			What is a permutation? 
@@ -322,11 +329,26 @@ public:
 		}
 		
 		m_data = newData;  m_shape = newShape;
+		return *this;
 	} 
-	void Transpose(std::vector<int>& permutation) {
-		this->Transpose(std::move(permutation));
-	}
 	
+	void append(const T value) {
+		if (this->nDims() > 1) {
+			throw std::exception("Cannot call append on a multi dimensional array");
+			exit(1);
+		}
+		m_data.push_back(value);
+
+		if (m_shape.empty()) {
+			m_shape = std::vector<int>{ 1,1 };
+			return;
+		}
+		if (m_shape[0] == 1)
+			m_shape[1]++;
+		else
+			m_shape[0]++;
+	}
+
 	// Reductions
 	template<typename BinaryFunction>
 	T Reduce(T initVal, BinaryFunction op)const {
@@ -420,22 +442,7 @@ public:
 		return std::equal(m_shape.begin(), m_shape.end(), other.shape().begin());
 	}
 
-	void append(const T value) {
-		if (this->nDims() > 1) {
-			throw std::exception("Cannot call append on a multi dimensional array"); 
-			exit(1);
-		}
-		m_data.push_back(value);
-
-		if (m_shape.empty()) {
-			m_shape = std::vector<int>{ 1,1 };
-			return;
-		}
-		if (m_shape[0] == 1)
-			m_shape[1]++;
-		else
-			m_shape[0]++;
-	}
+	
 
 	// Prints
 	void Print() {
@@ -574,8 +581,6 @@ private:
 	{
 		return std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<int>());
 	}
-
-
 
 	std::string toString(const std::vector<int> shape)const
 	{
