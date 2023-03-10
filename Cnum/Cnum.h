@@ -11,6 +11,10 @@ class Cnum
 public:
 
 	template<typename T>
+	friend class DynamicArray;
+
+
+	template<typename T>
 	class Rect;
 
 
@@ -56,7 +60,7 @@ public:
 	}
 
 	template<typename T>
-	static DynamicArray<T> Array(std::vector<T> initiallizer, std::vector<int> shape) {
+	static DynamicArray<T> Array(std::vector<T>&& initiallizer, std::vector<int> shape) {
 		try {
 			return DynamicArray<T>(initiallizer, shape);
 		}
@@ -67,7 +71,7 @@ public:
 	}
 
 	template<typename T>
-	static DynamicArray<T> Array(std::vector<T> initiallizer) {
+	static DynamicArray<T> Array(std::vector<T>&& initiallizer) {
 		return DynamicArray(initiallizer);
 	}
 
@@ -102,16 +106,13 @@ public:
 	}
 
 	template<typename T>
-	static DynamicArray<T> Concatenate(DynamicArray<T>&& arr1, DynamicArray<T>&& arr2, int axis = 0, int offset = -1) {
-		auto copy = arr1;
-		copy.Concatenate(std::move(arr2), axis, offset);
-		return copy;
+	static DynamicArray<T> Concatenate(DynamicArray<T>& arr1, DynamicArray<T>& arr2, int axis = 0, int offset = -1) {
+		return Concatenate(std::move(arr1), std::move(arr2), axis, offset);
 	}
-
 	template<typename T>
-	static DynamicArray<T> Concatenate(DynamicArray<T>& arr1, DynamicArray<T>& arr2, int axis=0, int offset=-1) {
+	static DynamicArray<T> Concatenate(DynamicArray<T>&& arr1, DynamicArray<T>&& arr2, int axis=0, int offset=-1) {
 		
-		try {
+		/*try {
 			auto copy = arr1;
 			copy.Concatenate(arr2, axis, offset);
 			return copy;
@@ -119,7 +120,53 @@ public:
 		catch (const std::invalid_argument& err) {
 			std::cout << err.what() << std::endl;
 			exit(0);
+		}*/
+
+		std::vector<T> result = arr1.raw();
+		std::vector<int> result_shape = arr1.shape();
+		auto arr2_data = arr2.raw();
+
+		// If the array is uninitialized i.e. empty, the concatenation will simply act as assignment
+		if (result.empty()) {
+			return arr2;
 		}
+
+		// The off-axis dimensions must all be the same for a valid concatenation
+		for (int i = 0; i < arr1.shape().size(); i++) {
+			if (i == axis)
+				continue;
+			if (arr1.shapeAlong(i) != arr2.shapeAlong(i)) {
+				throw std::invalid_argument(std::format("Arrays are not of equal length in axis {}", axis));
+			}
+		}
+
+		int stride = arr1.getStride(axis);
+
+
+		if (axis == 0) {
+			auto startPoint = (offset == -1) ? result.end() : result.begin() + offset * stride;
+			result.insert(startPoint, arr2_data.begin(), arr2_data.end());
+			result_shape[axis] += arr2.shapeAlong(axis);
+		}
+
+		else {
+
+			int newNumberOfElements = result.size() + arr2.size();
+
+			// Update the shape first so that the stepLength can be computed correctly
+			result_shape[axis] += arr2.shapeAlong(axis);
+			int stepLength = stride * arr1.shapeAlong(axis);
+
+			int startIndex = (offset == -1) ? stepLength - 1 : offset;  // Most likely wrong. Maybe stride*offset
+
+			int j = 0;
+			for (int i = startIndex; i < newNumberOfElements; i += stepLength) {
+				result.insert(result.begin() + i, arr2_data[j]);
+				j++;
+			}
+		}
+
+		return DynamicArray<T>(result, result_shape);
 	}
 
 	template<typename T>

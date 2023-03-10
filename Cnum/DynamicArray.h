@@ -24,23 +24,16 @@ public:
 	// -------------------------
 
 	DynamicArray() = default;
-	DynamicArray(std::vector<T>& initializer, std::vector<int> shape)
-		: m_data{ initializer }, m_shape{shape}
-	{
-		if (getNumberOfElements(shape) != m_data.size()) {
-			throw std::invalid_argument(std::format("Cannot create array of size {} with shape {}", m_data.size(), toString(shape)));
-		}
-
-		if (m_shape.size() == 1) {
-			m_shape = std::vector<int>{ m_shape[0], 1 };
-		}
-	}
+	DynamicArray(std::vector<T>& initializer, std::vector<int>&& shape)
+		: DynamicArray(std::move(initializer), std::move(shape))
+	{}
+	DynamicArray(std::vector<T>& initializer, std::vector<int>& shape)
+		: DynamicArray(std::move(initializer), std::move(shape))
+	{}
 	DynamicArray(std::vector<T>& initializer)
-		: m_data{ initializer }
-	{
-		m_shape = std::vector<int>{ 1, (int)initializer.size() };
-	};
-	DynamicArray(std::vector<int> shape, T initialValue)
+		: DynamicArray(std::move(initializer))
+	{}
+	DynamicArray(std::vector<int>&& shape, T initialValue)
 		: m_shape{ shape } 
 	{
 		m_data = std::vector<T>(getNumberOfElements(), initialValue);
@@ -66,6 +59,20 @@ public:
 	{
 		m_shape = std::vector<int>{ 1, (int)other.size() };
 	}
+	DynamicArray(const std::vector<T>&& other, const std::vector<int>&& shape) 
+		: m_data{other}, m_shape{shape}
+	{
+		if (getNumberOfElements(shape) != m_data.size()) {
+			throw std::invalid_argument(std::format("Cannot create array of size {} with shape {}", m_data.size(), toString(shape)));
+		}
+
+		if (m_shape.size() == 1) {
+			m_shape = std::vector<int>{ m_shape[0], 1 };
+		}
+	}
+	DynamicArray(const std::vector<T>&& other, const std::vector<int>& shape)
+		: DynamicArray(std::move(other), std::move(shape))
+	{}
 
 
 	// Static Creators -- Make private, and friend to Cnum?
@@ -267,7 +274,7 @@ public:
 		}
 		std::vector<bool> out(getNumberOfElements(m_shape), false);
 		std::transform(m_data.begin(), m_data.end(), rhs.raw().begin(), out.begin(), [](T v1, T v2) {return v1 == v2; });
-		return DynamicArray<bool>(out, m_shape);
+		return DynamicArray<bool>(out, this->shape());
 	}
 	DynamicArray<bool> operator==(const T rhs)const {
 		std::vector<bool> out(getNumberOfElements(m_shape), false); 
@@ -319,53 +326,6 @@ public:
 		m_shape = newShape;
 	}
 
-	void Concatenate(DynamicArray<T>&& other, int axis = 0, int offset = -1) {
-		auto arr = other;
-		this->Concatenate(arr, axis, offset);
-	}
-
-	void Concatenate(DynamicArray<T>& other, int axis = 0, int offset = -1)
-	{
-		// If the array is uninitialized i.e. empty, the concatenation will simply act as assignment
-		if (m_data.empty()) {
-			*this = other;
-			return;
-		}
-
-		// The off-axis dimensions must all be the same for a valid concatenation
-		for (int i = 0; i < m_shape.size(); i++) {
-			if (i == axis)
-				continue;
-			if (other.shapeAlong(i) != this->shapeAlong(i)) {
-				throw std::invalid_argument(std::format("Arrays are not of equal length in axis {}", axis));
-			}
-		}
-
-		int stride = getStride(axis);
-
-		if (axis == 0) {
-			auto startPoint = (offset == -1) ? m_data.end() : m_data.begin() + offset * stride;
-			m_data.insert(startPoint, other.m_data.begin(), other.m_data.end());
-			m_shape[axis] += other.shapeAlong(axis);
-		}
-
-		else {
-
-			int newNumberOfElements = this->size() + other.size();
-
-			// Update the shape first so that the stepLength can be computed correctly
-			m_shape[axis] += other.shapeAlong(axis);
-			int stepLength = stride * this->shapeAlong(axis);
-
-			int startIndex = (offset == -1) ? stepLength - 1 : offset;  // Most likely wrong. Maybe stride*offset
-
-			int j = 0;
-			for (int i = startIndex; i < newNumberOfElements; i += stepLength) {
-				m_data.insert(m_data.begin() + i, other[j]);
-				j++;
-			}
-		}
-	}
 	void Transpose() {
 		std::vector<int> permutation = std::vector<int>(m_shape.size());
 		std::iota(permutation.begin(), permutation.end(), 0);
@@ -374,6 +334,9 @@ public:
 	}
 	void Transpose(DynamicArray<int>&& permutation) {
 		this->Transpose(std::move((permutation.raw())));
+	}
+	void Transpose(DynamicArray<int>& permutation) {
+		this->Transpose(std::move(permutation));
 	}
 	void Transpose(std::vector<int>&& permutation)
 	{
@@ -412,6 +375,9 @@ public:
 		
 		m_data = newData;  m_shape = newShape;
 	} 
+	void Transpose(std::vector<int>& permutation) {
+		this->Transpose(std::move(permutation));
+	}
 	
 	// Reductions
 	template<typename BinaryFunction>
@@ -548,6 +514,14 @@ public:
 		return (int)std::count_if(m_shape.begin(), m_shape.end(), [](int dim) {return dim > 1; });
 	}
 	int size()const { return getNumberOfElements(); };
+	int getStride(int axis = 0)const
+	{
+		/*
+			What is a stride?
+				- How far you have to move in the 1d vector to get to the next element along the specified axis
+		*/
+		return std::accumulate(m_shape.begin() + 1 + axis, m_shape.end(), 1, std::multiplies<>());
+	}
 
 	const std::vector<T>& raw()const { return this->m_data; };
 	std::vector<T> raw() { return this->m_data; }
@@ -653,14 +627,7 @@ private:
 		return std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<int>());
 	}
 
-	int getStride(int axis=0)const
-	{
-		/*
-			What is a stride?
-				- How far you have to move in the 1d vector to get to the next element along the specified axis
-		*/
-		return std::accumulate(m_shape.begin() + 1 + axis, m_shape.end(), 1, std::multiplies<>());
-	}
+
 
 	std::string toString(const std::vector<int> shape)const
 	{
