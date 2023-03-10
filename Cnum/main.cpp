@@ -20,7 +20,8 @@ int main() {
 	}
 
 	auto test = Cnum::Arange(10, 19, 1);
-	test += Cnum::Arange(10, 19, 1);
+	test = test;
+
 
 	test.abs();
 	std::cout << test << std::endl;

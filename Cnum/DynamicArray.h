@@ -42,7 +42,7 @@ public:
 			m_shape = std::vector<int>{ m_shape[0], 1 };
 		}
 	};
-	DynamicArray(std::vector<T>& shape, T initialValue)
+	DynamicArray(std::vector<int>& shape, T initialValue)
 		: DynamicArray(std::move(shape), initialValue)
 	{}
 
@@ -56,8 +56,7 @@ public:
 	// Move Constructors
 	DynamicArray(const DynamicArray<T>&& other)
 		: m_data{other.m_data}, m_shape{other.m_shape}
-	{	
-	}
+	{}
 	DynamicArray(const std::vector<T>&& other)
 		: m_data{other}
 	{
@@ -118,11 +117,15 @@ public:
 
 
 	// Assignment
-	DynamicArray<T> operator=(const DynamicArray<T> rhs)const {
-		std::swap(*this, rhs); 
+	DynamicArray<T> operator=(DynamicArray<T>& rhs) { 
+		return *this = std::move(rhs);
+	}
+	DynamicArray<T> operator=( DynamicArray<T>&& rhs) {
+		m_data = rhs.m_data;
+		m_shape = rhs.m_shape;
 		return *this;
 	}
-	DynamicArray<T> operator=(const std::vector<T>&& rhs)const {
+	DynamicArray<T> operator=(std::vector<T>&& rhs)const {
 		return DynamicArray<T>(rhs);
 	}
 	DynamicArray<T> operator=(const std::vector<T>& rhs)const {
@@ -148,7 +151,7 @@ public:
 	}
 	void operator+=(const DynamicArray&& rhs)
 	{
-		*this = std::move(*this + rhs);
+		*this = *this + rhs;
 	}
 	void operator+=(const T rhs) {
 		*this = *this + rhs;
