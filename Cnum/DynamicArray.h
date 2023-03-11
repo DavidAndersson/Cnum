@@ -408,7 +408,7 @@ public:
 	}
 
 	DynamicArray<T> Transpose() {
-		std::vector<int> permutation = std::vector<int>(m_shape.size());
+		std::vector<int> permutation = std::vector<int>(this->nDims());
 		std::iota(permutation.begin(), permutation.end(), 0);
 		std::reverse(permutation.begin(), permutation.end());
 		return this->Transpose(permutation);
@@ -433,7 +433,7 @@ public:
 				The default permutation is to reverse the shape
 		*/
 
-		std::vector<int> permValues = std::vector<int>(m_shape.size());
+		std::vector<int> permValues = std::vector<int>(this->nDims());
 		std::iota(permValues.begin(), permValues.end(), 0);
 		if (std::is_permutation(permutation.begin(), permutation.end(), permValues.begin(), permValues.end()) == false) {
 			throw std::invalid_argument("Incorrectly specifed permutation"); 
@@ -487,7 +487,7 @@ public:
 	DynamicArray<T> ReduceAlongAxis(int axis)const
 	{
 		// The axis which the sum is along gets reduced to 1
-		std::vector<int> returnShape = m_shape;
+		std::vector<int> returnShape = this->shape();
 		returnShape[axis] = 1;
 		DynamicArray<T> returnArray = DynamicArray<T>(returnShape, 0);
 
@@ -503,19 +503,19 @@ public:
 	DynamicArray<T> ExtractAxis(int axis, std::vector<int>nonAxisLock, int start=0, int end=-1)const
 	{
 		// Error checking
-		if (axis > m_shape.size()) {
-			std::cerr << std::format("Error! Axis {} not valid for shape {}", axis, toString(m_shape)) << std::endl;
+		if (axis > this->nDims()) {
+			std::cerr << std::format("Error! Axis {} not valid for shape {}", axis, toString(this->shape())) << std::endl;
 			exit(0);
 		}
-		if (nonAxisLock.size() != m_shape.size() - 1) {
-			std::cerr << std::format("Error! Need to specify Only {} constraint(s) in function: Extract()", m_shape.size() - 1) << std::endl;
+		if (nonAxisLock.size() != this->nDims() - 1) {
+			std::cerr << std::format("Error! Need to specify Only {} constraint(s) in function: Extract()", this->nDims() - 1) << std::endl;
 			exit(0);
 		}
 		int nonAxisIdx = 0;
-		for (int i = 0; i < m_shape.size(); i++) {
+		for (int i = 0; i < this->nDims(); i++) {
 			if (i != axis) {
 				if (nonAxisLock[nonAxisIdx] > m_shape[i]) {
-					std::cerr << std::format("Error! {} is out of range for axis {} in shape {}", nonAxisLock[nonAxisIdx], i, toString(m_shape)) << std::endl;
+					std::cerr << std::format("Error! {} is out of range for axis {} in shape {}", nonAxisLock[nonAxisIdx], i, toString(this->shape())) << std::endl;
 					exit(0);
 				}
 				nonAxisIdx++;
@@ -576,7 +576,7 @@ public:
 
 	// Prints
 	void Print() {
-		auto indices = std::vector<int>((int)m_shape.size(), 0);
+		auto indices = std::vector<int>(this->nDims(), 0);
 		std::cout << "Cnum::Array(";
 		PrintDim(indices, 0);
 		std::cout << ")" << std::endl;
@@ -586,15 +586,15 @@ public:
 	// Getters
 	std::vector<int> shape()const { return m_shape; };
 	int shapeAlong(int axis)const { 
-		if (axis < m_shape.size()) { 
+		if (axis < this->nDims()) { 
 			return m_shape[axis]; 
 		} 
 		else {
-			std::cerr << std::format("Cannot access axis {} in array of shape {}", axis, toString(m_shape)); 
+			std::cerr << std::format("Cannot access axis {} in array of shape {}", axis, toString(this->shape())); 
 			exit(1);
 		}
 	}
-	std::string sshape()const { return toString(m_shape); };
+	std::string sshape()const { return toString(this->shape()); };
 	int nDims()const {
 		return (int)std::count_if(m_shape.begin(), m_shape.end(), [](int dim) {return dim > 1; });
 	}
@@ -622,7 +622,7 @@ private:
 
 	int flattenIndex(std::vector<int>& indices)const
 	{
-		return flattenIndex(indices, m_shape);
+		return flattenIndex(indices, this->shape());
 	}
 	int flattenIndex(std::vector<int>& indices, std::vector<int> shape)const 
 	{
@@ -649,9 +649,9 @@ private:
 	}
 	std::vector<int> reconstructIndex(int index) {
 
-		std::vector<int> indices = std::vector<int>(m_shape.size(), 0);
+		std::vector<int> indices = std::vector<int>(this->nDims(), 0);
 
-		for (int i = 0; i < m_shape.size(); i++) {
+		for (int i = 0; i < this->nDims(); i++) {
 
 			int stride = getStride(i);
 			if (stride > index)
@@ -671,7 +671,7 @@ private:
 
 	int getNumberOfElements()const
 	{
-		return getNumberOfElements(m_shape);
+		return getNumberOfElements(this->shape());
 	}
 	int getNumberOfElements(const std::vector<int>& shape)const
 	{

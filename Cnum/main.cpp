@@ -13,10 +13,6 @@ int main() {
 		if (arrT.isEqualTo(answer))
 			arrT.Print();
 
-		auto test = arrT == answer;
-		DynamicArray<double> tt = Cnum::Concatenate(arrT[arrT == answer], arrT[test]);
-		std::cout << tt << std::endl;
-
 	}
 
 	auto test = Cnum::Arange<float>(10, 19, 1);
