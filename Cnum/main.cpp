@@ -19,9 +19,11 @@ int main() {
 
 	}
 
-	auto test = Cnum::Arange<float>(10, 19, 1.2);
-	test == test;
+	auto test = Cnum::Arange<float>(10, 19, 1);
+	auto test2 = test - 1; 
 
+	auto res = test2 / 2.0f;
+	 
 
 	test.abs();
 	std::cout << test << std::endl;

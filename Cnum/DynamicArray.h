@@ -135,15 +135,22 @@ public:
 	// Addition
 	DynamicArray<T> operator+(const DynamicArray& rhs)const
 	{
-		std::vector<T> sum = m_data;
-		std::transform(m_data.begin(), m_data.end(), rhs.raw().begin(), sum.begin(), std::plus<T>());
-		auto arr = DynamicArray(sum, this->shape());
-		return arr;
+		return *this + std::move(rhs);
+	}
+	DynamicArray<T> operator+(const DynamicArray&& rhs)const
+	{
+		try {
+			EnsureSameSize(*this, rhs);
+			return PerformArithmeticOperation(*this, std::move(rhs), std::plus<>());
+		}
+		catch (const std::invalid_argument& err) {
+			std::cout << err.what() << std::endl;
+			exit(0);
+		}
 	}
 	DynamicArray<T> operator+(const T value)const
 	{
-		DynamicArray<T> other = DynamicArray<T>(m_shape, value);
-		return *this + other;
+		return *this + DynamicArray<T>(this->shape(), value);
 	}
 	void operator+=(const DynamicArray& rhs)
 	{
@@ -160,14 +167,22 @@ public:
 	// Subtraction
 	DynamicArray<T> operator-(const DynamicArray& rhs)const
 	{
-		DynamicArray<T> difference = rhs;
-		std::transform(m_data.begin(), m_data.end(), rhs.m_data.begin(), difference.m_data.begin(), std::minus<T>());
-		return difference;
+		return *this - std::move(rhs); 
+	}
+	DynamicArray<T> operator-(const DynamicArray&& rhs)const
+	{
+		try {
+			EnsureSameSize(*this, rhs);
+			return PerformArithmeticOperation(*this, std::move(rhs), std::minus<>());
+		}
+		catch (const std::invalid_argument& err) {
+			std::cout << err.what() << std::endl;
+			exit(0);
+		}
 	}
 	DynamicArray<T> operator-(const T value)const
 	{
-		DynamicArray<T> other = DynamicArray<T>(m_shape, value);
-		return *this - other;
+		 return *this - DynamicArray<T>(this->shape(), value);
 	}
 	void operator-=(const DynamicArray& rhs)
 	{
@@ -184,14 +199,22 @@ public:
 	// Multiplication
 	DynamicArray<T> operator*(const DynamicArray& rhs)const
 	{
-		DynamicArray<T> product = rhs;
-		std::transform(m_data.begin(), m_data.end(), rhs.m_data.begin(), product.m_data.begin(), std::multiplies<T>());
-		return product;
+		return *this * std::move(rhs); 
+	}
+	DynamicArray<T> operator*(const DynamicArray&& rhs)const
+	{
+		try {
+			EnsureSameSize(*this, rhs);
+			return PerformArithmeticOperation(*this, std::move(rhs), std::multiplies<>());
+		}
+		catch (const std::invalid_argument& err) {
+			std::cout << err.what() << std::endl;
+			exit(0);
+		}
 	}
 	DynamicArray<T> operator*(const T value)const
 	{
-		DynamicArray<T> other = DynamicArray<T>(m_shape, value);
-		return *this * other;
+		return *this * DynamicArray<T>(this->shape(), value);
 	}
 	void operator*=(const DynamicArray& rhs)
 	{
@@ -208,18 +231,23 @@ public:
 	// Division
 	DynamicArray<T> operator/(const DynamicArray& rhs)const
 	{
-		if (std::find(rhs.raw().begin(), rhs.raw().end(), 0) != rhs.raw().end()) {
-			throw std::invalid_argument("Division by zero encountered"); 
-			exit(1);
+		return *this / std::move(rhs);
+	}
+	DynamicArray<T> operator/(const DynamicArray&& rhs)const
+	{
+		try {
+			EnsureSameSize(*this, rhs);
+			EnsureNoZeros(this->raw());
+			return PerformArithmeticOperation(*this, std::move(rhs), std::divides<>());
 		}
-		std::vector<T> data; 
-		std::transform(m_data.begin(), m_data.end(), rhs.raw().begin(), data.begin(), std::divides<T>());
-		return DynamicArray<T>(data, m_shape);
+		catch (const std::invalid_argument& err) {
+			std::cout << err.what() << std::endl;
+			exit(0);
+		}
 	}
 	DynamicArray<T> operator/(const T value)const
 	{
-		DynamicArray<T> other = DynamicArray<T>(m_shape, value);
-		return *this / other;
+		return *this / DynamicArray<T>(this->shape(), value);
 	}
 	void operator/=(const DynamicArray& rhs)
 	{
@@ -240,39 +268,105 @@ public:
 	}
 	DynamicArray<bool> operator==(const DynamicArray&& rhs)const
 	{
-		if (this->sameShapeAs(rhs) == false) {
-			throw std::invalid_argument(std::format("Shape {} and {} do not match", this->sshape(), rhs.sshape()));
-			exit(1);
+		try {
+			EnsureSameSize(*this, rhs);
+			return CreateLogicalArray(*this, std::move(rhs), [](T v1, T v2) {return v1 == v2; });
 		}
-		std::vector<bool> out(getNumberOfElements(m_shape), false);
-		std::transform(m_data.begin(), m_data.end(), rhs.raw().begin(), out.begin(), [](T v1, T v2) {return v1 == v2; });
-		return DynamicArray<bool>(out, this->shape());
+		catch (const std::invalid_argument& err) {
+			std::cout << err.what() << std::endl;
+			exit(0);
+		}
 	}
 	DynamicArray<bool> operator==(const T rhs)const {
-		std::vector<bool> out(getNumberOfElements(m_shape), false); 
-		std::transform(m_data.begin(), m_data.end(), out.begin(), [&](T v) {return v == rhs;});
-		return DynamicArray<bool>(out, m_shape);
+		return CreateLogicalArray(*this, rhs, [&](T v) {return v == rhs; });
 	}
 
 	// Anti-Equality
 	DynamicArray<bool> operator!=(const DynamicArray& rhs)const
 	{
-		return *this == std::move(rhs);
+		return *this != std::move(rhs);
 	}
 	DynamicArray<bool> operator!=(const DynamicArray&& rhs)const
 	{
-		if (this->sameShapeAs(rhs) == false) {
-			throw std::invalid_argument(std::format("Shape {} and {} do not match", this->sshape(), rhs.sshape()));
-			exit(1);
+		try {
+			EnsureSameSize(*this, rhs);
+			return CreateLogicalArray(*this, std::move(rhs), [](T v1, T v2) {return v1 != v2; });
 		}
-		std::vector<bool> out(getNumberOfElements(m_shape), false);
-		std::transform(m_data.begin(), m_data.end(), rhs.raw().begin(), out.begin(), [](T v1, T v2) {return v1 != v2; });
-		return DynamicArray<bool>(out, m_shape);
+		catch (const std::invalid_argument& err) {
+			std::cout << err.what() << std::endl;
+			exit(0);
+		}
 	}
 	DynamicArray<bool> operator!=(const T rhs)const {
-		std::vector<bool> out(getNumberOfElements(m_shape), false);
-		std::transform(m_data.begin(), m_data.end(), out.begin(), [&](T v) {return v != rhs; });
-		return DynamicArray<bool>(out, m_shape);
+		return CreateLogicalArray(*this, rhs, [&](T v) {return v != rhs; });
+	}
+
+	// Less than
+	DynamicArray<bool> operator < (const DynamicArray& rhs)const
+	{
+		return *this < std::move(rhs);
+	}
+	DynamicArray<bool> operator < (const DynamicArray&& rhs)const 
+	{
+		try {
+			EnsureSameSize(*this, rhs); 
+			return CreateLogicalArray(*this, std::move(rhs), [](T v1, T v2) {return v1 < v2; });
+		}
+		catch (const std::invalid_argument& err) {
+			std::cout << err.what() << std::endl;
+			exit(0);
+		}
+	}
+
+	// Larger than
+	DynamicArray<bool> operator > (const DynamicArray& rhs)const
+	{
+		return *this > std::move(rhs);
+	}
+	DynamicArray<bool> operator > (const DynamicArray&& rhs)const
+	{
+		try {
+			EnsureSameSize(*this, rhs);
+			return CreateLogicalArray(*this, std::move(rhs), [](T v1, T v2) {return v1 > v2; });
+		}
+		catch (const std::invalid_argument& err) {
+			std::cout << err.what() << std::endl;
+			exit(0);
+		}
+	}
+
+	// Less or equal than
+	DynamicArray<bool> operator <= (const DynamicArray& rhs)const
+	{
+		return *this <= std::move(rhs);
+	}
+	DynamicArray<bool> operator <= (const DynamicArray&& rhs)const
+	{
+		try {
+			EnsureSameSize(*this, rhs);
+			return CreateLogicalArray(*this, std::move(rhs), [](T v1, T v2) {return v1 <= v2; });
+		}
+		catch (const std::invalid_argument& err) {
+			std::cout << err.what() << std::endl;
+			exit(0);
+		}
+	}
+
+	// Larger or equal than
+	DynamicArray<bool> operator >= (const DynamicArray& rhs)const
+	{
+		return *this >= std::move(rhs);
+	}
+	DynamicArray<bool> operator >= (const DynamicArray&& rhs)const
+	{
+		try {
+			EnsureSameSize(*this, rhs);
+			return CreateLogicalArray(*this, std::move(rhs), [](T v1, T v2) {return v1 >= v2; });
+		}
+		catch (const std::invalid_argument& err) {
+			std::cout << err.what() << std::endl;
+			exit(0);
+		}
 	}
 
 	// Streaming
@@ -629,6 +723,50 @@ private:
 				std::cout << std::endl;
 		}
 	}
+
+	static DynamicArray<bool> CreateLogicalArray(const DynamicArray<T>& arr1, const DynamicArray<T>&& arr2, std::function<bool(T, T)> func)
+	{
+		std::vector<bool> out(arr1.size(), false);
+		std::transform(arr1.raw().begin(), arr1.raw().end(), arr2.raw().begin(), out.begin(), func);
+		return DynamicArray<bool>(out, arr1.shape());
+	}
+	static DynamicArray<bool> CreateLogicalArray(const DynamicArray<T>& arr1, const T value, std::function<bool(T)> func)
+	{
+		std::vector<bool> out(arr1.size(), false);
+		std::transform(arr1.raw().begin(), arr1.raw().end(), out.begin(), func);
+		return DynamicArray<bool>(out, arr1.shape());
+	}
+	
+	template<typename Operation>
+	static DynamicArray<T> PerformArithmeticOperation(const DynamicArray<T>& arr1, const DynamicArray<T>&& arr2, Operation op)
+	{
+		std::vector<T> data(arr1.size());
+		std::transform(arr1.raw().begin(), arr1.raw().end(), arr2.raw().begin(), data.begin(), op);
+		return DynamicArray<T>(data, arr1.shape());
+	}
+
+private:
+
+	//--------------------------
+	// Exception Finding Functions
+	// -------------------------
+
+	static bool EnsureSameSize(DynamicArray<T> arr1, DynamicArray<T> arr2) 
+	{
+		if (arr1.sameShapeAs(arr2) == false) {
+			throw std::invalid_argument(std::format("Shape {} and {} do not match", arr1.sshape(), arr2.sshape()));
+		}
+		return true;
+	}
+	static bool EnsureNoZeros(std::vector<T> arr) 
+	{
+		if (std::find(arr.begin(), arr.end(), 0) != arr.end()) {
+			throw std::invalid_argument("Division by zero encountered");
+		}
+		return true;
+	}
+
+
 
 private:
 
