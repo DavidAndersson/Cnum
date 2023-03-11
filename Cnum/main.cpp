@@ -19,8 +19,8 @@ int main() {
 
 	}
 
-	auto test = Cnum::Arange(10, 19, 1);
-	test = test;
+	auto test = Cnum::Arange<float>(10, 19, 1.2);
+	test == test;
 
 
 	test.abs();

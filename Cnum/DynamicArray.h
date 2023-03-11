@@ -120,7 +120,7 @@ public:
 	DynamicArray<T> operator=(DynamicArray<T>& rhs) { 
 		return *this = std::move(rhs);
 	}
-	DynamicArray<T> operator=( DynamicArray<T>&& rhs) {
+	DynamicArray<T> operator=( DynamicArray<T>&& rhs) noexcept {
 		m_data = rhs.m_data;
 		m_shape = rhs.m_shape;
 		return *this;
@@ -173,6 +173,10 @@ public:
 	{
 		*this = *this - rhs;
 	}
+	void operator-=(const DynamicArray&& rhs)
+	{
+		*this = *this - rhs;
+	}
 	void operator-=(const T rhs) {
 		*this = *this - rhs;
 	}
@@ -190,6 +194,10 @@ public:
 		return *this * other;
 	}
 	void operator*=(const DynamicArray& rhs)
+	{
+		*this = *this * rhs;
+	}
+	void operator*=(const DynamicArray&& rhs)
 	{
 		*this = *this * rhs;
 	}
@@ -217,12 +225,20 @@ public:
 	{
 		*this = *this / rhs;
 	}
+	void operator/=(const DynamicArray&& rhs)
+	{
+		*this = *this / rhs;
+	}
 	void operator/=(const T rhs) {
 		*this = *this / rhs;
 	}
 
 	// Equailty
 	DynamicArray<bool> operator==(const DynamicArray& rhs)const
+	{
+		return *this == std::move(rhs);
+	}
+	DynamicArray<bool> operator==(const DynamicArray&& rhs)const
 	{
 		if (this->sameShapeAs(rhs) == false) {
 			throw std::invalid_argument(std::format("Shape {} and {} do not match", this->sshape(), rhs.sshape()));
@@ -240,6 +256,10 @@ public:
 
 	// Anti-Equality
 	DynamicArray<bool> operator!=(const DynamicArray& rhs)const
+	{
+		return *this == std::move(rhs);
+	}
+	DynamicArray<bool> operator!=(const DynamicArray&& rhs)const
 	{
 		if (this->sameShapeAs(rhs) == false) {
 			throw std::invalid_argument(std::format("Shape {} and {} do not match", this->sshape(), rhs.sshape()));
