@@ -551,7 +551,7 @@ public:
 	}
 
 	// Boolean checks
-	bool Contains(DynamicArray<T>& point)
+	bool Contains(DynamicArray<T>& point)const
 	{
 		if (point.shapeAlong(1) != this->shapeAlong(1))
 			throw std::invalid_argument(std::format("Point and shape must both be either {} or {} dimensional", this->shapeAlong(1), point.shapeAlong(0)));
@@ -575,7 +575,7 @@ public:
 	
 
 	// Prints
-	void Print() {
+	void Print()const {
 		auto indices = std::vector<int>(this->nDims(), 0);
 		std::cout << "Cnum::Array(";
 		PrintDim(indices, 0);
@@ -611,8 +611,8 @@ public:
 	const std::vector<T>& raw()const { return this->m_data; };
 	std::vector<T> raw() { return this->m_data; }
 
-	T min() { return *std::min_element(m_data.begin(), m_data.end());}
-	T max() { return *std::max_element(m_data.begin(), m_data.end());}
+	T min()const { return *std::min_element(m_data.begin(), m_data.end());}
+	T max()const { return *std::max_element(m_data.begin(), m_data.end());}
 
 private:
 
@@ -647,7 +647,7 @@ private:
 		index += indices[indices.size() - 1];
 		return index;
 	}
-	std::vector<int> reconstructIndex(int index) {
+	std::vector<int> reconstructIndex(int index)const {
 
 		std::vector<int> indices = std::vector<int>(this->nDims(), 0);
 
@@ -691,7 +691,7 @@ private:
 		return ss.str();
 	}
 
-	void PrintDim(std::vector<int>& index, int dim) 
+	void PrintDim(std::vector<int>& index, int dim)const
 	{
 		// In the lowest recursion (max dim) level - do the print
 		if (dim == m_shape.size()-1) {
