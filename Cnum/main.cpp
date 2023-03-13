@@ -13,5 +13,7 @@ int main() {
 	test.Print();
 	thing.Print();
 
+	test.Reshape({ 4,2 }).Print();
+
 
 }

@@ -399,7 +399,7 @@ public:
 	{
 		try {
 			// The new shape must have the same number of elements as the previous had
-			EnsureSameSize(this->shape, newShape); 
+			EnsureSameSize(this->shape(), newShape);
 			m_shape = newShape;
 			return *this;
 		}
@@ -683,12 +683,12 @@ private:
 	{
 		return getNumberOfElements(this->shape());
 	}
-	int getNumberOfElements(const std::vector<int>& shape)const
+	static int getNumberOfElements(const std::vector<int>& shape)
 	{
 		return std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<int>());
 	}
 
-	std::string toString(const std::vector<int> shape)const
+	static std::string toString(const std::vector<int> shape)
 	{
 		std::stringstream ss;
 		ss << "(";
@@ -723,7 +723,7 @@ private:
 		std::cout << "[";
 		for (int i = 0; i < m_shape[dim]; i++) {
 			index[dim] = i; 
-			if (dim == 0 && index[dim] != 0) { std::cout << "\t     "; }
+			if (index[dim] != 0) { std::cout << "\t"; PrintSpaces(5 + dim); }
 			PrintDim(index, dim + 1);
 			if (i == m_shape[dim] - 1) {
 				std::cout << "]";
@@ -763,6 +763,11 @@ private:
 
 	}
 
+	void PrintSpaces(int n)const {
+		for (int i = 0; i < n; i++)
+			std::cout << " "; 
+	}
+
 private:
 
 	//-------------------------------------
@@ -776,10 +781,10 @@ private:
 		}
 		return true;
 	}
-	static bool EnsureSameSize(std::vector<T>& shape1, std::vector<T>& shape2)
+	static bool EnsureSameSize(const std::vector<T>& shape1, const std::vector<T>& shape2)
 	{
 		if (getNumberOfElements(shape1) != getNumberOfElements(shape2)) {
-			throw std::invalid_argument(std::format("Invalid shapes, {} is not of the same size as {}", toString(shape2), shape1)); 
+			throw std::invalid_argument(std::format("Invalid shapes, {} is not of the same size as {}", toString(shape2), toString(shape1)));
 		}
 		return true;
 	}
