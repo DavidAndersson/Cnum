@@ -16,7 +16,7 @@ int main() {
 	
 	iArray test = Cnum::Arange(0, 50, 1); 
 
-	auto test2 = test[test > 10 && test < 40]; 
+	auto test2 = test.Where(test > 10); 
 
 	test2.Print();
 

@@ -87,7 +87,7 @@ public:
 	// -------------------------
 
 	// Indexing
-	T& operator[](std::vector<int> index)
+	T& operator[](std::vector<int>& index)
 	{
 		return m_data.at(flattenIndex(index));
 	}
@@ -101,7 +101,7 @@ public:
 			exit(0);
 		}
 	}
-	T& operator[](int index)
+	T operator[](int index)
 	{
 		return m_data[index];
 	}
@@ -421,7 +421,6 @@ public:
 		}
 	}
 
-
 	// Streaming
 	friend std::ostream& operator << (std::ostream& stream, DynamicArray& arr) {
 		return stream << std::move(arr);
@@ -517,7 +516,68 @@ public:
 			exit(0);
 		}
 	} 
-	
+
+	DynamicArray<T> Concatenate(std::vector<T>&& arr, int axis = 0, int offset = -1) {
+		return this->Concatenate(DynamicArray<T>(arr), axis, offset); 
+	}
+	DynamicArray<T> Concatenate(std::vector<T>& arr, int axis = 0, int offset = -1) {
+		return this->Concatenate(DynamicArray<T>(arr), axis, offset);
+	}
+	DynamicArray<T> Concatenate(DynamicArray<T>& arr, int axis = 0, int offset = -1) {
+		return this->Concatenate(std::move(arr), axis, offset);
+	}
+	DynamicArray<T> Concatenate(DynamicArray<T>&& arr, int axis = 0, int offset = -1) {
+
+		std::vector<T> result = this->raw();
+		std::vector<int> result_shape = this->shape();
+		auto sourceData = arr.raw();
+
+		// If the array is uninitialized i.e. empty, the concatenation will simply act as assignment
+		if (result.empty()) {
+			*this = arr; 
+			return *this;
+		}
+
+
+		// The off-axis dimensions must all be the same for a valid concatenation
+		for (int i = 0; i < this->shape().size(); i++) {
+			if (i == axis)
+				continue;
+			if (this->shapeAlong(i) != arr.shapeAlong(i)) {
+				throw std::invalid_argument(std::format("Arrays are not of equal length in axis {}", axis));
+			}
+		}
+
+		int stride = this->getStride(axis);
+
+
+		if (axis == 0) {
+			auto startPoint = (offset == -1) ? result.end() : result.begin() + offset * stride;
+			result.insert(startPoint, sourceData.begin(), sourceData.end());
+			result_shape[axis] += arr.shapeAlong(axis);
+		}
+
+		else {
+
+			int newNumberOfElements = (int)result.size() + arr.size();
+
+			// Update the shape first so that the stepLength can be computed correctly
+			result_shape[axis] += arr.shapeAlong(axis);
+			int stepLength = stride * this->shapeAlong(axis);
+
+			int startIndex = (offset == -1) ? stepLength : offset;  // Most likely wrong. Maybe stride*offset
+
+			int j = 0;
+			for (int i = startIndex; i < newNumberOfElements; i += stepLength) {
+				result.insert(result.begin() + i, sourceData[j]);
+				j++;
+			}
+		}
+
+		m_data = result; m_shape = result_shape; 
+		return *this;
+	}
+
 	void append(const T value) {
 
 		try {
@@ -542,8 +602,8 @@ public:
 	}
 
 	// Reductions
-	template<typename BinaryFunction>
-	T Reduce(T initVal, BinaryFunction op)const {
+	template<typename Operation>
+	T Reduce(T initVal, Operation op)const {
 		return std::accumulate(m_data.begin(), m_data.end(), initVal, op);
 	}
 	DynamicArray<T> ReduceAlongAxis(int axis)const
@@ -607,6 +667,24 @@ public:
 	}
 	DynamicArray<T> ExtractAxis(int axis, int nonAxisIndex, int start = 0, int end = -1)const {
 		return ExtractAxis(axis, std::vector<int>(1, nonAxisIndex), start, end);
+	}
+
+	// Searching
+	DynamicArray<T> Where(DynamicArray<bool>&& condition) {
+		auto con = condition; 
+		return this->Where(con);
+	}
+	DynamicArray<T> Where(DynamicArray<bool>& condition)
+	{
+		DynamicArray<int> outIndices; 
+		for (int i = 0; i < condition.size(); i++) {
+			if (condition[i] == true) {
+				auto idx = this->reconstructIndex(i); 
+				outIndices.Concatenate(idx, 1);
+			}
+		}
+
+		return outIndices;
 	}
 
 	// Boolean checks
@@ -727,6 +805,10 @@ private:
 		return index;
 	}
 	std::vector<int> reconstructIndex(int index)const {
+
+		if (this->nDims() == 1) {
+			return std::vector<int>{index};
+		}
 
 		std::vector<int> indices = std::vector<int>(this->nDims(), 0);
 
