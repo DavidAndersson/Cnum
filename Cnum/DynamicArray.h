@@ -48,9 +48,9 @@ public:
 	// Copy Constructors
 	DynamicArray(const DynamicArray<T>& src)
 		: m_data(src.m_data), m_shape(src.m_shape) {};
-	template<typename S>
-	DynamicArray(const DynamicArray<S>& src)
-		: m_data(src.m_data), m_shape(src.m_shape) {};
+	//template<typename S>
+	//DynamicArray(const DynamicArray<S>& src)
+	//	: m_data(src.raw()), m_shape(src.shape()) {};
 
 	// Move Constructors
 	DynamicArray(const DynamicArray<T>&& other)
@@ -387,6 +387,41 @@ public:
 		}
 	}
 
+	// Logical AND operator
+	DynamicArray<bool> operator && (const DynamicArray<bool>& rhs)const
+	{
+		return *this && std::move(rhs);
+	}
+	DynamicArray<bool> operator && (const DynamicArray<bool>&& rhs)const 
+	{
+		try {
+			Exceptions::EnsureSameShape(*this, rhs); 
+			return CreateLogicalArray(*this, rhs, [](bool v1, bool v2) {return v1 && v2; });
+		}
+		catch (const std::invalid_argument& err) {
+			std::cout << err.what() << std::endl;
+			exit(0);
+		}
+	}
+
+	// Logical OR operator
+	DynamicArray<bool> operator || (const DynamicArray<bool>& rhs)const
+	{
+		return *this || std::move(rhs);
+	}
+	DynamicArray<bool> operator || (const DynamicArray<bool>&& rhs)const
+	{
+		try {
+			Exceptions::EnsureSameShape(*this, rhs);
+			return CreateLogicalArray(*this, rhs, [](bool v1, bool v2) {return v1 || v2; });
+		}
+		catch (const std::invalid_argument& err) {
+			std::cout << err.what() << std::endl;
+			exit(0);
+		}
+	}
+
+
 	// Streaming
 	friend std::ostream& operator << (std::ostream& stream, DynamicArray& arr) {
 		return stream << std::move(arr);
@@ -612,7 +647,11 @@ public:
 		return toString(this->shape()); 
 	};
 	int nDims()const {
-		return (int)std::count_if(m_shape.begin(), m_shape.end(), [](int dim) {return dim >= 1; });
+		int dims = (int)std::count_if(m_shape.begin(), m_shape.end(), [](int dim) {return dim > 1; });
+		if (dims == 0 && m_shape[0] == 1)
+			return 1;
+		else
+			return dims;
 	}
 	int size()const 
 	{
@@ -752,13 +791,17 @@ private:
 		}
 	}
 
-	static DynamicArray<bool> CreateLogicalArray(const DynamicArray<T>& arr1, const DynamicArray<T>&& arr2, std::function<bool(T, T)> func)
+	static DynamicArray<bool> CreateLogicalArray(const DynamicArray<T>& arr1, const DynamicArray<T>& arr2, std::function<bool(T, T)> func)
+	{
+		return CreateLogicalArray(arr1, std::move(arr2), func);
+	}
+	static DynamicArray<bool> CreateLogicalArray(const DynamicArray<T>& arr1, const DynamicArray<T>&& arr2, std::function<bool(T,T)> func)
 	{
 		std::vector<bool> out(arr1.size(), false);
 		std::transform(arr1.raw().begin(), arr1.raw().end(), arr2.raw().begin(), out.begin(), func);
 		return DynamicArray<bool>(out, arr1.shape());
 	}
-	static DynamicArray<bool> CreateLogicalArray(const DynamicArray<T>& arr1, const T value, std::function<bool(T)> func)
+	static DynamicArray<bool> CreateLogicalArray(const DynamicArray<T>& arr1, T value, std::function<bool(T)> func)
 	{
 		std::vector<bool> out(arr1.size(), false);
 		std::transform(arr1.raw().begin(), arr1.raw().end(), out.begin(), func);

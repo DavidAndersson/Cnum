@@ -14,9 +14,10 @@
 int main() {
 
 	
-	iArray test = Cnum::UniformArray({ 5,5,5 }, 10); 
-	test[{3, 2, 1}] = 100; 
+	iArray test = Cnum::Arange(0, 50, 1); 
 
-	test[test > 50].Print();
+	auto test2 = test[test > 10 && test < 40]; 
 
-}
+	test2.Print();
+
+ }

@@ -19,8 +19,8 @@ public:
 
 	Exceptions() = delete;
 
-	template<typename T>
-	static bool EnsureSameShape(const DynamicArray<T>& arr1, const DynamicArray<T>& arr2)
+	template<typename T, typename S>
+	static bool EnsureSameShape(const DynamicArray<T>& arr1, const DynamicArray<S>& arr2)
 	{
 		if (arr1.sameShapeAs(arr2) == false) {
 			throw std::invalid_argument(std::format("Shape {} and {} do not match", arr1.sshape(), arr2.sshape()));
