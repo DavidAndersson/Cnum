@@ -14,6 +14,7 @@
 #include <math.h>
 #include "Utils.h"
 #include "Exceptions.h"
+#include <string_view>
 
 template<typename T>
 class DynamicArray
@@ -65,13 +66,18 @@ public:
 	}
 	DynamicArray(const std::vector<T>&& other, const std::vector<int>&& shape) 
 		: m_data{other}, m_shape{shape}
-	{
-		if (getNumberOfElements(shape) != m_data.size()) {
-			throw std::invalid_argument(std::format("Cannot create array of size {} with shape {}", m_data.size(), toString(shape)));
+	{	
+		try {
+			std::string_view msg(std::string_view(std::format("Cannot create array of size {} with shape {}", this->size(), toString(shape))));
+			Exceptions::EnsureEqual(getNumberOfElements(shape), this->size(), msg);
+			
+			if (this->size() == 1) {
+				m_shape = std::vector<int>{ m_shape[0], 1 };
+			}
 		}
-
-		if (m_shape.size() == 1) {
-			m_shape = std::vector<int>{ m_shape[0], 1 };
+		catch (const std::invalid_argument& err) {
+			std::cout << err.what() << std::endl;
+			exit(0);
 		}
 	}
 	DynamicArray(const std::vector<T>&& other, const std::vector<int>& shape)
@@ -89,11 +95,14 @@ public:
 		return m_data.at(flattenIndex(index));
 	}
 	T& operator[](DynamicArray<int>& index) {
-		if (index.nDims != m_shape.size()) {
-			throw std::invalid_argument(std::format("Index {} is not of the same order as shape {}", index.sshape(), toString(m_shape)));
-			exit(1);
+		try {
+			Exceptions::EnsureSameSize(index.size(), this->shape());
+			return m_data.at(flattenIndex(index.raw()));
 		}
-		return m_data.at(flattenIndex(index.m_data));
+		catch (const std::invalid_argument& err) {
+			std::cout << err.what() << std::endl;
+			exit(0);
+		}
 	}
 	T& operator[](int index)
 	{
@@ -576,13 +585,16 @@ public:
 	// Getters
 	std::vector<int> shape()const { return m_shape; };
 	int shapeAlong(int axis)const { 
-		if (axis < this->nDims()) { 
-			return m_shape[axis]; 
-		} 
-		else {
-			std::cerr << std::format("Cannot access axis {} in array of shape {}", axis, toString(this->shape())); 
-			exit(1);
+
+		try {
+			Exceptions::EnsureLargerDimThan(*this, axis); 
+			return m_shape[axis];
 		}
+		catch (const std::invalid_argument& err) {
+			std::cout << err.what() << std::endl;
+			exit(0);
+		}
+
 	}
 	std::string sshape()const { return toString(this->shape()); };
 	int nDims()const {

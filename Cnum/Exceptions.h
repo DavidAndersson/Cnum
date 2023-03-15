@@ -55,7 +55,7 @@ public:
 	}
 
 	template<typename T>
-	static bool EnsureSameSizeAlongAxis(const DynamicArray<T>& arr1, const DynamicArray<T>& arr2, int axis, const std::string_view msg)
+	static bool EnsureSameSizeAlongAxis(const DynamicArray<T>& arr1, const DynamicArray<T>& arr2, int axis, std::string_view msg)
 	{
 		if (arr1.shapeAlong(axis) != arr2.shapeAlong(axis)) {
 			throw std::invalid_argument(msg);
@@ -87,7 +87,7 @@ public:
 	static bool EnsureLargerDimThan(const DynamicArray<T>& arr, int dim)
 	{
 		if (arr.nDims() < dim) {
-			throw std::invalid_argument(std::format("The dimension of the array must be larger than {} to perform this operation", arr.sshape()));
+			throw std::invalid_argument(std::format("The dimension of the array must be larger than {} using dimension {}", arr.sshape(), dim));
 		}
 		return true;
 	}
@@ -99,14 +99,21 @@ public:
 		for (int i = 0; i < arr.nDims(); i++) {
 			if (i != axis) {
 				if (nonAxisIndex[idx] > arr.shapeAlong(i)) {
-					std::cerr << std::format("Error! {} is out of range for axis {} in shape {}", nonAxisIndex[idx], i, arr.sshape()) << std::endl;
-					exit(0);
+					throw std::invalid_argument(std::format("Error! {} is out of range for axis {} in shape {}", nonAxisIndex[idx], i, arr.sshape()));
 				}
 				idx++;
 			}
 		}
+		return true;
 	}
 
+
+	static bool EnsureEqual(int val_1, int val_2, std::string_view msg)
+	{
+		if (val_1 != val_2)
+			throw std::invalid_argument(msg.data());
+		return true;
+	}
 
 
 };
