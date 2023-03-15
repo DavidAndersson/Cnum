@@ -2,17 +2,18 @@
 #include <vector>
 #include <numeric>
 #include <iostream>
-#include <iomanip>
+//#include <iomanip>
 #include <string>
 #include <fstream>
-#include <stdexcept>
+//#include <stdexcept>
 #include <format>
 #include <algorithm>
 #include <iterator>
 #include <functional>
-#include <sstream>
+//#include <sstream>
 #include <math.h>
-
+#include "Utils.h"
+#include "Exceptions.h"
 
 template<typename T>
 class DynamicArray
@@ -115,7 +116,6 @@ public:
 		return data;
 	}
 
-
 	// Assignment
 	DynamicArray<T> operator=(DynamicArray<T>& rhs) { 
 		return *this = std::move(rhs);
@@ -140,7 +140,7 @@ public:
 	DynamicArray<T> operator+(const DynamicArray&& rhs)const
 	{
 		try {
-			EnsureSameShape(*this, rhs);
+			Exceptions::EnsureSameShape(*this, rhs);
 			return PerformArithmeticOperation(*this, std::move(rhs), std::plus<>());
 		}
 		catch (const std::invalid_argument& err) {
@@ -172,7 +172,7 @@ public:
 	DynamicArray<T> operator-(const DynamicArray&& rhs)const
 	{
 		try {
-			EnsureSameShape(*this, rhs);
+			Exceptions::EnsureSameShape(*this, rhs);
 			return PerformArithmeticOperation(*this, std::move(rhs), std::minus<>());
 		}
 		catch (const std::invalid_argument& err) {
@@ -204,7 +204,7 @@ public:
 	DynamicArray<T> operator*(const DynamicArray&& rhs)const
 	{
 		try {
-			EnsureSameShape(*this, rhs);
+			Exceptions::EnsureSameShape(*this, rhs);
 			return PerformArithmeticOperation(*this, std::move(rhs), std::multiplies<>());
 		}
 		catch (const std::invalid_argument& err) {
@@ -236,8 +236,8 @@ public:
 	DynamicArray<T> operator/(const DynamicArray&& rhs)const
 	{
 		try {
-			EnsureSameShape(*this, rhs);
-			EnsureNoZeros(this->raw());
+			Exceptions::EnsureSameShape(*this, rhs);
+			Exceptions::EnsureNoZeros(this->raw());
 			return PerformArithmeticOperation(*this, std::move(rhs), std::divides<>());
 		}
 		catch (const std::invalid_argument& err) {
@@ -269,7 +269,7 @@ public:
 	DynamicArray<bool> operator==(const DynamicArray&& rhs)const
 	{
 		try {
-			EnsureSameShape(*this, rhs);
+			Exceptions::EnsureSameShape(*this, rhs);
 			return CreateLogicalArray(*this, std::move(rhs), [](T v1, T v2) {return v1 == v2; });
 		}
 		catch (const std::invalid_argument& err) {
@@ -289,7 +289,7 @@ public:
 	DynamicArray<bool> operator!=(const DynamicArray&& rhs)const
 	{
 		try {
-			EnsureSameShape(*this, rhs);
+			Exceptions::EnsureSameShape(*this, rhs);
 			return CreateLogicalArray(*this, std::move(rhs), [](T v1, T v2) {return v1 != v2; });
 		}
 		catch (const std::invalid_argument& err) {
@@ -309,7 +309,7 @@ public:
 	DynamicArray<bool> operator < (const DynamicArray&& rhs)const 
 	{
 		try {
-			EnsureSameShape(*this, rhs); 
+			Exceptions::EnsureSameShape(*this, rhs);
 			return CreateLogicalArray(*this, std::move(rhs), [](T v1, T v2) {return v1 < v2; });
 		}
 		catch (const std::invalid_argument& err) {
@@ -326,7 +326,7 @@ public:
 	DynamicArray<bool> operator > (const DynamicArray&& rhs)const
 	{
 		try {
-			EnsureSameShape(*this, rhs);
+			Exceptions::EnsureSameShape(*this, rhs);
 			return CreateLogicalArray(*this, std::move(rhs), [](T v1, T v2) {return v1 > v2; });
 		}
 		catch (const std::invalid_argument& err) {
@@ -343,7 +343,7 @@ public:
 	DynamicArray<bool> operator <= (const DynamicArray&& rhs)const
 	{
 		try {
-			EnsureSameShape(*this, rhs);
+			Exceptions::EnsureSameShape(*this, rhs);
 			return CreateLogicalArray(*this, std::move(rhs), [](T v1, T v2) {return v1 <= v2; });
 		}
 		catch (const std::invalid_argument& err) {
@@ -360,7 +360,7 @@ public:
 	DynamicArray<bool> operator >= (const DynamicArray&& rhs)const
 	{
 		try {
-			EnsureSameShape(*this, rhs);
+			Exceptions::EnsureSameShape(*this, rhs);
 			return CreateLogicalArray(*this, std::move(rhs), [](T v1, T v2) {return v1 >= v2; });
 		}
 		catch (const std::invalid_argument& err) {
@@ -399,7 +399,7 @@ public:
 	{
 		try {
 			// The new shape must have the same number of elements as the previous had
-			EnsureSameSize(this->shape(), newShape);
+			Exceptions::EnsureSameSize(this->shape(), newShape);
 			m_shape = newShape;
 			return *this;
 		}
@@ -436,8 +436,8 @@ public:
 		*/
 
 		try {
-			EnsurePermutation(permutation); 
-			EnsureLargerDimThan(1);
+			Exceptions::EnsurePermutation(*this, permutation);
+			Exceptions::EnsureLargerDimThan(*this, 1);
 			std::vector<T> newData = std::vector<T>(m_data.size(), 0);
 			std::vector<int> newShape = std::vector<int>(this->shape().size(), 0);
 
@@ -495,7 +495,7 @@ public:
 	{
 
 		try {
-			EnsureLargerDimThan(axis + 1);
+			Exceptions::EnsureLargerDimThan(*this, axis + 1);
 		}
 		catch (const std::invalid_argument& err) {
 			std::cout << err.what() << std::endl;
@@ -518,9 +518,9 @@ public:
 	DynamicArray<T> ExtractAxis(int axis, std::vector<int>nonAxisIndex, int start=0, int end=-1)const
 	{
 		try {
-			EnsureLargerDimThan(axis);
-			EnsureSize(nonAxisIndex, this->nDims() - 1, std::format("Error in function - ExtractAxis(). Need to specify {} constraint indices, {} given ", this->nDims() - 1, nonAxisIndex.size()));
-			EnsureValidNonAxisIndex(nonAxisIndex, axis); 
+			Exceptions::EnsureLargerDimThan(*this, axis);
+			Exceptions::EnsureSize(nonAxisIndex, this->nDims() - 1, std::format("Error in function - ExtractAxis(). Need to specify {} constraint indices, {} given ", this->nDims() - 1, nonAxisIndex.size()));
+			Exceptions::EnsureValidNonAxisIndex(*this, nonAxisIndex, axis);
 		}
 		catch (const std::invalid_argument& err) {
 			std::cout << err.what() << std::endl;
@@ -555,26 +555,6 @@ public:
 	}
 
 	// Boolean checks
-	bool Contains(DynamicArray<T>& point)const
-	{
-		try {
-			EnsureSameSizeAlongAxis(point, 2, 3, std::format("Point and shape must both be either {} or {} dimensional", this->shapeAlong(1), point.shapeAlong(0)));
-			EnsureDim(point, 1); 
-		}
-		catch (const std::invalid_argument& err) {
-			std::cout << err.what() << std::endl;
-			exit(0);
-		}
-
-		// Goes through the elements of the point, and checks if it is contained by the correct axis in the parent
-		// Note that the method is inclusive at the lower end and exclusive at the upper end
-		for (int i = 0; i < point.m_data.size(); i++) {
-			if ((point[i] >= this->ExtractAxis(0, i).min() && point[i] < this->ExtractAxis(0, i).max()) == false) {
-				return false;
-			}
-		}
-		return true;
-	} 
 	bool isEqualTo(DynamicArray<T> other)const {
 		return std::equal(m_data.begin(), m_data.end(), other.m_data.begin());
 	}
@@ -683,23 +663,13 @@ private:
 	{
 		return getNumberOfElements(this->shape());
 	}
+
 	static int getNumberOfElements(const std::vector<int>& shape)
 	{
 		return std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<int>());
 	}
 
-	static std::string toString(const std::vector<int> shape)
-	{
-		std::stringstream ss;
-		ss << "(";
-		for (int i = 0; i < shape.size(); i++) {
-			ss << std::to_string(shape[i]);
-			if (i < shape.size() - 1)
-				ss << ", ";
-		}
-		ss << ")";
-		return ss.str();
-	}
+
 
 	void PrintDim(std::vector<int>& index, int dim)const
 	{
@@ -763,85 +733,11 @@ private:
 
 	}
 
-	void PrintSpaces(int n)const {
+	static void PrintSpaces(int n) {
 		for (int i = 0; i < n; i++)
 			std::cout << " "; 
 	}
 
-private:
-
-	//-------------------------------------
-	// Exception Finding Functions
-	// ------------------------------------
-
-	static bool EnsureSameShape(DynamicArray<T>& arr1, DynamicArray<T>& arr2)
-	{
-		if (arr1.sameShapeAs(arr2) == false) {
-			throw std::invalid_argument(std::format("Shape {} and {} do not match", arr1.sshape(), arr2.sshape()));
-		}
-		return true;
-	}
-	static bool EnsureSameSize(const std::vector<T>& shape1, const std::vector<T>& shape2)
-	{
-		if (getNumberOfElements(shape1) != getNumberOfElements(shape2)) {
-			throw std::invalid_argument(std::format("Invalid shapes, {} is not of the same size as {}", toString(shape2), toString(shape1)));
-		}
-		return true;
-	}
-	bool EnsureSize(std::vector<T>& arr, int size, const std::string_view msg)const
-	{
-		if (arr.size() != size) {
-			throw std::invalid_argument(msg.data());
-		}
-		return true;
-	}
-	static bool EnsureDim(DynamicArray<T>& arr, int dim) {
-		if (arr.nDims() != dim) {
-			throw std::invalid_argument(std::format("Array must be of size {} but {} was supplied", dim, arr.nDims()));
-		}
-	}
-	bool EnsureSameSizeAlongAxis(DynamicArray<T>& arr, int axis, const std::string_view msg)
-	{
-		if (arr.shapeAlong(axis) != this->shapeAlong(axis)) {
-			throw std::invalid_argument(msg);
-		}
-		return true;
-	}
-	static bool EnsureNoZeros(std::vector<T>& arr)
-	{
-		if (std::find(arr.begin(), arr.end(), 0) != arr.end()) {
-			throw std::invalid_argument("Division by zero encountered");
-		}
-		return true;
-	}
-	bool EnsurePermutation(std::vector<int> permutation) const
-	{
-		std::vector<int> permValues = std::vector<int>(this->nDims());
-		std::iota(permValues.begin(), permValues.end(), 0);
-		if (std::is_permutation(permutation.begin(), permutation.end(), permValues.begin(), permValues.end()) == false) {
-			throw std::invalid_argument("Incorrectly specifed permutation");
-		}
-		return true;
-	}
-	bool EnsureLargerDimThan(int dim)const {
-		if (this->nDims() < dim) {
-			throw std::invalid_argument(std::format("The dimension of the array must be larger than {} to perform this operation", this->sshape()));
-		}
-		return true; 
-	}
-	bool EnsureValidNonAxisIndex(std::vector<int>& nonAxisIndex, int axis)const
-	{
-		int idx = 0;
-		for (int i = 0; i < this->nDims(); i++) {
-			if (i != axis) {
-				if (nonAxisIndex[idx] > m_shape[i]) {
-					std::cerr << std::format("Error! {} is out of range for axis {} in shape {}", nonAxisIndex[idx], i, toString(this->shape())) << std::endl;
-					exit(0);
-				}
-				idx++;
-			}
-		}
-	}
 
 private:
 

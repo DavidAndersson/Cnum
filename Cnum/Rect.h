@@ -1,7 +1,8 @@
 #pragma once
 #include <vector>
 #include "Cnum.h"
-#include "DynamicArray.h"
+//#include "DynamicArray.h"
+#include "Exceptions.h"
 
 template<typename T>
 class Cnum::Rect
@@ -35,6 +36,26 @@ public:
 		return false;
 	}
 
+	bool Contains(DynamicArray<T>& point)const
+	{
+		try {
+			Exceptions::EnsureDim(point, 1);
+		}
+		catch (const std::invalid_argument& err) {
+			std::cout << err.what() << std::endl;
+			exit(0);
+		}
+
+		// Goes through the elements of the point, and checks if it is contained by the correct axis in the parent
+		// Note that the method is inclusive at the lower end and exclusive at the upper end
+		for (int i = 0; i < point.m_data.size(); i++) {
+			if ((point[i] >= m_coordinates.ExtractAxis(0, i).min() && point[i] < m_coordinates.ExtractAxis(0, i).max()) == false) {
+				return false;
+			}
+		}
+		return true;
+	}
+
 	DynamicArray<T> Center()const {
 		return DynamicArray<T>( m_coordinates.ReduceAlongAxis(0) / (T)2 );
 	}
@@ -66,6 +87,8 @@ public:
 
 		return children;
 	}
+
+	
 
 private:
 	DynamicArray<T> m_coordinates;

@@ -21,8 +21,10 @@
   <ItemGroup>
     <ClInclude Include="Cnum.h" />
     <ClInclude Include="DynamicArray.h" />
+    <ClInclude Include="Exceptions.h" />
     <ClInclude Include="kdTree.h" />
     <ClInclude Include="Rect.h" />
+    <ClInclude Include="Utils.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DynamicArray.cpp" />

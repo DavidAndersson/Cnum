@@ -15,5 +15,4 @@ int main() {
 
 	test.Reshape({ 4,2 }).Print();
 
-
 }
