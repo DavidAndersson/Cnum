@@ -20,7 +20,7 @@ public:
 	Exceptions() = delete;
 
 	template<typename T>
-	static bool EnsureSameShape(DynamicArray<T>& arr1, DynamicArray<T>& arr2)
+	static bool EnsureSameShape(const DynamicArray<T>& arr1, const DynamicArray<T>& arr2)
 	{
 		if (arr1.sameShapeAs(arr2) == false) {
 			throw std::invalid_argument(std::format("Shape {} and {} do not match", arr1.sshape(), arr2.sshape()));

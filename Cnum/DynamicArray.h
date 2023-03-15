@@ -308,6 +308,9 @@ public:
 	}
 
 	// Less than
+	DynamicArray<bool> operator < (T rhs)const {
+		return *this < DynamicArray<T>(this->shape(), rhs);
+	}
 	DynamicArray<bool> operator < (const DynamicArray& rhs)const
 	{
 		return *this < std::move(rhs);
@@ -325,6 +328,9 @@ public:
 	}
 
 	// Larger than
+	DynamicArray<bool> operator > (T rhs)const {
+		return *this > DynamicArray<T>(this->shape(), rhs); 
+	}
 	DynamicArray<bool> operator > (const DynamicArray& rhs)const
 	{
 		return *this > std::move(rhs);
@@ -342,6 +348,9 @@ public:
 	}
 
 	// Less or equal than
+	DynamicArray<bool> operator <= (T rhs)const {
+		return *this <= DynamicArray<T>(this->shape(), rhs);
+	}
 	DynamicArray<bool> operator <= (const DynamicArray& rhs)const
 	{
 		return *this <= std::move(rhs);
@@ -359,6 +368,9 @@ public:
 	}
 
 	// Larger or equal than
+	DynamicArray<bool> operator >= (T rhs)const {
+		return *this >= DynamicArray<T>(this->shape(), rhs);
+	}
 	DynamicArray<bool> operator >= (const DynamicArray& rhs)const
 	{
 		return *this >= std::move(rhs);
@@ -475,6 +487,7 @@ public:
 
 		try {
 			if (m_shape.empty()) {
+				m_data.push_back(value);
 				m_shape = std::vector<int>{ 1,1 };
 				return;
 			}
@@ -599,7 +612,7 @@ public:
 		return toString(this->shape()); 
 	};
 	int nDims()const {
-		return (int)std::count_if(m_shape.begin(), m_shape.end(), [](int dim) {return dim > 1; });
+		return (int)std::count_if(m_shape.begin(), m_shape.end(), [](int dim) {return dim >= 1; });
 	}
 	int size()const 
 	{
@@ -630,6 +643,15 @@ public:
 	T max()const
 	{ 
 		return *std::max_element(m_data.begin(), m_data.end());
+	}
+
+	DynamicArray<T> argMin()const {
+		size_t flatIdx = std::min_element(m_data.begin(), m_data.end()) - m_data.begin();
+		return reconstructIndex((int)flatIdx);
+	}
+	DynamicArray<T> argMax()const {
+		size_t flatIdx = std::max_element(m_data.begin(), m_data.end()) - m_data.begin();
+		return reconstructIndex((int)flatIdx);
 	}
 
 private:

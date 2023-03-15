@@ -14,11 +14,9 @@
 int main() {
 
 	
-	iArray test = Cnum::UniformArray<int>({ 5,5 }, 0); 
-	iArray test2 = Cnum::UniformArray<int>({ 5,5 }, 1);
+	iArray test = Cnum::UniformArray({ 5,5,5 }, 10); 
+	test[{3, 2, 1}] = 100; 
 
-	auto test3 = Cnum::MinimumOf(test, test2); 
-
-	test3.Print();
+	test[test > 50].Print();
 
 }

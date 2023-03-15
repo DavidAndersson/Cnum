@@ -258,13 +258,14 @@ public:
 	}
 
 	template<typename T>
-	static T Max(DynamicArray<T>& arr1) {
+	static T Max(DynamicArray<T>& arr) {
 		return arr.max();
 	}
 	template<typename T>
-	static T Min(DynamicArray<T>& arr1) {
+	static T Min(DynamicArray<T>& arr) {
 		return arr.min();
 	}
+
 
 
 
