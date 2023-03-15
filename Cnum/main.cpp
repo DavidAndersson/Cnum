@@ -4,15 +4,21 @@
 // Make the priority scheme for Rect overlapping more explicit
 
 
+/*
+	To Add:
+		- Find
+		- Where
+*/
+
+
 int main() {
 
 	
-	iArray test = Cnum::Array<int>({ 1,2,3,4,5,6,7,8 }, { 2,2,2 }); 
-	auto thing = test.ReduceAlongAxis(0); 
+	iArray test = Cnum::UniformArray<int>({ 5,5 }, 0); 
+	iArray test2 = Cnum::UniformArray<int>({ 5,5 }, 1);
 
-	test.Print();
-	thing.Print();
+	auto test3 = Cnum::MinimumOf(test, test2); 
 
-	test.Reshape({ 4,2 }).Print();
+	test3.Print();
 
 }

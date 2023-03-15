@@ -2,15 +2,12 @@
 #include <vector>
 #include <numeric>
 #include <iostream>
-//#include <iomanip>
 #include <string>
 #include <fstream>
-//#include <stdexcept>
 #include <format>
 #include <algorithm>
 #include <iterator>
 #include <functional>
-//#include <sstream>
 #include <math.h>
 #include "Utils.h"
 #include "Exceptions.h"
@@ -477,13 +474,14 @@ public:
 	void append(const T value) {
 
 		try {
-			EnsureLargerDimThan(1, *this); 
-			m_data.push_back(value);
-
 			if (m_shape.empty()) {
 				m_shape = std::vector<int>{ 1,1 };
 				return;
 			}
+			else {
+				Exceptions::EnsureDim(*this, 1);
+			}
+			m_data.push_back(value);
 			if (m_shape[0] == 1)
 				m_shape[1]++;
 			else
@@ -571,8 +569,6 @@ public:
 		return std::equal(m_shape.begin(), m_shape.end(), other.shape().begin());
 	}
 
-	
-
 	// Prints
 	void Print()const {
 		auto startIndex = std::vector<int>(this->nDims(), 0);
@@ -581,9 +577,11 @@ public:
 		std::cout << ")" << std::endl;
 	}
 
-
 	// Getters
-	std::vector<int> shape()const { return m_shape; };
+	std::vector<int> shape()const 
+	{ 
+		return m_shape; 
+	};
 	int shapeAlong(int axis)const { 
 
 		try {
@@ -596,11 +594,17 @@ public:
 		}
 
 	}
-	std::string sshape()const { return toString(this->shape()); };
+	std::string sshape()const 
+	{
+		return toString(this->shape()); 
+	};
 	int nDims()const {
 		return (int)std::count_if(m_shape.begin(), m_shape.end(), [](int dim) {return dim > 1; });
 	}
-	int size()const { return getNumberOfElements(); };
+	int size()const 
+	{
+		return getNumberOfElements();
+	};
 	int getStride(int axis = 0)const
 	{
 		/*
@@ -610,11 +614,23 @@ public:
 		return std::accumulate(m_shape.begin() + 1 + axis, m_shape.end(), 1, std::multiplies<>());
 	}
 
-	const std::vector<T>& raw()const { return this->m_data; };
-	std::vector<T> raw() { return this->m_data; }
+	const std::vector<T>& raw()const
+	{ 
+		return this->m_data;
+	};
+	std::vector<T> raw() 
+	{
+		return this->m_data;
+	}
 
-	T min()const { return *std::min_element(m_data.begin(), m_data.end());}
-	T max()const { return *std::max_element(m_data.begin(), m_data.end());}
+	T min()const
+	{ 
+		return *std::min_element(m_data.begin(), m_data.end());
+	}
+	T max()const
+	{ 
+		return *std::max_element(m_data.begin(), m_data.end());
+	}
 
 private:
 
@@ -681,8 +697,6 @@ private:
 		return std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<int>());
 	}
 
-
-
 	void PrintDim(std::vector<int>& index, int dim)const
 	{
 		// In the lowest recursion (max dim) level - do the print
@@ -743,11 +757,6 @@ private:
 		index.erase(index.begin() + axis); 
 		return index;
 
-	}
-
-	static void PrintSpaces(int n) {
-		for (int i = 0; i < n; i++)
-			std::cout << " "; 
 	}
 
 

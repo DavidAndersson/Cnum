@@ -50,7 +50,7 @@ public:
 	static bool EnsureDim(const DynamicArray<T>& arr, int dim)
 	{
 		if (arr.nDims() != dim) {
-			throw std::invalid_argument(std::format("Array must be of size {} but {} was supplied", dim, arr.nDims()));
+			throw std::invalid_argument(std::format("Array must be of size {} but dimension {} was supplied", dim, arr.nDims()));
 		}
 	}
 

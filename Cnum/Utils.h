@@ -16,6 +16,10 @@ static std::string toString(const std::vector<int> shape)
 	return ss.str();
 }
 
+static void PrintSpaces(int n) {
+	for (int i = 0; i < n; i++)
+		std::cout << " ";
+}
 
 static int multiplyElements(const std::vector<int>& vec)
 {

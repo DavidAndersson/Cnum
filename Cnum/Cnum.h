@@ -212,16 +212,60 @@ public:
 	}
 
 	template<typename T>
-	static DynamicArray<T> abs(DynamicArray<T>&& arr) {
+	static DynamicArray<T> Abs(DynamicArray<T>&& arr) {
 		auto copy = arr;
 		return copy.abs();
 	}
 
 	template<typename T>
-	static DynamicArray<T> abs(DynamicArray<T>& arr) {
+	static DynamicArray<T> Abs(DynamicArray<T>& arr) {
 		auto copy = arr; 
 		return copy.abs();
 	}
+
+	template<typename T>
+	static DynamicArray<T> MinimumOf(DynamicArray<T>& arr1, DynamicArray<T>& arr2) {
+
+		try {
+			Exceptions::EnsureSameShape(arr1, arr2); 
+		}
+		catch (const std::invalid_argument& err) {
+			std::cout << err.what() << std::endl;
+			exit(0);
+		}
+		std::vector<T> out(arr1.size()); 
+		auto arr1Data = arr1.raw();
+		std::transform(arr1Data.begin(), arr1Data.end(), arr2.raw().begin(), out.begin(), [](T v1, T v2) {return std::min(v1, v2);});
+		return DynamicArray<T>(out, arr1.shape());
+
+	}
+
+	template<typename T>
+	static DynamicArray<T> MaximumOf(DynamicArray<T>& arr1, DynamicArray<T>& arr2) {
+
+		try {
+			Exceptions::EnsureSameShape(arr1, arr2);
+		}
+		catch (const std::invalid_argument& err) {
+			std::cout << err.what() << std::endl;
+			exit(0);
+		}
+		std::vector<T> out(arr1.size());
+		auto arr1Data = arr1.raw();
+		std::transform(arr1Data.begin(), arr1Data.end(), arr2.raw().begin(), out.begin(), [](T v1, T v2) {return std::max(v1, v2); });
+		return DynamicArray<T>(out, arr1.shape());
+
+	}
+
+	template<typename T>
+	static T Max(DynamicArray<T>& arr1) {
+		return arr.max();
+	}
+	template<typename T>
+	static T Min(DynamicArray<T>& arr1) {
+		return arr.min();
+	}
+
 
 
 	template<typename T>

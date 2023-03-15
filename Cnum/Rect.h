@@ -1,7 +1,6 @@
 #pragma once
 #include <vector>
 #include "Cnum.h"
-//#include "DynamicArray.h"
 #include "Exceptions.h"
 
 template<typename T>
@@ -40,6 +39,7 @@ public:
 	{
 		try {
 			Exceptions::EnsureDim(point, 1);
+			Exceptions::EnsureEqual(m_dim, point.size());
 		}
 		catch (const std::invalid_argument& err) {
 			std::cout << err.what() << std::endl;
@@ -73,15 +73,18 @@ public:
 		for (int i = 0; i < nChildren; i++) {
 			auto indices = table.ExtractAxis(1, i); 
 
-			std::vector<T> low; 
-			std::vector<T> high;
 
+			// Holding the coordinates of the low and high point of the Rect
+			DynamicArray<T> low; 
+			DynamicArray<T> high;
+
+			// Correctly setting the coorindates of the children based on the binary table and the parent coordinates
 			for (int j = 0; j < indices.size(); j++) {
-				low.push_back(coords[{ (int)indices[j], j }]);
-				high.push_back(coords[{(int)indices[j]+1, j }]);
+				low.append(coords[{ (int)indices[j], j }]);
+				high.append(coords[{(int)indices[j]+1, j }]);
 			}
 
-			Cnum::Rect<T> child = Rect<T>(DynamicArray<T>(low), DynamicArray<T>(high));
+			Cnum::Rect<T> child = Rect<T>(low, high);
 			children.push_back(child);
 		}
 
