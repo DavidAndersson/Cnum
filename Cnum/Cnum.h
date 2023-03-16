@@ -290,22 +290,28 @@ public:
 
 
 	template<typename T>
-	static DynamicArray<T> BlendIf(DynamicArray<T>& trueArrayCondition, DynamicArray<T>& falseArrayCondition, DynamicArray<bool>&& condition) {
+	static DynamicArray<T> BlendIf(DynamicArray<T>& trueConditionArray, DynamicArray<T>& falseConditionArray, DynamicArray<bool>&& condition) {
 		auto copy = trueArrayCondition;
-		return copy.Blend(std::move(falseArrayCondition), std::move(condition));
+		return copy.Blend(std::move(falseConditionArray), std::move(condition));
 	}
 	template<typename T>
-	static DynamicArray<T> BlendIf(DynamicArray<T>&& trueArrayCondition, DynamicArray<T>&& falseArrayCondition, DynamicArray<bool>&& condition) {
-		return trueArrayCondition.Blend(falseArrayCondition, condition);
-	}
-	template<typename T>
-	static DynamicArray<T> BlendIf(DynamicArray<T>&& trueArrayCondition, DynamicArray<T>&& falseArrayCondition, bool condition) {
-		return trueArrayCondition.Blend(falseArrayCondition, DynamicArray<bool>(trueArrayCondition.shape(), condition));
-	}
-	template<typename T>
-	static DynamicArray<T> BlendIf(DynamicArray<T>& trueArrayCondition, DynamicArray<T>& falseArrayCondition, bool condition) {
+	static DynamicArray<T> BlendIf(DynamicArray<T>& trueArrayCondition, DynamicArray<T>& falseConditionArray, DynamicArray<bool>& condition) {
 		auto copy = trueArrayCondition;
-		return copy.Blend(std::move(falseArrayCondition), DynamicArray<bool>(trueArrayCondition.shape(), condition));
+		return copy.Blend(std::move(falseConditionArray), std::move(condition));
+	}
+	template<typename T>
+	static DynamicArray<T> BlendIf(DynamicArray<T>&& trueArrayCondition, DynamicArray<T>&& falseConditionArray, DynamicArray<bool>&& condition) {
+		return trueArrayCondition.Blend(falseConditionArray, condition);
+	}
+	
+	template<typename T>
+	static DynamicArray<T> BlendIf(DynamicArray<T>&& trueArrayCondition, DynamicArray<T>&& falseConditionArray, bool condition) {
+		return trueArrayCondition.Blend(falseConditionArray, DynamicArray<bool>(trueArrayCondition.shape(), condition));
+	}
+	template<typename T>
+	static DynamicArray<T> BlendIf(DynamicArray<T>& trueArrayCondition, DynamicArray<T>& falseConditionArray, bool condition) {
+		auto copy = trueArrayCondition;
+		return copy.Blend(std::move(falseConditionArray), DynamicArray<bool>(trueArrayCondition.shape(), condition));
 	}
 
 	template<typename T>

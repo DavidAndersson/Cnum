@@ -47,13 +47,12 @@ public:
 
 	// Copy Constructors
 	DynamicArray(const DynamicArray<T>& src)
-		: m_data(src.m_data), m_shape(src.m_shape) {};
-	//template<typename S>
-	//DynamicArray(const DynamicArray<S>& src)
-	//	: m_data(src.raw()), m_shape(src.shape()) {};
+		: m_data(src.m_data), m_shape(src.m_shape) {
+		std::cout << "Made a copy" << std::endl;
+	};
 
 	// Move Constructors
-	DynamicArray(const DynamicArray<T>&& other)
+	DynamicArray(const DynamicArray<T>&& other)noexcept
 		: m_data{other.m_data}, m_shape{other.m_shape}
 	{}
 	DynamicArray(const std::vector<T>&& other)
@@ -437,17 +436,17 @@ public:
 	// -------------------------
 
 	// Mutating methods
-	DynamicArray<T> Flatten()
+	DynamicArray<T>& Flatten()
 	{
 		m_shape = { this->size() };
 		return *this;
 	}
-	DynamicArray<T> abs()
+	DynamicArray<T>& abs()
 	{
 		std::transform(m_data.begin(), m_data.end(), m_data.begin(), [](T e) {return std::abs(e); });
 		return *this;
 	}
-	DynamicArray<T> Reshape(const std::vector<int>& newShape)
+	DynamicArray<T>& Reshape(const std::vector<int>& newShape)
 	{
 		try {
 			// The new shape must have the same number of elements as the previous had
@@ -461,23 +460,23 @@ public:
 		}	
 	}
 
-	DynamicArray<T> Transpose() {
+	DynamicArray<T>& Transpose() {
 		std::vector<int> permutation = std::vector<int>(this->nDims());
 		std::iota(permutation.begin(), permutation.end(), 0);
 		std::reverse(permutation.begin(), permutation.end());
 		return this->Transpose(permutation);
 
 	}
-	DynamicArray<T> Transpose(DynamicArray<int>&& permutation) {
+	DynamicArray<T>& Transpose(DynamicArray<int>&& permutation) {
 		return this->Transpose(std::move((permutation.raw())));
 	}
-	DynamicArray<T> Transpose(DynamicArray<int>& permutation) {
+	DynamicArray<T>& Transpose(DynamicArray<int>& permutation) {
 		return this->Transpose(std::move(permutation));
 	}
-	DynamicArray<T> Transpose(std::vector<int>& permutation) {
+	DynamicArray<T>& Transpose(std::vector<int>& permutation) {
 		return this->Transpose(std::move(permutation));
 	}
-	DynamicArray<T> Transpose(std::vector<int>&& permutation)
+	DynamicArray<T>& Transpose(std::vector<int>&& permutation)
 	{
 		/*
 			What is the meaning of a permutation in this context? 
@@ -517,16 +516,16 @@ public:
 		}
 	} 
 
-	DynamicArray<T> Concatenate(std::vector<T>&& arr, int axis = 0, int offset = -1) {
+	DynamicArray<T>& Concatenate(std::vector<T>&& arr, int axis = 0, int offset = -1) {
 		return this->Concatenate(DynamicArray<T>(arr), axis, offset); 
 	}
-	DynamicArray<T> Concatenate(std::vector<T>& arr, int axis = 0, int offset = -1) {
+	DynamicArray<T>& Concatenate(std::vector<T>& arr, int axis = 0, int offset = -1) {
 		return this->Concatenate(DynamicArray<T>(arr), axis, offset);
 	}
-	DynamicArray<T> Concatenate(DynamicArray<T>& arr, int axis = 0, int offset = -1) {
+	DynamicArray<T>& Concatenate(DynamicArray<T>& arr, int axis = 0, int offset = -1) {
 		return this->Concatenate(std::move(arr), axis, offset);
 	}
-	DynamicArray<T> Concatenate(DynamicArray<T>&& arr, int axis = 0, int offset = -1) {
+	DynamicArray<T>& Concatenate(DynamicArray<T>&& arr, int axis = 0, int offset = -1) {
 
 		std::vector<T> result = this->raw();
 		std::vector<int> result_shape = this->shape();
@@ -578,13 +577,16 @@ public:
 		return *this;
 	}
 
-	DynamicArray<T> Blend(DynamicArray<T>&& arr, DynamicArray<bool>&& condition) {
+	DynamicArray<T>& Blend(DynamicArray<T>&& arr, DynamicArray<bool>&& condition) {
 		for (int i = 0; i < condition.size(); i++) {
 			if (condition[i] == true) {
 				m_data[i] = arr[i];
 			}
 		}
 		return *this;
+	}
+	DynamicArray<T>& Blend(DynamicArray<T>& arr, DynamicArray<bool>&& condition) {
+		return this->Blend(std::move(arr), std::move(condition));
 	}
 
 	void append(const T value) {
@@ -694,10 +696,10 @@ public:
 	}
 
 	// Boolean checks
-	bool isEqualTo(DynamicArray<T> other)const {
+	bool isEqualTo(const DynamicArray<T>& other)const {
 		return std::equal(m_data.begin(), m_data.end(), other.m_data.begin());
 	}
-	bool sameShapeAs(DynamicArray<T> other)const {
+	bool sameShapeAs(const DynamicArray<T>& other)const {
 		return std::equal(m_shape.begin(), m_shape.end(), other.shape().begin());
 	}
 
