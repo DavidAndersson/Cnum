@@ -1,15 +1,6 @@
 #include "Cnum.h"
 #include <iostream>
 
-// Make the priority scheme for Rect overlapping more explicit
-
-
-/*
-	To Add:
-		- Find
-		- Where
-*/
-
 
 int main() {
 

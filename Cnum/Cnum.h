@@ -38,7 +38,7 @@ public:
 	static DynamicArray<T> Arange(T start, T end, T stepSize) {
 
 		try {
-			if (isInsideRangeSym(start, end, stepSize)) {
+			if (Exceptions::EnsureInsideRangeSym(start, end, stepSize)) {
 				
 				bool toBeReversed = false;
 				if (start > end) {
@@ -291,27 +291,26 @@ public:
 
 	template<typename T>
 	static DynamicArray<T> BlendIf(DynamicArray<T>& trueConditionArray, DynamicArray<T>& falseConditionArray, DynamicArray<bool>&& condition) {
-		auto copy = trueArrayCondition;
+		auto copy = trueConditionArray;
 		return copy.Blend(std::move(falseConditionArray), std::move(condition));
 	}
 	template<typename T>
-	static DynamicArray<T> BlendIf(DynamicArray<T>& trueArrayCondition, DynamicArray<T>& falseConditionArray, DynamicArray<bool>& condition) {
-		auto copy = trueArrayCondition;
+	static DynamicArray<T> BlendIf(DynamicArray<T>& trueConditionArray, DynamicArray<T>& falseConditionArray, DynamicArray<bool>& condition) {
+		auto copy = trueConditionArray;
 		return copy.Blend(std::move(falseConditionArray), std::move(condition));
 	}
 	template<typename T>
-	static DynamicArray<T> BlendIf(DynamicArray<T>&& trueArrayCondition, DynamicArray<T>&& falseConditionArray, DynamicArray<bool>&& condition) {
-		return trueArrayCondition.Blend(falseConditionArray, condition);
-	}
-	
-	template<typename T>
-	static DynamicArray<T> BlendIf(DynamicArray<T>&& trueArrayCondition, DynamicArray<T>&& falseConditionArray, bool condition) {
-		return trueArrayCondition.Blend(falseConditionArray, DynamicArray<bool>(trueArrayCondition.shape(), condition));
+	static DynamicArray<T> BlendIf(DynamicArray<T>&& trueConditionArray, DynamicArray<T>&& falseConditionArray, DynamicArray<bool>&& condition) {
+		return trueConditionArray.Blend(falseConditionArray, condition);
 	}
 	template<typename T>
-	static DynamicArray<T> BlendIf(DynamicArray<T>& trueArrayCondition, DynamicArray<T>& falseConditionArray, bool condition) {
-		auto copy = trueArrayCondition;
-		return copy.Blend(std::move(falseConditionArray), DynamicArray<bool>(trueArrayCondition.shape(), condition));
+	static DynamicArray<T> BlendIf(DynamicArray<T>&& trueConditionArray, DynamicArray<T>&& falseConditionArray, bool condition) {
+		return trueConditionArray.Blend(falseConditionArray, DynamicArray<bool>(trueConditionArray.shape(), condition));
+	}
+	template<typename T>
+	static DynamicArray<T> BlendIf(DynamicArray<T>& trueConditionArray, DynamicArray<T>& falseConditionArray, bool condition) {
+		auto copy = trueConditionArray;
+		return copy.Blend(std::move(falseConditionArray), DynamicArray<bool>(trueConditionArray.shape(), condition));
 	}
 
 	template<typename T>
@@ -412,24 +411,7 @@ private:
 		return DynamicArray<T>(initializer, std::vector<int>{rowCount, finalColCount});
 	}
 
-	template<typename T>
-	static bool isInsideRange(T low, T high, T value) {
 
-		if ((high - low) < value) {
-			throw std::invalid_argument(std::format("Value {} not inside range ({}, {})", value, low, high));
-			exit(0);
-		}
-		return true;
-	}
-	template<typename T>
-	static bool isInsideRangeSym(T low, T high, T value) {
-
-		if (std::abs(high - low) < value) {
-			throw std::invalid_argument(std::format("Value {} not inside range +-({}, {})", value, low, high));
-			exit(0);
-		}
-		return true;
-	}
 
 
 };

@@ -128,6 +128,7 @@ public:
 	DynamicArray<T> operator=( DynamicArray<T>&& rhs) noexcept {
 		m_data = rhs.m_data;
 		m_shape = rhs.m_shape;
+		std::cout << "Made a copy assignment" << std::endl;
 		return *this;
 	}
 	DynamicArray<T> operator=(std::vector<T>&& rhs)const {
@@ -542,9 +543,8 @@ public:
 		for (int i = 0; i < this->shape().size(); i++) {
 			if (i == axis)
 				continue;
-			if (this->shapeAlong(i) != arr.shapeAlong(i)) {
-				throw std::invalid_argument(std::format("Arrays are not of equal length in axis {}", axis));
-			}
+
+			Exceptions::EnsureSameSizeAlongAxis(*this, arr, i, std::string_view(std::format("Arrays are not of equal length in axis {}", axis)));
 		}
 
 		int stride = this->getStride(axis);

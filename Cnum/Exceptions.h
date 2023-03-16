@@ -58,7 +58,7 @@ public:
 	static bool EnsureSameSizeAlongAxis(const DynamicArray<T>& arr1, const DynamicArray<T>& arr2, int axis, std::string_view msg)
 	{
 		if (arr1.shapeAlong(axis) != arr2.shapeAlong(axis)) {
-			throw std::invalid_argument(msg);
+			throw std::invalid_argument(msg.data());
 		}
 		return true;
 	}
@@ -115,6 +115,24 @@ public:
 		return true;
 	}
 
+	template<typename T>
+	static bool EnsureInsideRange(T low, T high, T value) {
+
+		if ((high - low) < value) {
+			throw std::invalid_argument(std::format("Value {} not inside range ({}, {})", value, low, high));
+			exit(0);
+		}
+		return true;
+	}
+	template<typename T>
+	static bool EnsureInsideRangeSym(T low, T high, T value) {
+
+		if (std::abs(high - low) < value) {
+			throw std::invalid_argument(std::format("Value {} not inside range +-({}, {})", value, low, high));
+			exit(0);
+		}
+		return true;
+	}
 
 };
 
