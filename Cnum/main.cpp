@@ -2,6 +2,17 @@
 #include <iostream>
 
 
+/*
+	TODOs: 
+		Sorting
+		Unit tests
+		Mathemathical functions mapped to all elements
+		Random
+
+*/
+
+
+
 int main() {
 
 	iArray test = Cnum::Arange(10); 
