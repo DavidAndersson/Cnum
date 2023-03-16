@@ -670,17 +670,14 @@ public:
 	}
 
 	// Searching
-	DynamicArray<T> Where(DynamicArray<bool>&& condition) {
-		auto con = condition; 
-		return this->Where(con);
-	}
-	DynamicArray<T> Where(DynamicArray<bool>& condition)
+	DynamicArray<int> Find(DynamicArray<bool>&& condition)
 	{
-		DynamicArray<int> outIndices; 
+		int axis = (this->nDims() > 1) ? 0 : 1; 
+		DynamicArray<int> outIndices;
 		for (int i = 0; i < condition.size(); i++) {
 			if (condition[i] == true) {
-				auto idx = this->reconstructIndex(i); 
-				outIndices.Concatenate(idx, 1);
+				auto idx = this->reconstructIndex(i);
+				outIndices.Concatenate(idx, axis);
 			}
 		}
 

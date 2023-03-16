@@ -32,6 +32,8 @@ public:
 	Cnum() = delete;
 	
 	// Static Creators
+
+	// Overload to only take end
 	template<typename T>
 	static DynamicArray<T> Arange(T start, T end, T stepSize) {
 
@@ -58,6 +60,11 @@ public:
 			exit(0);
 		}
 		
+	}
+
+	template<typename T>
+	static DynamicArray<T> Arange(T end) {
+		return Arange(0, end, 1);
 	}
 
 	template<typename T>
@@ -266,6 +273,20 @@ public:
 		return arr.min();
 	}
 
+
+	// Searching
+	static DynamicArray<int> FindWhere(DynamicArray<bool>&& condition) {
+		return condition.Find(std::move(condition));
+	}
+	template<typename T>
+	static DynamicArray<int> FindWhere(DynamicArray<T>&& arr, DynamicArray<bool>&& condition) {
+		return arr.Find(std::move(condition));
+	}
+	template<typename T>
+	static DynamicArray<int> FindWhere(DynamicArray<T>& arr, DynamicArray<bool>&& condition)
+	{
+		return arr.Find(std::move(condition));
+	}
 
 
 

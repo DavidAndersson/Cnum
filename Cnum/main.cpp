@@ -13,11 +13,9 @@
 
 int main() {
 
-	
-	iArray test = Cnum::Arange(0, 50, 1); 
+	fArray test = Cnum::UniformArray<float>({ 3,2,1 }, 5); 
 
-	auto test2 = test.Where(test > 10); 
+	auto tst2 = Cnum::FindWhere( test > 2.0f);
 
-	test2.Print();
-
+	tst2.Print();
  }
