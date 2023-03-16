@@ -578,6 +578,15 @@ public:
 		return *this;
 	}
 
+	DynamicArray<T> Blend(DynamicArray<T>&& arr, DynamicArray<bool>&& condition) {
+		for (int i = 0; i < condition.size(); i++) {
+			if (condition[i] == true) {
+				m_data[i] = arr[i];
+			}
+		}
+		return *this;
+	}
+
 	void append(const T value) {
 
 		try {
