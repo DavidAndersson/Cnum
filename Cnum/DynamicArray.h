@@ -462,6 +462,11 @@ public:
 	}
 
 	DynamicArray<T>& Transpose() {
+
+		if (this->nDims() == 1) {
+			std::reverse(m_shape.begin(), m_shape.end()); 
+			return *this; 
+		}
 		std::vector<int> permutation = std::vector<int>(this->nDims());
 		std::iota(permutation.begin(), permutation.end(), 0);
 		std::reverse(permutation.begin(), permutation.end());
@@ -517,58 +522,47 @@ public:
 		}
 	} 
 
-	DynamicArray<T>& Concatenate(std::vector<T>&& arr, int axis = 0, int offset = -1) {
-		return this->Concatenate(DynamicArray<T>(arr), axis, offset); 
+	DynamicArray<T>& Concatenate(std::vector<T>&& arr, int axis = 0) {
+		return this->Join(DynamicArray<T>(arr), axis, -1); 
 	}
-	DynamicArray<T>& Concatenate(std::vector<T>& arr, int axis = 0, int offset = -1) {
-		return this->Concatenate(DynamicArray<T>(arr), axis, offset);
+	DynamicArray<T>& Concatenate(std::vector<T>& arr, int axis = 0) {
+		return this->Join(DynamicArray<T>(arr), axis, -1);
 	}
-	DynamicArray<T>& Concatenate(DynamicArray<T>& arr, int axis = 0, int offset = -1) {
-		return this->Concatenate(std::move(arr), axis, offset);
+	DynamicArray<T>& Concatenate(DynamicArray<T>& arr, int axis = 0) {
+		return this->Join(std::move(arr), axis, -1);
 	}
-	DynamicArray<T>& Concatenate(DynamicArray<T>&& arr, int axis = 0, int offset = -1) {
+	DynamicArray<T>& Concatenate(DynamicArray<T>&& arr, int axis = 0) {
+		return this->Join(arr, axis, -1);
+	}
+	
+	DynamicArray<T>& Insert(std::vector<T>&& arr, int axis, int offset) {
+		return this->Join(DynamicArray<T>(arr), axis, offset);
+	}
+	DynamicArray<T>& Insert(std::vector<T>& arr, int axis, int offset) {
+		return this->Join(DynamicArray<T>(arr), axis, offset);
+	}
+	DynamicArray<T>& Insert(DynamicArray<T>& arr, int axis, int offset) {
+		return this->Join(std::move(arr), axis, offset);
+	}
+	DynamicArray<T>& Insert(DynamicArray<T>&& arr, int axis, int offset) {
+		return this->Join(arr, axis, offset);
+	}
 
-		// If the array is uninitialized i.e. empty, the concatenation will simply act as assignment
-		if (m_data.empty()) {
-			*this = arr; 
-			return *this;
+	DynamicArray<T>& ReplaceAlong(DynamicArray<T>& newData, int axis, std::vector<int>& nonAxisIndices) {
+		return this->ReplaceAlong(std::move(newData), axis, std::move(nonAxisIndices)); 
+	}
+	DynamicArray<T>& ReplaceAlong(DynamicArray<T>& newData, int axis, std::vector<int>&& nonAxisIndices) {
+		return this->ReplaceAlong(std::move(newData), axis, std::move(nonAxisIndices));
+	}
+	DynamicArray<T>& ReplaceAlong(DynamicArray<T>&& newData, int axis, std::vector<int>&& nonAxisIndices) {
+
+		int stride = getStride(axis);
+		auto start_stop = DetermineStartEndIndexForAxis(axis, nonAxisIndices, 0, -1);
+		int j = 0; 
+		for (int i = start_stop.first; i <= start_stop.second; i += stride) {
+			m_data[i] = newData[j];
+			j++;
 		}
-
-
-		// The off-axis dimensions must all be the same for a valid concatenation
-		for (int i = 0; i < this->nDims(); i++) {
-			if (i == axis)
-				continue;
-
-			Exceptions::EnsureSameSizeAlongAxis(*this, arr, i, std::string_view(std::format("Arrays are not of equal length in axis {}", axis)));
-		}
-
-		int stride = this->getStride(axis);
-
-
-		if (axis == 0) {
-			auto startPoint = (offset == -1) ? this->end() : this->begin() + offset * stride;
-			m_data.insert(startPoint, arr.begin(), arr.end());
-			m_shape[axis] += arr.shapeAlong(axis);
-		}
-
-		else {
-
-			int newNumberOfElements = this->size() + arr.size();
-
-			// Update the shape first so that the stepLength can be computed correctly
-			m_shape[axis] += arr.shapeAlong(axis);
-			int stepLength = stride * this->shapeAlong(axis);
-
-			int startIndex = (offset == -1) ? stepLength : offset;  // Most likely wrong. Maybe stride*offset
-
-			int j = 0;
-			for (int i = startIndex; i < newNumberOfElements; i += stepLength) {
-				m_data.insert(this->begin() + i, arr[j]);
-				j++;
-			}
-		}
-
 		return *this;
 	}
 
@@ -584,7 +578,7 @@ public:
 		return this->Blend(std::move(arr), std::move(condition));
 	}
 
-	void append(const T value) {
+	void append(const T value, int axis = 1) {
 
 		try {
 			if (m_shape.empty()) {
@@ -594,12 +588,10 @@ public:
 			}
 			else {
 				Exceptions::EnsureDim(*this, 1);
+				Exceptions::EnsureLargerDimThan(*this, axis);
 			}
 			m_data.push_back(value);
-			if (m_shape[0] == 1)
-				m_shape[1]++;
-			else
-				m_shape[0]++;
+			m_shape[axis]++; 
 		}
 		catch (const std::invalid_argument& err) {
 			std::cout << err.what() << std::endl;
@@ -648,28 +640,14 @@ public:
 			exit(0);
 		}
 
-		// If negative end - wrap around
-		if (end < 0)
-			end = m_shape[axis] + end;
-
-		// Determine starting index in the array
-		auto startIndex = nonAxisIndex;
-		for (int i = 0; i <= startIndex.size(); i++) {
-			if (i == axis) {
-				startIndex.insert(startIndex.begin() + i, start);
-			}
-		}
-
-		auto endIndex = startIndex;
-		endIndex[axis] = end;
-
+		auto start_stop = DetermineStartEndIndexForAxis(axis, nonAxisIndex, start, end); 
 		int stride = getStride(axis);
-		std::vector<T> initializer;
-		for (int i = flattenIndex(startIndex); i <= flattenIndex(endIndex); i += stride) {
-			initializer.push_back(m_data[i]);
+		DynamicArray<T> out; 
+		for (int i = start_stop.first; i <= start_stop.second; i += stride) {
+			out.append(m_data[i]);
 		}
 
-		return DynamicArray<T>(initializer);
+		return out;
 	}
 	DynamicArray<T> ExtractAxis(int axis, int nonAxisIndex, int start = 0, int end = -1)const {
 		return ExtractAxis(axis, std::vector<int>(1, nonAxisIndex), start, end);
@@ -692,7 +670,7 @@ public:
 
 
 	// Sorting
-	std::pair<DynamicArray<T>, DynamicArray<T>> SortAndFlatten()
+	std::pair<DynamicArray<T>, DynamicArray<T>> SortFlat_args()
 	{
 		DynamicArray<int> idx( {1, this->size()}, 0);
 		std::iota(idx.begin(), idx.end(), 0);
@@ -702,7 +680,42 @@ public:
 
 		return std::make_pair(*this, idx); 
 	}
-	//DynamicArray<T> Sort();
+
+	// Think about what indices this should return...
+	std::pair<DynamicArray<T>, DynamicArray<T>> Sort_args(int axis) {
+
+		DynamicArray<int> idx(this->shape(), 0);
+		std::iota(idx.begin(), idx.end(), 0);
+
+		int stride = this->getStride(axis);
+		int step = stride * this->shapeAlong(axis);
+		for (int i = 0; i < this->size(); i += step) {
+			DynamicArray<T> sortedAxis = idx.ExtractAxis(axis, getNonAxisIndex(i, axis));
+			std::stable_sort(sortedAxis.begin(), sortedAxis.end(), [&](int i1, int i2) { return m_data[i1] < m_data[i2];  });
+			idx.ReplaceAlong(sortedAxis, axis, getNonAxisIndex(i, axis));
+		}
+		reConfigureData(idx); 
+
+		return std::make_pair(*this, idx);
+
+	}
+	DynamicArray<T>& SortFlat()
+	{
+		std::sort(this->begin(), this->end()); 
+		this->Flatten(); 
+		return *this;
+	}
+	DynamicArray<T> Sort(int axis) 
+	{
+		int stride = this->getStride(axis);
+		int step = stride * this->shapeAlong(axis);
+		for (int i = 0; i < this->size(); i += step) {
+			DynamicArray<T> sortedAxis = this->ExtractAxis(axis, getNonAxisIndex(i, axis)).SortFlat();
+			this->ReplaceAlong(sortedAxis, axis, getNonAxisIndex(i, axis));
+		}
+		return *this;
+	}
+
 
 	// Boolean checks
 	bool isEqualTo(const DynamicArray<T>& other)const {
@@ -766,6 +779,7 @@ public:
 	{
 		return getNumberOfElements();
 	};
+	// Exception here
 	int getStride(int axis = 0)const
 	{
 		/*
@@ -775,6 +789,7 @@ public:
 		return std::accumulate(m_shape.begin() + 1 + axis, m_shape.end(), 1, std::multiplies<>());
 	}
 
+	// Iterators
 	auto begin()const
 	{
 		return m_data.begin(); 
@@ -825,6 +840,10 @@ private:
 	// Private Interface
 	// -------------------------
 
+	int flattenIndex(DynamicArray<int>& indices)const
+	{
+		return this->flattenIndex(m_data, this->shape());
+	}
 	int flattenIndex(std::vector<int>& indices)const
 	{
 		return flattenIndex(indices, this->shape());
@@ -881,6 +900,11 @@ private:
 	int getNumberOfElements()const
 	{
 		return getNumberOfElements(this->shape());
+	}
+	int getNonAxisNumberOfElements(int axis)const {
+		std::vector<int> shape = this->shape(); 
+		shape.erase(shape.begin() + axis); 
+		return getNumberOfElements(shape); 
 	}
 
 	static int getNumberOfElements(const std::vector<int>& shape)
@@ -959,6 +983,74 @@ private:
 		for (int i = 0; i < this->size(); i++) {
 			m_data[i] = copy[indices[i]];
 		}
+	}
+
+
+	std::pair<int, int> DetermineStartEndIndexForAxis(int axis, std::vector<int> nonAxisIndex, int start, int end)const
+	{ 
+
+		// Determine starting index in the array
+		auto startIndex = nonAxisIndex;
+		for (int i = 0; i <= startIndex.size(); i++) {
+			if (i == axis) {
+				startIndex.insert(startIndex.begin() + i, start);
+			}
+		}
+
+		auto endIndex = startIndex;
+		endIndex[axis] = (end < 0) ? m_shape[axis] + end : end;
+
+		return std::make_pair(flattenIndex(startIndex), flattenIndex(endIndex)); 
+	}
+
+	DynamicArray<T>& Join(DynamicArray<T>&& arr, int axis, int offset) {
+
+		// If the array is uninitialized i.e. empty, the concatenation will simply act as assignment
+		if (m_data.empty()) {
+			*this = arr;
+			return *this;
+		}
+
+		// The off-axis dimensions must all be the same for a valid concatenation
+		for (int i = 0; i < this->nDims(); i++) {
+			if (i == axis)
+				continue;
+
+			try {
+				Exceptions::EnsureSameSizeAlongAxis(*this, arr, i, std::string_view(std::format("Arrays are not of equal length in axis {}", axis)));
+			}
+			catch (const std::invalid_argument& err) {
+				std::cout << err.what() << std::endl;
+				exit(0);
+			}
+		}
+
+		int stride = this->getStride(axis);
+
+		if (axis == 0) {
+			auto startPoint = (offset == -1) ? this->end() : this->begin() + offset * stride;
+			m_data.insert(startPoint, arr.begin(), arr.end());
+			m_shape[axis] += arr.shapeAlong(axis);
+		}
+
+		else {
+
+			int newNumberOfElements = this->size() + arr.size();
+
+			// Update the shape first so that the stepLength can be computed correctly
+			m_shape[axis] += arr.shapeAlong(axis);
+			int stepLength = stride * this->shapeAlong(axis);
+
+			int startIndex = (offset == -1) ? stepLength : offset;  // Most likely wrong. Maybe stride*offset
+
+			int j = 0;
+			for (int i = startIndex; i < newNumberOfElements; i += stepLength) {
+				m_data.insert(this->begin() + i, arr[j]);
+				j++;
+			}
+		}
+
+		return *this;
 	}
 
 

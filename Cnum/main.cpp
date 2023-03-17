@@ -6,6 +6,7 @@
 	TODOs: 
 		Sorting
 		Unit tests
+		Print in which function an exception is thrown
 		Mathemathical functions mapped to all elements
 		Random
 		Shape - which Rect, Circ etc could inherit from
@@ -17,13 +18,15 @@
 
 int main() {
 
-	iArray test = Cnum::Arange(10); 
-	iArray test2 = Cnum::Arange(10, 0, 1);
+	iArray test = Cnum::UniformArray<int>({ 3,3 }, 0); 
+	iArray in = Cnum::Array<int>({ 1,2,3 }).Transpose();
 
-	auto tst2 = Cnum::BlendIf(test, test2, test > 5);
+	test.Insert(in, 1, 1); 
+	test.Print();
+	auto res = test.Sort_args(1); 
 
-	auto out = tst2.SortAndFlatten();
+	res.first.Print();
+	res.second.Print();
 
-	out.second.Print();
 
  }
