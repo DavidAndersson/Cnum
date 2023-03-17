@@ -439,7 +439,7 @@ public:
 	// Mutating methods
 	DynamicArray<T>& Flatten()
 	{
-		m_shape = { this->size() };
+		m_shape = { 1, this->size() };
 		return *this;
 	}
 	DynamicArray<T>& abs()
@@ -692,7 +692,17 @@ public:
 
 
 	// Sorting
-	DynamicArray<T> Sort();
+	std::pair<DynamicArray<T>, DynamicArray<T>> SortAndFlatten()
+	{
+		DynamicArray<int> idx( {1, this->size()}, 0);
+		std::iota(idx.begin(), idx.end(), 0);
+		std::stable_sort(idx.begin(), idx.end(), [&](int i1, int i2) { return m_data[i1] < m_data[i2]; });
+		reConfigureData(idx); 
+		this->Flatten(); 
+
+		return std::make_pair(*this, idx); 
+	}
+	//DynamicArray<T> Sort();
 
 	// Boolean checks
 	bool isEqualTo(const DynamicArray<T>& other)const {
@@ -942,6 +952,13 @@ private:
 		index.erase(index.begin() + axis); 
 		return index;
 
+	}
+
+	void reConfigureData(DynamicArray<int>& indices) {
+		auto copy = m_data; 
+		for (int i = 0; i < this->size(); i++) {
+			m_data[i] = copy[indices[i]];
+		}
 	}
 
 

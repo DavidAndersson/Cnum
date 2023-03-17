@@ -285,6 +285,15 @@ public:
 		return arr.Find(std::move(condition));
 	}
 
+	// Sorting
+	template<typename T>
+	DynamicArray<T> SortAndFlatten(DynamicArray<T> arr)const
+	{
+		return arr.SortAndFlatten();
+	}
+	//template<typename T>
+	//DynamicArray<T> Sort();
+
 
 	template<typename T>
 	static DynamicArray<T> BlendIf(DynamicArray<T>& trueConditionArray, DynamicArray<T>& falseConditionArray, DynamicArray<bool>&& condition) {

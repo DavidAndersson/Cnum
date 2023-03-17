@@ -22,10 +22,8 @@ int main() {
 
 	auto tst2 = Cnum::BlendIf(test, test2, test > 5);
 
-	tst2.abs();
+	auto out = tst2.SortAndFlatten();
 
-	tst2.Print();
-	test.Print(); 
-	test2.Print();
+	out.second.Print();
 
  }
