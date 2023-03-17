@@ -128,8 +128,7 @@ public:
 			exit(0);
 		}
 
-		auto arr1Data = arr1.raw();
-		return std::inner_product(arr1Data.begin(), arr1Data.end(), arr2.raw().begin(), 0);
+		return std::inner_product(arr1.begin(), arr1.end(), arr2.begin(), 0);
 	}
 
 	template<typename T>
@@ -240,10 +239,9 @@ public:
 			std::cout << err.what() << std::endl;
 			exit(0);
 		}
-		std::vector<T> out(arr1.size()); 
-		auto arr1Data = arr1.raw();
-		std::transform(arr1Data.begin(), arr1Data.end(), arr2.raw().begin(), out.begin(), [](T v1, T v2) {return std::min(v1, v2);});
-		return DynamicArray<T>(out, arr1.shape());
+		DynamicArray<T> out = arr1; 
+		std::transform(arr1.begin(), arr1.end(), arr2.begin(), out.begin(), [](T v1, T v2) {return std::min(v1, v2);});
+		return out;
 
 	}
 
@@ -257,10 +255,9 @@ public:
 			std::cout << err.what() << std::endl;
 			exit(0);
 		}
-		std::vector<T> out(arr1.size());
-		auto arr1Data = arr1.raw();
-		std::transform(arr1Data.begin(), arr1Data.end(), arr2.raw().begin(), out.begin(), [](T v1, T v2) {return std::max(v1, v2); });
-		return DynamicArray<T>(out, arr1.shape());
+		DynamicArray<T> out = arr1;
+		std::transform(arr1.begin(), arr1.end(), arr2.begin(), out.begin(), [](T v1, T v2) {return std::max(v1, v2); });
+		return out;
 
 	}
 

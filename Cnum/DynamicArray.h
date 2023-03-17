@@ -23,16 +23,16 @@ public:
 	// -------------------------
 
 	DynamicArray() = default;
-	DynamicArray(std::vector<T>& initializer, std::vector<int>&& shape)
+	DynamicArray(const std::vector<T>& initializer, const std::vector<int>&& shape)
 		: DynamicArray(std::move(initializer), std::move(shape))
 	{}
-	DynamicArray(std::vector<T>& initializer, std::vector<int>& shape)
+	DynamicArray(const std::vector<T>& initializer, const std::vector<int>& shape)
 		: DynamicArray(std::move(initializer), std::move(shape))
 	{}
-	DynamicArray(std::vector<T>& initializer)
+	DynamicArray(const std::vector<T>& initializer)
 		: DynamicArray(std::move(initializer))
 	{}
-	DynamicArray(std::vector<int>&& shape, T initialValue)
+	DynamicArray(const std::vector<int>&& shape, T initialValue)
 		: m_shape{ shape } 
 	{
 		m_data = std::vector<T>(getNumberOfElements(), initialValue);
@@ -41,7 +41,7 @@ public:
 			m_shape = std::vector<int>{ m_shape[0], 1 };
 		}
 	};
-	DynamicArray(std::vector<int>& shape, T initialValue)
+	DynamicArray(const std::vector<int>& shape, T initialValue)
 		: DynamicArray(std::move(shape), initialValue)
 	{}
 
@@ -444,7 +444,7 @@ public:
 	}
 	DynamicArray<T>& abs()
 	{
-		std::transform(m_data.begin(), m_data.end(), m_data.begin(), [](T e) {return std::abs(e); });
+		std::transform(this->begin(), this->end(), this->begin(), [](T e) {return std::abs(e); });
 		return *this;
 	}
 	DynamicArray<T>& Reshape(const std::vector<int>& newShape)
@@ -490,18 +490,18 @@ public:
 		try {
 			Exceptions::EnsurePermutation(*this, permutation);
 			Exceptions::EnsureLargerDimThan(*this, 1);
-			std::vector<T> newData = std::vector<T>(m_data.size(), 0);
-			std::vector<int> newShape = std::vector<int>(this->shape().size(), 0);
+			std::vector<T> newData = std::vector<T>(this->size(), 0);
+			std::vector<int> newShape = std::vector<int>(this->nDims(), 0);
 
 			// Update the shape based on the permutation
-			for (int j = 0; j < this->shape().size(); j++) {
+			for (int j = 0; j < this->nDims(); j++) {
 				newShape[j] = this->shapeAlong(permutation[j]);
 			}
 
 			// Swap places of the data w.r.t the permutation
 			for (int i = 0; i < newData.size(); i++) {
 				std::vector<int> indices = reconstructIndex(i);
-				std::vector<int> temp = std::vector<int>(this->shape().size(), 0);
+				std::vector<int> temp = std::vector<int>(this->nDims(), 0);
 				for (int j = 0; j < temp.size(); j++) {
 					temp[j] = indices[permutation[j]];
 				}
@@ -528,19 +528,15 @@ public:
 	}
 	DynamicArray<T>& Concatenate(DynamicArray<T>&& arr, int axis = 0, int offset = -1) {
 
-		std::vector<T> result = this->raw();
-		std::vector<int> result_shape = this->shape();
-		auto sourceData = arr.raw();
-
 		// If the array is uninitialized i.e. empty, the concatenation will simply act as assignment
-		if (result.empty()) {
+		if (m_data.empty()) {
 			*this = arr; 
 			return *this;
 		}
 
 
 		// The off-axis dimensions must all be the same for a valid concatenation
-		for (int i = 0; i < this->shape().size(); i++) {
+		for (int i = 0; i < this->nDims(); i++) {
 			if (i == axis)
 				continue;
 
@@ -551,29 +547,28 @@ public:
 
 
 		if (axis == 0) {
-			auto startPoint = (offset == -1) ? result.end() : result.begin() + offset * stride;
-			result.insert(startPoint, sourceData.begin(), sourceData.end());
-			result_shape[axis] += arr.shapeAlong(axis);
+			auto startPoint = (offset == -1) ? this->end() : this->begin() + offset * stride;
+			m_data.insert(startPoint, arr.begin(), arr.end());
+			m_shape[axis] += arr.shapeAlong(axis);
 		}
 
 		else {
 
-			int newNumberOfElements = (int)result.size() + arr.size();
+			int newNumberOfElements = this->size() + arr.size();
 
 			// Update the shape first so that the stepLength can be computed correctly
-			result_shape[axis] += arr.shapeAlong(axis);
+			m_shape[axis] += arr.shapeAlong(axis);
 			int stepLength = stride * this->shapeAlong(axis);
 
 			int startIndex = (offset == -1) ? stepLength : offset;  // Most likely wrong. Maybe stride*offset
 
 			int j = 0;
 			for (int i = startIndex; i < newNumberOfElements; i += stepLength) {
-				result.insert(result.begin() + i, sourceData[j]);
+				m_data.insert(this->begin() + i, arr[j]);
 				j++;
 			}
 		}
 
-		m_data = result; m_shape = result_shape; 
 		return *this;
 	}
 
@@ -695,6 +690,10 @@ public:
 		return outIndices;
 	}
 
+
+	// Sorting
+	DynamicArray<T> Sort();
+
 	// Boolean checks
 	bool isEqualTo(const DynamicArray<T>& other)const {
 		return std::equal(m_data.begin(), m_data.end(), other.m_data.begin());
@@ -712,11 +711,15 @@ public:
 	}
 
 	// Getters
-	std::vector<int> shape()const 
+	const std::vector<int>& shape()const 
 	{ 
 		return m_shape; 
+	}
+	std::vector<int> shape()
+	{
+		return m_shape;
 	};
-	int shapeAlong(int axis)const { 
+	const int& shapeAlong(int axis)const { 
 
 		try {
 			Exceptions::EnsureLargerDimThan(*this, axis); 
@@ -726,7 +729,17 @@ public:
 			std::cout << err.what() << std::endl;
 			exit(0);
 		}
+	}
+	int shapeAlong(int axis) {
 
+		try {
+			Exceptions::EnsureLargerDimThan(*this, axis);
+			return m_shape[axis];
+		}
+		catch (const std::invalid_argument& err) {
+			std::cout << err.what() << std::endl;
+			exit(0);
+		}
 	}
 	std::string sshape()const 
 	{
@@ -750,6 +763,23 @@ public:
 				- How far you have to move in the 1d vector to get to the next element along the specified axis
 		*/
 		return std::accumulate(m_shape.begin() + 1 + axis, m_shape.end(), 1, std::multiplies<>());
+	}
+
+	auto begin()const
+	{
+		return m_data.begin(); 
+	}
+	auto begin()
+	{
+		return m_data.begin();
+	}
+	auto end()const
+	{
+		return m_data.end();
+	}
+	auto end()
+	{
+		return m_data.end();
 	}
 
 	const std::vector<T>& raw()const
@@ -888,13 +918,13 @@ private:
 	static DynamicArray<bool> CreateLogicalArray(const DynamicArray<T>& arr1, const DynamicArray<T>&& arr2, std::function<bool(T,T)> func)
 	{
 		std::vector<bool> out(arr1.size(), false);
-		std::transform(arr1.raw().begin(), arr1.raw().end(), arr2.raw().begin(), out.begin(), func);
+		std::transform(arr1.begin(), arr1.end(), arr2.begin(), out.begin(), func);
 		return DynamicArray<bool>(out, arr1.shape());
 	}
 	static DynamicArray<bool> CreateLogicalArray(const DynamicArray<T>& arr1, T value, std::function<bool(T)> func)
 	{
 		std::vector<bool> out(arr1.size(), false);
-		std::transform(arr1.raw().begin(), arr1.raw().end(), out.begin(), func);
+		std::transform(arr1.begin(), arr1.end(), out.begin(), func);
 		return DynamicArray<bool>(out, arr1.shape());
 	}
 	
@@ -902,7 +932,7 @@ private:
 	static DynamicArray<T> PerformArithmeticOperation(const DynamicArray<T>& arr1, const DynamicArray<T>&& arr2, Operation op)
 	{
 		std::vector<T> data(arr1.size());
-		std::transform(arr1.raw().begin(), arr1.raw().end(), arr2.raw().begin(), data.begin(), op);
+		std::transform(arr1.begin(), arr1.raw().end(), arr2.begin(), data.begin(), op);
 		return DynamicArray<T>(data, arr1.shape());
 	}
 
