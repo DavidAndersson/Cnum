@@ -23,10 +23,13 @@ int main() {
 
 	test.Insert(in, 1, 1); 
 	test.Print();
-	auto res = test.Sort_args(1); 
 
-	res.first.Print();
-	res.second.Print();
 
+	auto t = Cnum::Array<int>({ 6,3,6,4,6,6,3,2,4,6,8,5,4,2,5,7 }); 
+	t.Transpose();
+
+	auto out = t.argSort(); 
+
+	out.Print();
 
  }

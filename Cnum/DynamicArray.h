@@ -664,39 +664,47 @@ public:
 				outIndices.Concatenate(idx, axis);
 			}
 		}
-
 		return outIndices;
 	}
 
-
 	// Sorting
-	std::pair<DynamicArray<T>, DynamicArray<T>> SortFlat_args()
+	DynamicArray<int> argSort() 
 	{
-		DynamicArray<int> idx( {1, this->size()}, 0);
-		std::iota(idx.begin(), idx.end(), 0);
-		std::stable_sort(idx.begin(), idx.end(), [&](int i1, int i2) { return m_data[i1] < m_data[i2]; });
-		reConfigureData(idx); 
-		this->Flatten(); 
+		try {
+			Exceptions::EnsureDim(*this, 1); 
+			DynamicArray<int> out(this->shape(), 0);
+			std::iota(out.begin(), out.end(), 0);
+			std::stable_sort(out.begin(), out.end(), [&](int i1, int i2) { return m_data[i1] < m_data[i2];  });
+			return out;
+		}
+		catch (const std::invalid_argument& err) {
+			std::cout << err.what() << std::endl;
+			exit(0);
+		}
 
-		return std::make_pair(*this, idx); 
 	}
+	DynamicArray<int> argSort(int axis) {
 
-	// Think about what indices this should return...
-	std::pair<DynamicArray<T>, DynamicArray<T>> Sort_args(int axis) {
+		/*
+			What are the indices returned? 
+				The indices that are returned represent the internal axis-sorting indices. 
+				i.e. along the specifed axis, there will be an internal set containing 0-N in 
+				the corresponding sorted order
+		*/
 
-		DynamicArray<int> idx(this->shape(), 0);
-		std::iota(idx.begin(), idx.end(), 0);
-
+		DynamicArray<int> axisIdx({ this->shapeAlong(axis) }, 0);
+		DynamicArray<int> out(this->shape(), 0);
+		
 		int stride = this->getStride(axis);
 		int step = stride * this->shapeAlong(axis);
 		for (int i = 0; i < this->size(); i += step) {
-			DynamicArray<T> sortedAxis = idx.ExtractAxis(axis, getNonAxisIndex(i, axis));
-			std::stable_sort(sortedAxis.begin(), sortedAxis.end(), [&](int i1, int i2) { return m_data[i1] < m_data[i2];  });
-			idx.ReplaceAlong(sortedAxis, axis, getNonAxisIndex(i, axis));
+			DynamicArray<T> data = this->ExtractAxis(axis, getNonAxisIndex(i, axis));
+			std::iota(axisIdx.begin(), axisIdx.end(), 0);
+			std::stable_sort(axisIdx.begin(), axisIdx.end(), [&](int i1, int i2) { return data[i1] < data[i2];  });
+			out.ReplaceAlong(axisIdx, axis, getNonAxisIndex(i, axis));
 		}
-		reConfigureData(idx); 
 
-		return std::make_pair(*this, idx);
+		return out; 
 
 	}
 	DynamicArray<T>& SortFlat()
@@ -705,7 +713,19 @@ public:
 		this->Flatten(); 
 		return *this;
 	}
-	DynamicArray<T> Sort(int axis) 
+	DynamicArray<T>& Sort()
+	{
+		try {
+			Exceptions::EnsureDim(*this, 1);
+			std::sort(this->begin(), this->end());
+			return *this;
+		}
+		catch (const std::invalid_argument& err) {
+			std::cout << err.what() << std::endl;
+			exit(0);
+		}
+	}
+	DynamicArray<T>& Sort(int axis) 
 	{
 		int stride = this->getStride(axis);
 		int step = stride * this->shapeAlong(axis);
@@ -985,7 +1005,18 @@ private:
 		}
 	}
 
-
+	int getDominantAxis_1d()
+	{
+		try {
+			Exceptions::EnsureDim(*this, 1);
+			return (int)(std::max_element(m_shape.begin(), m_shape.end()) - m_shape.begin());
+		}
+		catch (const std::invalid_argument& err) {
+			std::cout << err.what() << std::endl;
+			exit(0);
+		}
+		
+	}
 	std::pair<int, int> DetermineStartEndIndexForAxis(int axis, std::vector<int> nonAxisIndex, int start, int end)const
 	{ 
 
