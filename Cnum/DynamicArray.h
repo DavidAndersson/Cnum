@@ -86,9 +86,14 @@ public:
 	// -------------------------
 
 	// Indexing
-	T& operator[](std::vector<int>& index)
+	T& operator[](std::vector<int>&& index)
 	{
 		return m_data.at(flattenIndex(index));
+	}
+	T& operator[](std::vector<int>& index)
+	{
+		//return m_data.at(flattenIndex(index));
+		return *this[std::move(index)]; 
 	}
 	T& operator[](DynamicArray<int>& index) {
 		try {
@@ -102,7 +107,14 @@ public:
 	}
 	T operator[](int index)
 	{
-		return m_data[index];
+		try {
+			Exceptions::EnsureDim(*this, 1); 
+			return m_data[index];
+		}
+		catch (const std::invalid_argument& err) {
+			std::cout << err.what() << std::endl;
+			exit(0);
+		}
 	}
 	DynamicArray<T> operator[](DynamicArray<bool>&& logicalIndices) {
 		DynamicArray<T> data;
@@ -522,17 +534,17 @@ public:
 		}
 	} 
 
-	DynamicArray<T>& Concatenate(std::vector<T>&& arr, int axis = 0) {
+	DynamicArray<T>& Concatenate(std::vector<T>&& arr, int axis) {
 		return this->Join(DynamicArray<T>(arr), axis, -1); 
 	}
-	DynamicArray<T>& Concatenate(std::vector<T>& arr, int axis = 0) {
+	DynamicArray<T>& Concatenate(std::vector<T>& arr, int axis) {
 		return this->Join(DynamicArray<T>(arr), axis, -1);
 	}
-	DynamicArray<T>& Concatenate(DynamicArray<T>& arr, int axis = 0) {
+	DynamicArray<T>& Concatenate(DynamicArray<T>& arr, int axis) {
 		return this->Join(std::move(arr), axis, -1);
 	}
-	DynamicArray<T>& Concatenate(DynamicArray<T>&& arr, int axis = 0) {
-		return this->Join(arr, axis, -1);
+	DynamicArray<T>& Concatenate(DynamicArray<T>&& arr, int axis) {
+		return this->Join(std::move(arr), axis, -1);
 	}
 	
 	DynamicArray<T>& Insert(std::vector<T>&& arr, int axis, int offset) {
@@ -799,14 +811,22 @@ public:
 	{
 		return getNumberOfElements();
 	};
-	// Exception here
 	int getStride(int axis = 0)const
 	{
 		/*
 			What is a stride?
 				- How far you have to move in the 1d vector to get to the next element along the specified axis
 		*/
-		return std::accumulate(m_shape.begin() + 1 + axis, m_shape.end(), 1, std::multiplies<>());
+
+		try {
+			Exceptions::EnsureLargerDimThan(*this, axis); 
+			return std::accumulate(m_shape.begin() + 1 + axis, m_shape.end(), 1, std::multiplies<>());
+		}
+		catch (const std::invalid_argument& err) {
+			std::cout << err.what() << std::endl;
+			exit(0);
+		}
+		
 	}
 
 	// Iterators
@@ -940,7 +960,7 @@ private:
 			std::cout << "[";
 			for (int j = start; j < start + m_shape[m_shape.size()-1]; j++) {
 				std::cout << m_data[j];
-				if (j < start + m_shape[1] - 1) {
+				if (j < start + m_shape[m_shape.size() - 1] - 1) {
 					std::cout << " ";
 				}
 			}
@@ -1067,17 +1087,19 @@ private:
 		else {
 
 			int newNumberOfElements = this->size() + arr.size();
+			int startIndex = (offset == -1) ? this->shapeAlong(axis) : offset;
 
 			// Update the shape first so that the stepLength can be computed correctly
 			m_shape[axis] += arr.shapeAlong(axis);
 			int stepLength = stride * this->shapeAlong(axis);
-
-			int startIndex = (offset == -1) ? stepLength : offset;  // Most likely wrong. Maybe stride*offset
-
 			int j = 0;
+
 			for (int i = startIndex; i < newNumberOfElements; i += stepLength) {
-				m_data.insert(this->begin() + i, arr[j]);
-				j++;
+				int offset = j;
+				for (int k = 0; k < arr.shapeAlong(axis); k++) {
+					m_data.insert(this->begin() + i + k, arr[arr.reconstructIndex(j)]);
+					j++;
+				}
 			}
 		}
 
