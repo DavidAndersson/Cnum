@@ -55,8 +55,8 @@ public:
 				return DynamicArray<T>{initializer};
 			}
 		}
-		catch (const std::invalid_argument& err) {
-			std::cout << err.what() << std::endl;
+		catch (const std::exception& ex) {
+			std::cout << ex.what() << std::endl;
 			exit(0);
 		}
 		
@@ -88,7 +88,8 @@ public:
 			return ReadDataFromFile(dataFile, delimiter);
 		}
 		catch (const std::runtime_error& err) {
-			std::cout << err.what() << std::endl;
+			std::cout << "Error in FromFile() -> ";
+			std::cout << ex.what() << std::endl;
 			exit(0);
 		}
 	}
@@ -103,8 +104,8 @@ public:
 		try {
 			return DynamicArray<T>(initiallizer, shape);
 		}
-		catch (const std::invalid_argument& err) {
-			std::cout << err.what() << std::endl;
+		catch (const std::exception& ex) {
+			std::cout << ex.what() << std::endl;
 			exit(0);
 		}
 	}
@@ -119,16 +120,18 @@ public:
 
 	template<typename T>
 	static T Dot(DynamicArray<T>& arr1, DynamicArray<T>& arr2) {
-		if (arr1.shape().size() > 1 || arr2.shape().size() > 1) {
-			std::cerr << "Arrays must be one dimensional for scalar product" << std::endl;
-			exit(0);
-		}
-		else if (arr1.shape().size() != arr2.shape().size()) {
-			std::cerr << "Arrays must be of the same size" << std::endl;
-			exit(0);
-		}
 
-		return std::inner_product(arr1.begin(), arr1.end(), arr2.begin(), 0);
+		try {
+			Exceptions::EnsureSameSize(arr1, arr2);
+			Exceptions::EnsureDim(arr1, 1);
+			Exceptions::EnsureDim(arr2, 1);
+
+			return std::inner_product(arr1.begin(), arr1.end(), arr2.begin(), 0);
+		}
+		catch (const std::exception& ex) {
+			std::cout << ex.what() << std::endl;
+			exit(0);
+		}
 	}
 
 	template<typename T>
@@ -143,8 +146,8 @@ public:
 			copy.Concatenate(arr2, axis, offset);
 			return copy;
 		}
-		catch (const std::invalid_argument& err) {
-			std::cout << err.what() << std::endl;
+		catch (const std::exception& ex) {
+			std::cout << ex.what() << std::endl;
 			exit(0);
 		}*/
 
@@ -235,8 +238,8 @@ public:
 		try {
 			Exceptions::EnsureSameShape(arr1, arr2); 
 		}
-		catch (const std::invalid_argument& err) {
-			std::cout << err.what() << std::endl;
+		catch (const std::exception& ex) {
+			std::cout << ex.what() << std::endl;
 			exit(0);
 		}
 		DynamicArray<T> out = arr1; 
@@ -251,8 +254,8 @@ public:
 		try {
 			Exceptions::EnsureSameShape(arr1, arr2);
 		}
-		catch (const std::invalid_argument& err) {
-			std::cout << err.what() << std::endl;
+		catch (const std::exception& ex) {
+			std::cout << ex.what() << std::endl;
 			exit(0);
 		}
 		DynamicArray<T> out = arr1;

@@ -50,7 +50,7 @@ public:
 	static bool EnsureDim(const DynamicArray<T>& arr, int dim)
 	{
 		if (arr.nDims() != dim) {
-			throw std::invalid_argument(std::format("{} dimension array is incompatible with dimension {}", arr.nDims(), dim));
+			throw std::invalid_argument(std::format("{} dimension array is incompatible with {} dimension", arr.nDims(), dim));
 		}
 		return true;
 	}
@@ -107,6 +107,20 @@ public:
 		}
 		return true;
 	}
+
+	template<typename T>
+	static bool EnsureSameNonAxisShape(const DynamicArray<T>& arr1, const DynamicArray<T>& arr2, int axis)
+	{
+		for (int i = 0; i < arr1.nDims(); i++) {
+			if (i != axis) {
+				if (arr1.shapeAlong(i) != arr2.shapeAlong(i)) {
+					throw std::invalid_argument(std::format("The shape must be the same along axis {}", i));
+				}
+			}
+		}
+		return true;
+	}
+
 
 
 	static bool EnsureEqual(int val_1, int val_2, const std::string& msg)

@@ -68,8 +68,8 @@ public:
 			Exceptions::EnsureEqual(getNumberOfElements(shape), this->size(), msg);
 			
 		}
-		catch (const std::invalid_argument& err) {
-			std::cout << err.what() << std::endl;
+		catch (const std::exception& ex) {
+			std::cout << ex.what() << std::endl;
 			exit(0);
 		}
 	}
@@ -89,9 +89,9 @@ public:
 			Exceptions::EnsureDim(*this, (int)index.size());
 			return m_data.at(flattenIndex(index));
 		}
-		catch (const std::invalid_argument& err) {
+		catch (const std::exception& ex) {
 			std::cout << "Error in [] access -> ";
-			std::cout << err.what() << std::endl;
+			std::cout << ex.what() << std::endl;
 			exit(0);
 		}
 		
@@ -102,9 +102,9 @@ public:
 			Exceptions::EnsureDim(*this, (int)index.size());
 			return m_data.at(flattenIndex(index));
 		}
-		catch (const std::invalid_argument& err) {
+		catch (const std::exception& ex) {
 			std::cout << "Error in [] access -> ";
-			std::cout << err.what() << std::endl;
+			std::cout << ex.what() << std::endl;
 			exit(0);
 		}
 	}
@@ -113,8 +113,8 @@ public:
 			Exceptions::EnsureSameSize(index.size(), this->shape());
 			return m_data.at(flattenIndex(index.raw()));
 		}
-		catch (const std::invalid_argument& err) {
-			std::cout << err.what() << std::endl;
+		catch (const std::exception& ex) {
+			std::cout << ex.what() << std::endl;
 			exit(0);
 		}
 	}
@@ -122,11 +122,11 @@ public:
 	{
 		try {
 			Exceptions::EnsureDim(*this, 1); 
-			return (T&)m_data[index];
+			return (T&)m_data.at(index);
 		}
-		catch (const std::invalid_argument& err) {
+		catch (const std::exception& ex) {
 			std::cout << "Error in [] access -> ";
-			std::cout << err.what() << std::endl;
+			std::cout << ex.what() << std::endl;
 			exit(0);
 		}
 	}
@@ -140,9 +140,9 @@ public:
 			}
 			return data;
 		}
-		catch (const std::invalid_argument& err) {
+		catch (const std::exception& ex) {
 			std::cout << "Error in [] access -> ";
-			std::cout << err.what() << std::endl;
+			std::cout << ex.what() << std::endl;
 			exit(0);
 		}
 
@@ -158,9 +158,9 @@ public:
 			}
 			return data;
 		}
-		catch (const std::invalid_argument& err) {
+		catch (const std::exception& ex) {
 			std::cout << "Error in [] access -> ";
-			std::cout << err.what() << std::endl;
+			std::cout << ex.what() << std::endl;
 			exit(0);
 		}
 	}
@@ -193,9 +193,9 @@ public:
 			Exceptions::EnsureSameShape(*this, rhs);
 			return PerformArithmeticOperation(*this, std::move(rhs), std::plus<>());
 		}
-		catch (const std::invalid_argument& err) {
+		catch (const std::exception& ex) {
 			std::cout << "Error in array addition -> ";
-			std::cout << err.what() << std::endl;
+			std::cout << ex.what() << std::endl;
 			exit(0);
 		}
 	}
@@ -226,9 +226,9 @@ public:
 			Exceptions::EnsureSameShape(*this, rhs);
 			return PerformArithmeticOperation(*this, std::move(rhs), std::minus<>());
 		}
-		catch (const std::invalid_argument& err) {
+		catch (const std::exception& ex) {
 			std::cout << "Error in array subtraction -> ";
-			std::cout << err.what() << std::endl;
+			std::cout << ex.what() << std::endl;
 			exit(0);
 		}
 	}
@@ -259,9 +259,9 @@ public:
 			Exceptions::EnsureSameShape(*this, rhs);
 			return PerformArithmeticOperation(*this, std::move(rhs), std::multiplies<>());
 		}
-		catch (const std::invalid_argument& err) {
+		catch (const std::exception& ex) {
 			std::cout << "Error in array multiplication -> ";
-			std::cout << err.what() << std::endl;
+			std::cout << ex.what() << std::endl;
 			exit(0);
 		}
 	}
@@ -293,9 +293,9 @@ public:
 			Exceptions::EnsureNoZeros(this->raw());
 			return PerformArithmeticOperation(*this, std::move(rhs), std::divides<>());
 		}
-		catch (const std::invalid_argument& err) {
+		catch (const std::exception& ex) {
 			std::cout << "Error in array division -> ";
-			std::cout << err.what() << std::endl;
+			std::cout << ex.what() << std::endl;
 			exit(0);
 		}
 	}
@@ -326,9 +326,9 @@ public:
 			Exceptions::EnsureSameShape(*this, rhs);
 			return CreateLogicalArray(*this, std::move(rhs), [](T v1, T v2) {return v1 == v2; });
 		}
-		catch (const std::invalid_argument& err) {
+		catch (const std::exception& ex) {
 			std::cout << "Error in == operator -> ";
-			std::cout << err.what() << std::endl;
+			std::cout << ex.what() << std::endl;
 			exit(0);
 		}
 	}
@@ -347,9 +347,9 @@ public:
 			Exceptions::EnsureSameShape(*this, rhs);
 			return CreateLogicalArray(*this, std::move(rhs), [](T v1, T v2) {return v1 != v2; });
 		}
-		catch (const std::invalid_argument& err) {
+		catch (const std::exception& ex) {
 			std::cout << "Error in != operator -> ";
-			std::cout << err.what() << std::endl;
+			std::cout << ex.what() << std::endl;
 			exit(0);
 		}
 	}
@@ -371,9 +371,9 @@ public:
 			Exceptions::EnsureSameShape(*this, rhs);
 			return CreateLogicalArray(*this, std::move(rhs), [](T v1, T v2) {return v1 < v2; });
 		}
-		catch (const std::invalid_argument& err) {
+		catch (const std::exception& ex) {
 			std::cout << "Error in < operator -> ";
-			std::cout << err.what() << std::endl;
+			std::cout << ex.what() << std::endl;
 			exit(0);
 		}
 	}
@@ -392,9 +392,9 @@ public:
 			Exceptions::EnsureSameShape(*this, rhs);
 			return CreateLogicalArray(*this, std::move(rhs), [](T v1, T v2) {return v1 > v2; });
 		}
-		catch (const std::invalid_argument& err) {
+		catch (const std::exception& ex) {
 			std::cout << "Error in > operator -> ";
-			std::cout << err.what() << std::endl;
+			std::cout << ex.what() << std::endl;
 			exit(0);
 		}
 	}
@@ -413,9 +413,9 @@ public:
 			Exceptions::EnsureSameShape(*this, rhs);
 			return CreateLogicalArray(*this, std::move(rhs), [](T v1, T v2) {return v1 <= v2; });
 		}
-		catch (const std::invalid_argument& err) {
+		catch (const std::exception& ex) {
 			std::cout << "Error in <= operator -> ";
-			std::cout << err.what() << std::endl;
+			std::cout << ex.what() << std::endl;
 			exit(0);
 		}
 	}
@@ -434,9 +434,9 @@ public:
 			Exceptions::EnsureSameShape(*this, rhs);
 			return CreateLogicalArray(*this, std::move(rhs), [](T v1, T v2) {return v1 >= v2; });
 		}
-		catch (const std::invalid_argument& err) {
+		catch (const std::exception& ex) {
 			std::cout << "Error in >= operator -> ";
-			std::cout << err.what() << std::endl;
+			std::cout << ex.what() << std::endl;
 			exit(0);
 		}
 	}
@@ -452,9 +452,9 @@ public:
 			Exceptions::EnsureSameShape(*this, rhs); 
 			return CreateLogicalArray(*this, rhs, [](bool v1, bool v2) {return v1 && v2; });
 		}
-		catch (const std::invalid_argument& err) {
+		catch (const std::exception& ex) {
 			std::cout << "Error in && operator -> ";
-			std::cout << err.what() << std::endl;
+			std::cout << ex.what() << std::endl;
 			exit(0);
 		}
 	}
@@ -470,9 +470,9 @@ public:
 			Exceptions::EnsureSameShape(*this, rhs);
 			return CreateLogicalArray(*this, rhs, [](bool v1, bool v2) {return v1 || v2; });
 		}
-		catch (const std::invalid_argument& err) {
+		catch (const std::exception& ex) {
 			std::cout << "Error in || operator -> ";
-			std::cout << err.what() << std::endl;
+			std::cout << ex.what() << std::endl;
 			exit(0);
 		}
 	}
@@ -511,9 +511,9 @@ public:
 			m_shape = newShape;
 			return *this;
 		}
-		catch (const std::invalid_argument& err) {
+		catch (const std::exception& ex) {
 			std::cout << "Error in Reshape() -> ";
-			std::cout << err.what() << std::endl;
+			std::cout << ex.what() << std::endl;
 			exit(0);
 		}	
 	}
@@ -557,7 +557,7 @@ public:
 
 			// Update the shape based on the permutation
 			for (int j = 0; j < this->nDims(); j++) {
-				newShape[j] = this->shapeAlong(permutation[j]);
+				newShape.at(j) = this->shapeAlong(permutation.at(j));
 			}
 
 			// Swap places of the data w.r.t the permutation
@@ -565,17 +565,17 @@ public:
 				std::vector<int> indices = reconstructIndex(i);
 				std::vector<int> temp = std::vector<int>(this->nDims(), 0);
 				for (int j = 0; j < temp.size(); j++) {
-					temp[j] = indices[permutation[j]];
+					temp.at(j) = indices.at(permutation.at(j));
 				}
-				newData[flattenIndex(temp, newShape)] = m_data[i];
+				newData.at(flattenIndex(temp, newShape)) = m_data.at(i);
 			}
 
 			m_data = newData;  m_shape = newShape;
 			return *this;
 		}
-		catch (const std::invalid_argument& err) {
+		catch (const std::exception& ex) {
 			std::cout << "Error in Transpose() -> ";
-			std::cout << err.what() << std::endl;
+			std::cout << ex.what() << std::endl;
 			exit(0);
 		}
 	} 
@@ -618,31 +618,40 @@ public:
 			Exceptions::EnsureSize(nonAxisIndices, this->nDims() - 1); 
 			Exceptions::EnsureValidNonAxisIndex(*this, nonAxisIndices, axis); 
 			Exceptions::EnsureSize(newData, this->shapeAlong(axis)); 
+
+			int stride = getStride(axis);
+			auto start_stop = DetermineStartEndIndexForAxis(axis, nonAxisIndices, 0, -1);
+			int j = 0;
+			for (int i = start_stop.first; i <= start_stop.second; i += stride) {
+				m_data.at(i) = newData[j];
+				j++;
+			}
+			return *this;
 		}
-		catch (const std::invalid_argument& err) {
+		catch (const std::exception& ex) {
 			std::cout << "Error in ReplaceAlong() -> ";
-			std::cout << err.what() << std::endl;
+			std::cout << ex.what() << std::endl;
 			exit(0);
 		}
-
-
-		int stride = getStride(axis);
-		auto start_stop = DetermineStartEndIndexForAxis(axis, nonAxisIndices, 0, -1);
-		int j = 0; 
-		for (int i = start_stop.first; i <= start_stop.second; i += stride) {
-			m_data[i] = newData[j];
-			j++;
-		}
-		return *this;
 	}
 
 	DynamicArray<T>& Blend(DynamicArray<T>&& arr, DynamicArray<bool>&& condition) {
-		for (int i = 0; i < condition.size(); i++) {
-			if (condition[i] == true) {
-				m_data[i] = arr[i];
+		
+		try {
+			Exceptions::EnsureSameShape(*this, condition); 
+
+			for (int i = 0; i < condition.size(); i++) {
+				if (condition[i] == true) {
+					m_data.at(i) = arr[i];
+				}
 			}
+			return *this;
 		}
-		return *this;
+		catch (const std::exception& ex) {
+			std::cout << "Error in Blend() -> ";
+			std::cout << ex.what() << std::endl;
+			exit(0);
+		}	
 	}
 	DynamicArray<T>& Blend(DynamicArray<T>& arr, DynamicArray<bool>&& condition) {
 		return this->Blend(std::move(arr), std::move(condition));
@@ -658,13 +667,12 @@ public:
 			}
 			else {
 				Exceptions::EnsureDim(*this, 1);
-				Exceptions::EnsureLargerDimThan(*this, axis);
 			}
 			m_data.push_back(value);
-			m_shape[axis]++; 
+			m_shape.at(axis)++; 
 		}
-		catch (const std::invalid_argument& err) {
-			std::cout << err.what() << std::endl;
+		catch (const std::exception& ex) {
+			std::cout << ex.what() << std::endl;
 			exit(0);
 		}
 	}
@@ -676,26 +684,26 @@ public:
 	}
 	DynamicArray<T> ReduceAlongAxis(int axis)const
 	{
-
 		try {
 			Exceptions::EnsureLargerDimThan(*this, axis + 1);
+
+			// The axis which the sum is along gets reduced to 1
+			std::vector<int> returnShape = this->shape();
+			returnShape.at(axis) = 1;
+			DynamicArray<T> returnArray(returnShape, 0);
+
+			for (int i = 0; i < getNumberOfElements(returnShape); i++) {
+				std::vector<int> nonAxisIndex = getNonAxisIndex(i, axis);
+				returnArray[i] = this->ExtractAxis(axis, nonAxisIndex).Reduce(0, std::plus());
+			}
+			return returnArray;
+
 		}
-		catch (const std::invalid_argument& err) {
+		catch (const std::exception& ex) {
 			std::cout << "Error in ReduceAlongAxis() -> ";
-			std::cout << err.what() << std::endl;
+			std::cout << ex.what() << std::endl;
 			exit(0);
 		}
-
-		// The axis which the sum is along gets reduced to 1
-		std::vector<int> returnShape = this->shape();
-		returnShape[axis] = 1;
-		DynamicArray<T> returnArray(returnShape, 0);
-
-		for (int i = 0; i < getNumberOfElements(returnShape); i++) {
-			std::vector<int> nonAxisIndex = getNonAxisIndex(i, axis); 
-			returnArray[i] = this->ExtractAxis(axis, nonAxisIndex).Reduce(0, std::plus());
-		}
-		return returnArray;
 	}
 
 	// Extractions
@@ -705,21 +713,20 @@ public:
 			Exceptions::EnsureLargerDimThan(*this, axis);
 			Exceptions::EnsureSize(nonAxisIndex, this->nDims() - 1, std::format("Error in function - ExtractAxis(). Need to specify {} constraint indices, {} given ", this->nDims() - 1, nonAxisIndex.size()));
 			Exceptions::EnsureValidNonAxisIndex(*this, nonAxisIndex, axis);
+
+			auto start_stop = DetermineStartEndIndexForAxis(axis, nonAxisIndex, start, end);
+			int stride = getStride(axis);
+			DynamicArray<T> out;
+			for (int i = start_stop.first; i <= start_stop.second; i += stride) {
+				out.append(m_data.at(i));
+			}
+			return out;
 		}
-		catch (const std::invalid_argument& err) {
+		catch (const std::exception& ex) {
 			std::cout << "Error in ExtractAxis() -> ";
-			std::cout << err.what() << std::endl;
+			std::cout << ex.what() << std::endl;
 			exit(0);
 		}
-
-		auto start_stop = DetermineStartEndIndexForAxis(axis, nonAxisIndex, start, end); 
-		int stride = getStride(axis);
-		DynamicArray<T> out; 
-		for (int i = start_stop.first; i <= start_stop.second; i += stride) {
-			out.append(m_data[i]);
-		}
-
-		return out;
 	}
 	DynamicArray<T> ExtractAxis(int axis, int nonAxisIndex, int start = 0, int end = -1)const {
 		return ExtractAxis(axis, std::vector<int>(1, nonAxisIndex), start, end);
@@ -730,22 +737,22 @@ public:
 	{
 		try {
 			Exceptions::EnsureSameShape(*this, condition); 
+
+			int axis = (this->nDims() > 1) ? 0 : 1;
+			DynamicArray<int> outIndices;
+			for (int i = 0; i < condition.size(); i++) {
+				if (condition[i] == true) {
+					auto idx = this->reconstructIndex(i);
+					outIndices.Concatenate(idx, axis);
+				}
+			}
+			return outIndices;
 		}
-		catch (const std::invalid_argument& err) {
+		catch (const std::exception& ex) {
 			std::cout << "Error in Find() -> ";
-			std::cout << err.what() << std::endl;
+			std::cout << ex.what() << std::endl;
 			exit(0);
 		}
-
-		int axis = (this->nDims() > 1) ? 0 : 1; 
-		DynamicArray<int> outIndices;
-		for (int i = 0; i < condition.size(); i++) {
-			if (condition[i] == true) {
-				auto idx = this->reconstructIndex(i);
-				outIndices.Concatenate(idx, axis);
-			}
-		}
-		return outIndices;
 	}
 
 	// Sorting
@@ -755,12 +762,12 @@ public:
 			Exceptions::EnsureDim(*this, 1); 
 			DynamicArray<int> out(this->shape(), 0);
 			std::iota(out.begin(), out.end(), 0);
-			std::stable_sort(out.begin(), out.end(), [&](int i1, int i2) { return m_data[i1] < m_data[i2];  });
+			std::stable_sort(out.begin(), out.end(), [&](int i1, int i2) { return m_data.at(i1) < m_data.at(i2);  });
 			return out;
 		}
-		catch (const std::invalid_argument& err) {
+		catch (const std::exception& ex) {
 			std::cout << "Error in argSort() -> ";
-			std::cout << err.what() << std::endl;
+			std::cout << ex.what() << std::endl;
 			exit(0);
 		}
 
@@ -772,22 +779,32 @@ public:
 				The indices that are returned represent the internal axis-sorting indices. 
 				i.e. along the specifed axis, there will be an internal set containing 0-N in 
 				the corresponding sorted order
+
+				[[1 0],   would if sorted along axis 0 return [[1 0],
+				 [0 2]]									       [0 1]]
 		*/
 
-		DynamicArray<int> axisIdx({ this->shapeAlong(axis) }, 0);
-		DynamicArray<int> out(this->shape(), 0);
-		
-		int stride = this->getStride(axis);
-		int step = stride * this->shapeAlong(axis);
-		for (int i = 0; i < this->size(); i += step) {
-			DynamicArray<T> data = this->ExtractAxis(axis, getNonAxisIndex(i, axis));
-			std::iota(axisIdx.begin(), axisIdx.end(), 0);
-			std::stable_sort(axisIdx.begin(), axisIdx.end(), [&](int i1, int i2) { return data[i1] < data[i2];  });
-			out.ReplaceAlong(axisIdx, axis, getNonAxisIndex(i, axis));
+		try {
+			Exceptions::EnsureLargerDimThan(*this, axis); 
+
+			DynamicArray<int> axisIdx({ this->shapeAlong(axis) }, 0);
+			DynamicArray<int> out(this->shape(), 0);
+
+			int stride = this->getStride(axis);
+			int step = stride * this->shapeAlong(axis);
+			for (int i = 0; i < this->size(); i += step) {
+				DynamicArray<T> data = this->ExtractAxis(axis, getNonAxisIndex(i, axis));
+				std::iota(axisIdx.begin(), axisIdx.end(), 0);
+				std::stable_sort(axisIdx.begin(), axisIdx.end(), [&](int i1, int i2) { return data[i1] < data[i2];  });
+				out.ReplaceAlong(axisIdx, axis, getNonAxisIndex(i, axis));
+			}
+			return out;
 		}
-
-		return out; 
-
+		catch (const std::exception& ex) {
+			std::cout << "Error in argSort() -> ";
+			std::cout << ex.what() << std::endl;
+			exit(0);
+		}
 	}
 	DynamicArray<T>& SortFlat()
 	{
@@ -802,21 +819,30 @@ public:
 			std::sort(this->begin(), this->end());
 			return *this;
 		}
-		catch (const std::invalid_argument& err) {
+		catch (const std::exception& ex) {
 			std::cout << "Error in Sort() -> ";
-			std::cout << err.what() << std::endl;
+			std::cout << ex.what() << std::endl;
 			exit(0);
 		}
 	}
 	DynamicArray<T>& Sort(int axis) 
 	{
-		int stride = this->getStride(axis);
-		int step = stride * this->shapeAlong(axis);
-		for (int i = 0; i < this->size(); i += step) {
-			DynamicArray<T> sortedAxis = this->ExtractAxis(axis, getNonAxisIndex(i, axis)).SortFlat();
-			this->ReplaceAlong(sortedAxis, axis, getNonAxisIndex(i, axis));
+		try {
+			Exceptions::EnsureLargerDimThan(*this, axis); 
+
+			int stride = this->getStride(axis);
+			int step = stride * this->shapeAlong(axis);
+			for (int i = 0; i < this->size(); i += step) {
+				DynamicArray<T> sortedAxis = this->ExtractAxis(axis, getNonAxisIndex(i, axis)).SortFlat();
+				this->ReplaceAlong(sortedAxis, axis, getNonAxisIndex(i, axis));
+			}
+			return *this;
 		}
-		return *this;
+		catch (const std::exception& ex) {
+			std::cout << "Error in Sort() -> ";
+			std::cout << ex.what() << std::endl;
+			exit(0);
+		}
 	}
 
 
@@ -850,22 +876,20 @@ public:
 	const int& shapeAlong(int axis)const { 
 
 		try {
-			Exceptions::EnsureLargerDimThan(*this, axis); 
-			return m_shape[axis];
+			return m_shape.at(axis);
 		}
-		catch (const std::invalid_argument& err) {
-			std::cout << err.what() << std::endl;
+		catch (const std::exception& ex) {
+			std::cout << ex.what() << std::endl;
 			exit(0);
 		}
 	}
 	int shapeAlong(int axis) {
 
 		try {
-			Exceptions::EnsureLargerDimThan(*this, axis);
-			return m_shape[axis];
+			return m_shape.at(axis);
 		}
-		catch (const std::invalid_argument& err) {
-			std::cout << err.what() << std::endl;
+		catch (const std::exception& ex) {
+			std::cout << ex.what() << std::endl;
 			exit(0);
 		}
 	}
@@ -875,7 +899,7 @@ public:
 	};
 	int nDims()const {
 		int dims = (int)std::count_if(m_shape.begin(), m_shape.end(), [](int dim) {return dim > 1; });
-		if (dims == 0 && m_shape[0] == 1)
+		if (dims == 0 && m_shape.at(0) == 1)
 			return 1;
 		else
 			return dims;
@@ -895,8 +919,8 @@ public:
 			Exceptions::EnsureLargerDimThan(*this, axis); 
 			return std::accumulate(m_shape.begin() + 1 + axis, m_shape.end(), 1, std::multiplies<>());
 		}
-		catch (const std::invalid_argument& err) {
-			std::cout << err.what() << std::endl;
+		catch (const std::exception& ex) {
+			std::cout << ex.what() << std::endl;
 			exit(0);
 		}
 		
@@ -976,38 +1000,53 @@ private:
 				1 * 4*4*4 + 2 * 4*4 + 1 * 4 + 0	= 64 + 32 + 4 = 100
 			*/
 
-		int index = 0;
 
-		for (int j = 0; j < indices.size() - 1; j++)
-			index += indices[j] * std::accumulate(shape.begin() + j + 1, shape.end(), 1, std::multiplies<int>());
+		try {
 
-		index += indices[indices.size() - 1];
-		return index;
+			int index = 0;
+
+			for (int j = 0; j < indices.size() - 1; j++)
+				index += indices.at(j) * std::accumulate(shape.begin() + j + 1, shape.end(), 1, std::multiplies<int>());
+
+			index += indices.at(indices.size() - 1);
+			return index;
+		}
+		catch (const std::exception& ex) {
+			std::cout << ex.what() << std::endl;
+			exit(0);
+		}
+		
 	}
-	std::vector<int> reconstructIndex(int index)const {
-
-		if (this->nDims() == 1) {
-			return std::vector<int>{index};
-		}
-
-		std::vector<int> indices = std::vector<int>(this->nDims(), 0);
-
-		for (int i = 0; i < this->nDims(); i++) {
-
-			int stride = getStride(i);
-			if (stride > index)
-				continue;
-
-			int j = 0;
-			for (; j < m_shape[i] - 1 && index - stride >= 0; j++) {
-				index -= stride;
+	std::vector<int> reconstructIndex(int index)const 
+	{
+		try {
+			if (this->nDims() == 1) {
+				return std::vector<int>{index};
 			}
-			indices[i] = j;
 
-			if (index < 0)
-				break;
+			std::vector<int> indices = std::vector<int>(this->nDims(), 0);
+
+			for (int i = 0; i < this->nDims(); i++) {
+
+				int stride = getStride(i);
+				if (stride > index)
+					continue;
+
+				int j = 0;
+				for (; j < m_shape.at(i) - 1 && index - stride >= 0; j++) {
+					index -= stride;
+				}
+				indices.at(i) = j;
+
+				if (index < 0)
+					break;
+			}
+			return indices;
 		}
-		return indices;
+		catch (const std::exception& ex) {
+			std::cout << ex.what() << std::endl;
+			exit(0);
+		}
 	}
 
 	int getNumberOfElements()const
@@ -1034,7 +1073,7 @@ private:
 			for (int j = start; j < start + m_shape[m_shape.size()-1]; j++) {
 				std::cout << m_data[j];
 				if (j < start + m_shape[m_shape.size() - 1] - 1) {
-					std::cout << " ";
+					std::cout << ", ";
 				}
 			}
 			std::cout << "]";
@@ -1091,6 +1130,7 @@ private:
 
 	}
 
+	// Deprecated
 	void reConfigureData(DynamicArray<int>& indices) {
 		auto copy = m_data; 
 		for (int i = 0; i < this->size(); i++) {
@@ -1104,15 +1144,14 @@ private:
 			Exceptions::EnsureDim(*this, 1);
 			return (int)(std::max_element(m_shape.begin(), m_shape.end()) - m_shape.begin());
 		}
-		catch (const std::invalid_argument& err) {
-			std::cout << err.what() << std::endl;
+		catch (const std::exception& ex) {
+			std::cout << ex.what() << std::endl;
 			exit(0);
 		}
 		
 	}
 	std::pair<int, int> DetermineStartEndIndexForAxis(int axis, std::vector<int> nonAxisIndex, int start, int end)const
 	{ 
-
 		// Determine starting index in the array
 		auto startIndex = nonAxisIndex;
 		for (int i = 0; i <= startIndex.size(); i++) {
@@ -1122,62 +1161,53 @@ private:
 		}
 
 		auto endIndex = startIndex;
-		endIndex[axis] = (end < 0) ? m_shape[axis] + end : end;
+		endIndex.at(axis) = (end < 0) ? m_shape.at(axis) + end : end;
 
 		return std::make_pair(flattenIndex(startIndex), flattenIndex(endIndex)); 
 	}
 
 	DynamicArray<T>& Join(DynamicArray<T>&& arr, int axis, int offset) {
 
-		// If the array is uninitialized i.e. empty, the concatenation will simply act as assignment
+		// If the array is uninitialized i.e. empty, the join will simply act as assignment
 		if (m_data.empty()) {
 			*this = arr;
 			return *this;
 		}
+		try {
+			Exceptions::EnsureSameNonAxisShape(*this, arr, axis); 
 
-		// The off-axis dimensions must all be the same for a valid concatenation
-		for (int i = 0; i < this->nDims(); i++) {
-			if (i == axis)
-				continue;
+			int stride = this->getStride(axis);
 
-			try {
-				Exceptions::EnsureSameSizeAlongAxis(*this, arr, i, std::string_view(std::format("Arrays are not of equal length in axis {}", axis)));
+			if (axis == 0) {
+				auto startPoint = (offset == -1) ? this->end() : this->begin() + offset * stride;
+				m_data.insert(startPoint, arr.begin(), arr.end());
+				m_shape[axis] += arr.shapeAlong(axis);
 			}
-			catch (const std::invalid_argument& err) {
-				std::cout << "Error when trying to join two arrays -";
-				std::cout << err.what() << std::endl;
-				exit(0);
-			}
-		}
+			else {
 
-		int stride = this->getStride(axis);
+				int newNumberOfElements = this->size() + arr.size();
+				int startIndex = (offset == -1) ? this->shapeAlong(axis) : offset;
 
-		if (axis == 0) {
-			auto startPoint = (offset == -1) ? this->end() : this->begin() + offset * stride;
-			m_data.insert(startPoint, arr.begin(), arr.end());
-			m_shape[axis] += arr.shapeAlong(axis);
-		}
+				// Update the shape first so that the stepLength can be computed correctly
+				m_shape[axis] += arr.shapeAlong(axis);
+				int stepLength = stride * this->shapeAlong(axis);
+				int j = 0;
 
-		else {
-
-			int newNumberOfElements = this->size() + arr.size();
-			int startIndex = (offset == -1) ? this->shapeAlong(axis) : offset;
-
-			// Update the shape first so that the stepLength can be computed correctly
-			m_shape[axis] += arr.shapeAlong(axis);
-			int stepLength = stride * this->shapeAlong(axis);
-			int j = 0;
-
-			for (int i = startIndex; i < newNumberOfElements; i += stepLength) {
-				int offset = j;
-				for (int k = 0; k < arr.shapeAlong(axis); k++) {
-					m_data.insert(this->begin() + i + k, arr[arr.reconstructIndex(j)]);
-					j++;
+				for (int i = startIndex; i < newNumberOfElements; i += stepLength) {
+					int offset = j;
+					for (int k = 0; k < arr.shapeAlong(axis); k++) {
+						m_data.insert(this->begin() + i + k, arr[arr.reconstructIndex(j)]);
+						j++;
+					}
 				}
 			}
+			return *this;
 		}
-
-		return *this;
+		catch (const std::exception& ex) {
+			std::cout << "Error when trying to join two arrays -> ";
+			std::cout << ex.what() << std::endl;
+			exit(0);
+		}
 	}
 
 

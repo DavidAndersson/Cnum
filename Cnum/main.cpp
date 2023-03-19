@@ -18,9 +18,6 @@
 
 int main() 
 {
-
-	iArray tet = Cnum::Array<int>({1,2,4,5,6, 7}, {3,2});
-	auto t = tet[tet == 2];
-	t.Print();
 	
- }
+	
+}

@@ -48,7 +48,7 @@ namespace UnitTest
 				iArray arr = Cnum::UniformArray<int>({ 2,2 }, 0);
 				iArray in = Cnum::Array<int>({ 1,2,3,4,5,6 }, { 3,2 });
 				arr.Insert(in, 0, 1);
-				auto result = Cnum::Array<int>({ 0,0,1,2,3,4,5,6,0,0,0,0 }, { 5,2 });
+				auto result = Cnum::Array<int>({ 0,0,1,2,3,4,5,6,0,0 }, { 5,2 });
 				Assert::IsTrue(arr.isEqualTo(result));
 			}
 			{
