@@ -64,12 +64,9 @@ public:
 		: m_data{other}, m_shape{shape}
 	{	
 		try {
-			std::string_view msg(std::string_view(std::format("Cannot create array of size {} with shape {}", this->size(), toString(shape))));
+			std::string msg = std::format("Cannot create array of size {} with shape {}", this->size(), toString(shape));
 			Exceptions::EnsureEqual(getNumberOfElements(shape), this->size(), msg);
 			
-			if (this->size() == 1) {
-				m_shape = std::vector<int>{ m_shape[0], 1 };
-			}
 		}
 		catch (const std::invalid_argument& err) {
 			std::cout << err.what() << std::endl;
@@ -105,11 +102,11 @@ public:
 			exit(0);
 		}
 	}
-	T operator[](int index)
+	T& operator[](int index)
 	{
 		try {
 			Exceptions::EnsureDim(*this, 1); 
-			return m_data[index];
+			return (T&)m_data[index];
 		}
 		catch (const std::invalid_argument& err) {
 			std::cout << err.what() << std::endl;
@@ -809,7 +806,7 @@ public:
 	}
 	int size()const 
 	{
-		return getNumberOfElements();
+		return (int)m_data.size();
 	};
 	int getStride(int axis = 0)const
 	{

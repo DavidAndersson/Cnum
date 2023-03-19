@@ -32,7 +32,7 @@ public:
 	static bool EnsureSameSize(const std::vector<T>& arr1, const std::vector<T>& arr2)
 	{
 		if (multiplyElements(arr1) != multiplyElements(arr2)) {
-			throw std::invalid_argument(std::format("Invalid shapes, {} is not of the same size as {}", toString(arr1), toString(arr2)));
+			throw std::invalid_argument(std::format("{} is not of the same size as {}", toString(arr1), toString(arr2)));
 		}
 		return true;
 	}
@@ -108,7 +108,7 @@ public:
 	}
 
 
-	static bool EnsureEqual(int val_1, int val_2, std::string_view msg)
+	static bool EnsureEqual(int val_1, int val_2, const std::string& msg)
 	{
 		if (val_1 != val_2)
 			throw std::invalid_argument(msg.data());
