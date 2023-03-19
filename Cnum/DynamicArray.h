@@ -614,6 +614,18 @@ public:
 	}
 	DynamicArray<T>& ReplaceAlong(DynamicArray<T>&& newData, int axis, std::vector<int>&& nonAxisIndices) {
 
+		try {
+			Exceptions::EnsureSize(nonAxisIndices, this->nDims() - 1); 
+			Exceptions::EnsureValidNonAxisIndex(*this, nonAxisIndices, axis); 
+			Exceptions::EnsureSize(newData, this->shapeAlong(axis)); 
+		}
+		catch (const std::invalid_argument& err) {
+			std::cout << "Error in ReplaceAlong() -> ";
+			std::cout << err.what() << std::endl;
+			exit(0);
+		}
+
+
 		int stride = getStride(axis);
 		auto start_stop = DetermineStartEndIndexForAxis(axis, nonAxisIndices, 0, -1);
 		int j = 0; 
@@ -716,6 +728,15 @@ public:
 	// Searching
 	DynamicArray<int> Find(DynamicArray<bool>&& condition)
 	{
+		try {
+			Exceptions::EnsureSameShape(*this, condition); 
+		}
+		catch (const std::invalid_argument& err) {
+			std::cout << "Error in Find() -> ";
+			std::cout << err.what() << std::endl;
+			exit(0);
+		}
+
 		int axis = (this->nDims() > 1) ? 0 : 1; 
 		DynamicArray<int> outIndices;
 		for (int i = 0; i < condition.size(); i++) {
@@ -816,7 +837,7 @@ public:
 		PrintDim(startIndex, 0);
 		std::cout << ")" << std::endl;
 	}
-
+	
 	// Getters
 	const std::vector<int>& shape()const 
 	{ 
