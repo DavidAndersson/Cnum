@@ -85,12 +85,28 @@ public:
 	// Indexing
 	T& operator[](std::vector<int>&& index)
 	{
-		return m_data.at(flattenIndex(index));
+		try {
+			Exceptions::EnsureDim(*this, (int)index.size());
+			return m_data.at(flattenIndex(index));
+		}
+		catch (const std::invalid_argument& err) {
+			std::cout << "Error in [] access -> ";
+			std::cout << err.what() << std::endl;
+			exit(0);
+		}
+		
 	}
 	T& operator[](std::vector<int>& index)
 	{
-		//return m_data.at(flattenIndex(index));
-		return *this[std::move(index)]; 
+		try {
+			Exceptions::EnsureDim(*this, (int)index.size());
+			return m_data.at(flattenIndex(index));
+		}
+		catch (const std::invalid_argument& err) {
+			std::cout << "Error in [] access -> ";
+			std::cout << err.what() << std::endl;
+			exit(0);
+		}
 	}
 	T& operator[](DynamicArray<int>& index) {
 		try {
@@ -109,25 +125,44 @@ public:
 			return (T&)m_data[index];
 		}
 		catch (const std::invalid_argument& err) {
+			std::cout << "Error in [] access -> ";
 			std::cout << err.what() << std::endl;
 			exit(0);
 		}
 	}
 	DynamicArray<T> operator[](DynamicArray<bool>&& logicalIndices) {
-		DynamicArray<T> data;
-		for (int i = 0; i < logicalIndices.size(); i++) {
- 			if (logicalIndices.raw()[i] == true)
-				data.append(m_data[i]);
+		try {
+			Exceptions::EnsureSameShape(*this, logicalIndices);
+			DynamicArray<T> data;
+			for (int i = 0; i < logicalIndices.size(); i++) {
+				if (logicalIndices.raw()[i] == true)
+					data.append(m_data[i]);
+			}
+			return data;
 		}
-		return data;
+		catch (const std::invalid_argument& err) {
+			std::cout << "Error in [] access -> ";
+			std::cout << err.what() << std::endl;
+			exit(0);
+		}
+
+		
 	}
 	DynamicArray<T> operator[](DynamicArray<bool>& logicalIndices) {
-		DynamicArray<T> data;
-		for (int i = 0; i < logicalIndices.size(); i++) {
-			if (logicalIndices.raw()[i] == true)
-				data.append(m_data[i]);
+		try {
+			Exceptions::EnsureSameShape(*this, logicalIndices);
+			DynamicArray<T> data;
+			for (int i = 0; i < logicalIndices.size(); i++) {
+				if (logicalIndices.raw()[i] == true)
+					data.append(m_data[i]);
+			}
+			return data;
 		}
-		return data;
+		catch (const std::invalid_argument& err) {
+			std::cout << "Error in [] access -> ";
+			std::cout << err.what() << std::endl;
+			exit(0);
+		}
 	}
 
 	// Assignment
@@ -159,6 +194,7 @@ public:
 			return PerformArithmeticOperation(*this, std::move(rhs), std::plus<>());
 		}
 		catch (const std::invalid_argument& err) {
+			std::cout << "Error in array addition -> ";
 			std::cout << err.what() << std::endl;
 			exit(0);
 		}
@@ -191,6 +227,7 @@ public:
 			return PerformArithmeticOperation(*this, std::move(rhs), std::minus<>());
 		}
 		catch (const std::invalid_argument& err) {
+			std::cout << "Error in array subtraction -> ";
 			std::cout << err.what() << std::endl;
 			exit(0);
 		}
@@ -223,6 +260,7 @@ public:
 			return PerformArithmeticOperation(*this, std::move(rhs), std::multiplies<>());
 		}
 		catch (const std::invalid_argument& err) {
+			std::cout << "Error in array multiplication -> ";
 			std::cout << err.what() << std::endl;
 			exit(0);
 		}
@@ -256,6 +294,7 @@ public:
 			return PerformArithmeticOperation(*this, std::move(rhs), std::divides<>());
 		}
 		catch (const std::invalid_argument& err) {
+			std::cout << "Error in array division -> ";
 			std::cout << err.what() << std::endl;
 			exit(0);
 		}
@@ -288,6 +327,7 @@ public:
 			return CreateLogicalArray(*this, std::move(rhs), [](T v1, T v2) {return v1 == v2; });
 		}
 		catch (const std::invalid_argument& err) {
+			std::cout << "Error in == operator -> ";
 			std::cout << err.what() << std::endl;
 			exit(0);
 		}
@@ -308,6 +348,7 @@ public:
 			return CreateLogicalArray(*this, std::move(rhs), [](T v1, T v2) {return v1 != v2; });
 		}
 		catch (const std::invalid_argument& err) {
+			std::cout << "Error in != operator -> ";
 			std::cout << err.what() << std::endl;
 			exit(0);
 		}
@@ -331,6 +372,7 @@ public:
 			return CreateLogicalArray(*this, std::move(rhs), [](T v1, T v2) {return v1 < v2; });
 		}
 		catch (const std::invalid_argument& err) {
+			std::cout << "Error in < operator -> ";
 			std::cout << err.what() << std::endl;
 			exit(0);
 		}
@@ -351,6 +393,7 @@ public:
 			return CreateLogicalArray(*this, std::move(rhs), [](T v1, T v2) {return v1 > v2; });
 		}
 		catch (const std::invalid_argument& err) {
+			std::cout << "Error in > operator -> ";
 			std::cout << err.what() << std::endl;
 			exit(0);
 		}
@@ -371,6 +414,7 @@ public:
 			return CreateLogicalArray(*this, std::move(rhs), [](T v1, T v2) {return v1 <= v2; });
 		}
 		catch (const std::invalid_argument& err) {
+			std::cout << "Error in <= operator -> ";
 			std::cout << err.what() << std::endl;
 			exit(0);
 		}
@@ -391,6 +435,7 @@ public:
 			return CreateLogicalArray(*this, std::move(rhs), [](T v1, T v2) {return v1 >= v2; });
 		}
 		catch (const std::invalid_argument& err) {
+			std::cout << "Error in >= operator -> ";
 			std::cout << err.what() << std::endl;
 			exit(0);
 		}
@@ -408,6 +453,7 @@ public:
 			return CreateLogicalArray(*this, rhs, [](bool v1, bool v2) {return v1 && v2; });
 		}
 		catch (const std::invalid_argument& err) {
+			std::cout << "Error in && operator -> ";
 			std::cout << err.what() << std::endl;
 			exit(0);
 		}
@@ -425,6 +471,7 @@ public:
 			return CreateLogicalArray(*this, rhs, [](bool v1, bool v2) {return v1 || v2; });
 		}
 		catch (const std::invalid_argument& err) {
+			std::cout << "Error in || operator -> ";
 			std::cout << err.what() << std::endl;
 			exit(0);
 		}
@@ -465,6 +512,7 @@ public:
 			return *this;
 		}
 		catch (const std::invalid_argument& err) {
+			std::cout << "Error in Reshape() -> ";
 			std::cout << err.what() << std::endl;
 			exit(0);
 		}	
@@ -526,6 +574,7 @@ public:
 			return *this;
 		}
 		catch (const std::invalid_argument& err) {
+			std::cout << "Error in Transpose() -> ";
 			std::cout << err.what() << std::endl;
 			exit(0);
 		}
@@ -537,10 +586,10 @@ public:
 	DynamicArray<T>& Concatenate(std::vector<T>& arr, int axis) {
 		return this->Join(DynamicArray<T>(arr), axis, -1);
 	}
-	DynamicArray<T>& Concatenate(DynamicArray<T>& arr, int axis) {
+	DynamicArray<T>& Concatenate(DynamicArray<T>&& arr, int axis) {
 		return this->Join(std::move(arr), axis, -1);
 	}
-	DynamicArray<T>& Concatenate(DynamicArray<T>&& arr, int axis) {
+	DynamicArray<T>& Concatenate(DynamicArray<T>& arr, int axis) {
 		return this->Join(std::move(arr), axis, -1);
 	}
 	
@@ -620,6 +669,7 @@ public:
 			Exceptions::EnsureLargerDimThan(*this, axis + 1);
 		}
 		catch (const std::invalid_argument& err) {
+			std::cout << "Error in ReduceAlongAxis() -> ";
 			std::cout << err.what() << std::endl;
 			exit(0);
 		}
@@ -645,6 +695,7 @@ public:
 			Exceptions::EnsureValidNonAxisIndex(*this, nonAxisIndex, axis);
 		}
 		catch (const std::invalid_argument& err) {
+			std::cout << "Error in ExtractAxis() -> ";
 			std::cout << err.what() << std::endl;
 			exit(0);
 		}
@@ -687,6 +738,7 @@ public:
 			return out;
 		}
 		catch (const std::invalid_argument& err) {
+			std::cout << "Error in argSort() -> ";
 			std::cout << err.what() << std::endl;
 			exit(0);
 		}
@@ -730,6 +782,7 @@ public:
 			return *this;
 		}
 		catch (const std::invalid_argument& err) {
+			std::cout << "Error in Sort() -> ";
 			std::cout << err.what() << std::endl;
 			exit(0);
 		}
@@ -750,7 +803,9 @@ public:
 	bool isEqualTo(const DynamicArray<T>& other)const {
 		return std::equal(m_data.begin(), m_data.end(), other.m_data.begin());
 	}
-	bool sameShapeAs(const DynamicArray<T>& other)const {
+	
+	template<typename S>
+	bool sameShapeAs(const DynamicArray<S>& other)const {
 		return std::equal(m_shape.begin(), m_shape.end(), other.shape().begin());
 	}
 
@@ -1068,6 +1123,7 @@ private:
 				Exceptions::EnsureSameSizeAlongAxis(*this, arr, i, std::string_view(std::format("Arrays are not of equal length in axis {}", axis)));
 			}
 			catch (const std::invalid_argument& err) {
+				std::cout << "Error when trying to join two arrays -";
 				std::cout << err.what() << std::endl;
 				exit(0);
 			}
