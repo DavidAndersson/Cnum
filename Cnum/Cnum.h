@@ -87,7 +87,7 @@ public:
 			auto dataFile = OpenFile(filePath);
 			return ReadDataFromFile(dataFile, delimiter);
 		}
-		catch (const std::runtime_error& err) {
+		catch (const std::exception& ex) {
 			std::cout << "Error in FromFile() -> ";
 			std::cout << ex.what() << std::endl;
 			exit(0);
@@ -221,15 +221,13 @@ public:
 	}
 
 	template<typename T>
-	static DynamicArray<T> Abs(DynamicArray<T>&& arr) {
-		auto copy = arr;
-		return copy.abs();
+	static DynamicArray<T>& Abs(DynamicArray<T>&& arr) {
+		return arr.abs();
 	}
 
 	template<typename T>
-	static DynamicArray<T> Abs(DynamicArray<T>& arr) {
-		auto copy = arr; 
-		return copy.abs();
+	static DynamicArray<T> Abs(DynamicArray<T> arr) {
+		return arr.abs();
 	}
 
 	template<typename T>

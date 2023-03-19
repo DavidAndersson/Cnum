@@ -47,19 +47,19 @@ public:
 
 	// Copy Constructors
 	DynamicArray(const DynamicArray<T>& src)
-		: m_data(src.m_data), m_shape(src.m_shape) {
+		: m_data(src.m_data), m_shape(src.m_shape) 
+	{
 		std::cout << "Made a copy" << std::endl;
 	};
 
 	// Move Constructors
-	DynamicArray(const DynamicArray<T>&& other)noexcept
-		: m_data{other.m_data}, m_shape{other.m_shape}
-	{}
-	DynamicArray(const std::vector<T>&& other)
-		: m_data{other}
+	DynamicArray(DynamicArray<T>&& other)noexcept
 	{
-		m_shape = std::vector<int>{ 1, (int)other.size() };
+		std::swap(*this, other); 
 	}
+	DynamicArray(const std::vector<T>&& other)
+		: m_data{ other }, m_shape{ std::vector<int>{ 1, (int)other.size() } }
+	{}
 	DynamicArray(const std::vector<T>&& other, const std::vector<int>&& shape) 
 		: m_data{other}, m_shape{shape}
 	{	
