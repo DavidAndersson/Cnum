@@ -53,7 +53,7 @@ public:
 	};
 
 	// Move Constructors
-	DynamicArray(DynamicArray<T>&& other)noexcept
+	DynamicArray(DynamicArray&& other) 
 	{
 		std::swap(*this, other); 
 	}

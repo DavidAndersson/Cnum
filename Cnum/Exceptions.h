@@ -79,7 +79,7 @@ public:
 		std::vector<int> permValues = std::vector<int>(arr.nDims());
 		std::iota(permValues.begin(), permValues.end(), 0);
 		if (std::is_permutation(permutation.begin(), permutation.end(), permValues.begin(), permValues.end()) == false) {
-			throw std::invalid_argument("Incorrectly specifed permutation");
+			throw std::invalid_argument(std::format("{} is not a correct permutation in {} dimensions", toString(permutation), arr.nDims()));
 		}
 		return true;
 	}

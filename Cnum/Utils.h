@@ -3,13 +3,13 @@
 #include <string>
 #include <sstream>
 
-static std::string toString(const std::vector<int> shape)
+static std::string toString(const std::vector<int> arr)
 {
 	std::stringstream ss;
 	ss << "(";
-	for (int i = 0; i < shape.size(); i++) {
-		ss << std::to_string(shape[i]);
-		if (i < shape.size() - 1)
+	for (int i = 0; i < arr.size(); i++) {
+		ss << std::to_string(arr[i]);
+		if (i < arr.size() - 1)
 			ss << ", ";
 	}
 	ss << ")";

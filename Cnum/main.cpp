@@ -18,10 +18,7 @@
 
 int main() 
 {
-	auto arr = Cnum::Array<int>({ 1,2,-5, 1 });
-	auto test = Cnum::Abs(arr);
 
-	test.Print();
-	arr.Print();
+	iArray test = DynamicArray(DynamicArray<int>({ 1,2,4 }));
 	
 }
