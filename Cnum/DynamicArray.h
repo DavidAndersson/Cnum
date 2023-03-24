@@ -55,7 +55,7 @@ public:
 	// Move Constructors
 	DynamicArray(DynamicArray&& other) 
 	{
-		std::swap(*this, other); 
+		*this = std::move(other);
 	}
 	DynamicArray(const std::vector<T>&& other)
 		: m_data{ other }, m_shape{ std::vector<int>{ 1, (int)other.size() } }
@@ -180,16 +180,16 @@ public:
 	DynamicArray<T> operator=(DynamicArray<T>& rhs) { 
 		return *this = std::move(rhs);
 	}
-	DynamicArray<T> operator=( DynamicArray<T>&& rhs) noexcept {
+	DynamicArray<T>& operator=( DynamicArray<T>&& rhs) noexcept {
 		m_data = rhs.m_data;
 		m_shape = rhs.m_shape;
 		std::cout << "Made a copy assignment" << std::endl;
 		return *this;
 	}
-	DynamicArray<T> operator=(std::vector<T>&& rhs)const {
+	DynamicArray<T>& operator=(std::vector<T>&& rhs)const {
 		return DynamicArray<T>(rhs);
 	}
-	DynamicArray<T> operator=(const std::vector<T>& rhs)const {
+	DynamicArray<T>& operator=(const std::vector<T>& rhs)const {
 		return DynamicArray<T>(rhs);
 	}
 
@@ -648,19 +648,19 @@ public:
 
 	DynamicArray<T>& Reverse(int axis) 
 	{
-		int stride = this->getExtractionStepLength(axis);
+		auto index = this->reconstructIndex(0);
 		for (int i = 0, index = 0; i < this->getNonAxisNumberOfElements(axis); i++) {
 			auto nonAxisIndex = getNonAxisIndex(index, axis);
 			DynamicArray<T> extracted = ExtractAxis(axis, nonAxisIndex);
 			std::reverse(extracted.begin(), extracted.end());
 			this->ReplaceAlong(extracted, axis, nonAxisIndex);
-			index += stride;
+			this->incrementExtractionIndex(index, axis, this->nDims() - 1);
 		}
 		return *this;
 	}
 	DynamicArray<T>& Roll(int shift, int axis)
 	{
-		int stride = this->getExtractionStepLength(axis);
+		auto index = this->reconstructIndex(0);
 		for (int i = 0, index = 0; i < this->getNonAxisNumberOfElements(axis); i++) {
 			auto nonAxisIndex = getNonAxisIndex(index, axis);
 			DynamicArray<T> extracted = ExtractAxis(axis, nonAxisIndex);
@@ -669,7 +669,7 @@ public:
 			else
 				std::rotate(extracted.begin(), extracted.begin() - shift, extracted.end());
 			this->ReplaceAlong(extracted, axis, nonAxisIndex);
-			index += stride;
+			this->incrementExtractionIndex(index, axis, this->nDims() - 1);
 		}
 		return *this;
 	}
@@ -746,7 +746,7 @@ public:
 	}
 
 	// Extractions
-	DynamicArray<T> ExtractAxis(int axis, std::vector<int>nonAxisIndex, int start=0, int end=-1)const
+	DynamicArray<T> ExtractAxis(int axis, std::vector<int>& nonAxisIndex, int start=0, int end=-1)const
 	{
 		try {
 			Exceptions::EnsureLargerDimThan(*this, axis);
@@ -829,14 +829,14 @@ public:
 			DynamicArray<int> axisIdx({ this->shapeAlong(axis) }, 0);
 			DynamicArray<int> out(this->shape(), 0);
 
-			int stride = this->getExtractionStepLength(axis);
-			for (int i = 0, index = 0; i < this->getNonAxisNumberOfElements(axis); i++) {
+			auto index = this->reconstructIndex(0);
+			for (int i = 0; i < this->getNonAxisNumberOfElements(axis); i++) {
 				auto nonAxisIndex = getNonAxisIndex(index, axis);
 				DynamicArray<T> data = this->ExtractAxis(axis, nonAxisIndex);
 				std::iota(axisIdx.begin(), axisIdx.end(), 0);
 				std::stable_sort(axisIdx.begin(), axisIdx.end(), [&](int i1, int i2) { return data[i1] < data[i2];  });
 				out.ReplaceAlong(axisIdx, axis, nonAxisIndex);
-				index += stride;
+				this->incrementExtractionIndex(index, axis, this->nDims() - 1);
 			}
 			return out;
 		}
@@ -870,12 +870,12 @@ public:
 		try {
 			Exceptions::EnsureLargerDimThan(*this, axis); 
 
-			int stride = 1;//this->getExtractionStepLength(axis);
-			for (int i = 0, index = 0; i < this->getNonAxisNumberOfElements(axis); i++) {
+			auto index = this->reconstructIndex(0); 
+			for (int i = 0; i < this->getNonAxisNumberOfElements(axis); i++) {
 				auto nonAxisIndex = getNonAxisIndex(index, axis);
 				DynamicArray<T> sortedAxis = this->ExtractAxis(axis, nonAxisIndex).SortFlat();
 				this->ReplaceAlong(sortedAxis, axis, nonAxisIndex);
-				index = updateExtractionIndex(index, stride, axis); 
+				this->incrementExtractionIndex(index, axis, this->nDims()-1);
 			}
 			return *this;
 		}
@@ -1133,18 +1133,20 @@ private:
 		else
 			return getStride(axis + 1);
 	}
-	int updateExtractionIndex(int index, int stride, int axis)
-	{
-		// Every time the index grows in one axis, this needs to be represented in the update
 
-		auto prev_idx = reconstructIndex(index);
-		auto new_idx = reconstructIndex(index+stride); 
-		auto diff = new_idx - prev_idx; 
+	void incrementExtractionIndex(DynamicArray<T>& index, int axis, int dim) {
 
-		if (diff[axis] == 1)
-			return index + this->shapeAlong(axis);
-		else
-			return index + stride;
+		if (dim == -1)
+			return;
+
+		if (index[dim] + 1 > this->shapeAlong(dim) - 1 || dim == axis) {
+			index[dim] = 0;
+			incrementExtractionIndex(index, axis, dim - 1);
+		}
+		else {
+			index[dim]++;
+		}
+			
 	}
 
 	void PrintDim(std::vector<int>& index, int dim)const
@@ -1205,11 +1207,18 @@ private:
 		return DynamicArray<T>(data, arr1.shape());
 	}
 
+
 	std::vector<int> getNonAxisIndex(int flatIndex, int axis)const {
 
 		auto index = reconstructIndex(flatIndex).raw(); 
 		index.erase(index.begin() + axis); 
 		return index;
+
+	}
+	std::vector<int> getNonAxisIndex(DynamicArray<T>& index, int axis)const {
+		auto idx = index.raw();
+		idx.erase(idx.begin() + axis);
+		return idx;
 
 	}
 
@@ -1293,44 +1302,6 @@ private:
 		}
 	}
 
-
-	DynamicArray<int> getExtractionIndices(int axis)
-	{
-
-		auto table = Cnum::GetBinaryTable<int>(this->nDims());
-		auto axisIndices = table.ExtractAxis(0, axis);
-		return axisIndices[axisIndices == 1];
-	}
-
-
-	template<typename T>
-	static DynamicArray<T> GetBinaryTable(int nDims) {
-
-		int nRows = (int)std::pow(2, nDims);
-		int nCols = nDims;
-		int stride = nRows / 2;
-		DynamicArray<T> table;
-
-		// Loop column for column. The first column has first half 0 and second 1. Second column has first quarter 0 second 1 etc etc...
-
-		for (int col = 0; col < nDims; col++) {
-
-			DynamicArray<T> column = Cnum::UniformArray<T>({ nRows, 1 }, 0);
-
-			int value = 0;
-			for (int i = stride; i < nRows; i += 2 * stride) {
-				for (int j = i; j < i + stride; j++) {
-					column[j] = 1;
-				}
-			}
-			if (col == 0)
-				table = column;
-			else
-				table.Concatenate(column, 1);
-			stride /= 2;
-		}
-		return table;
-	}
 
 private:
 

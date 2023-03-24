@@ -22,30 +22,14 @@
 int main() 
 {
 
-	//iArray test = Cnum::Array<int>({ 1,2,3,4,5,6,7,8 }, { 2,2,2 });
+	iArray test = Cnum::Array<int>({ 12,11,10,9,8,7,6,5,4,3,2,1 }, { 2,2,3 });
 
-	//test.Sort(1).Print();
+	test.Print();
 
-	/*auto table = Cnum::GetBinaryTable<int>(3); 
-
-	iArray test = table.ExtractAxis(0, 1); 
-
-	auto t = test.Find(test == 1); 
-
-	t.Print();*/
-
-	DynamicArray<bool> test = Cnum::Array<bool>({ true, false, true, false });
-	DynamicArray<float> test2 = Cnum::Array<float>({ 1,0,1,0 });
+	test.Sort(2).Print();
 
 
 
-	test2[1] = 1;
-
-	test2.Print();
-
-	auto t = 1 && 1;
-
-	std::cout << t << std::endl;
 
 	
 }
