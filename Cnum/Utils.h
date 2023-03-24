@@ -25,3 +25,4 @@ static int multiplyElements(const std::vector<int>& vec)
 {
 	return std::accumulate(vec.begin(), vec.end(), 1, std::multiplies<int>());
 }
+

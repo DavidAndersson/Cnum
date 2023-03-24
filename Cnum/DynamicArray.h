@@ -110,7 +110,7 @@ public:
 	}
 	T& operator[](DynamicArray<int>& index) {
 		try {
-			Exceptions::EnsureSameSize(index.size(), this->shape());
+			Exceptions::EnsureDim(*this, index.size());
 			return m_data.at(flattenIndex(index.raw()));
 		}
 		catch (const std::exception& ex) {
@@ -118,6 +118,17 @@ public:
 			exit(0);
 		}
 	}
+	T& operator[](DynamicArray<int>&& index) {
+		try {
+			Exceptions::EnsureDim(*this, index.size());
+			return m_data.at(flattenIndex(index.raw()));
+		}
+		catch (const std::exception& ex) {
+			std::cout << ex.what() << std::endl;
+			exit(0);
+		}
+	}   
+
 	T& operator[](int index)
 	{
 		try {
@@ -565,7 +576,7 @@ public:
 				std::vector<int> indices = reconstructIndex(i);
 				std::vector<int> temp = std::vector<int>(this->nDims(), 0);
 				for (int j = 0; j < temp.size(); j++) {
-					temp.at(j) = indices.at(permutation.at(j));
+					temp.at(j) = indices[(permutation.at(j))];
 				}
 				newData.at(flattenIndex(temp, newShape)) = m_data.at(i);
 			}
@@ -769,7 +780,7 @@ public:
 			int axis = (this->nDims() > 1) ? 0 : 1;
 			DynamicArray<int> outIndices;
 			for (int i = 0; i < condition.size(); i++) {
-				if (condition[i] == true) {
+				if (condition.raw()[i] == true) {
 					auto idx = this->reconstructIndex(i);
 					outIndices.Concatenate(idx, axis);
 				}
@@ -859,12 +870,12 @@ public:
 		try {
 			Exceptions::EnsureLargerDimThan(*this, axis); 
 
-			int stride = this->getExtractionStepLength(axis);
+			int stride = 1;//this->getExtractionStepLength(axis);
 			for (int i = 0, index = 0; i < this->getNonAxisNumberOfElements(axis); i++) {
 				auto nonAxisIndex = getNonAxisIndex(index, axis);
 				DynamicArray<T> sortedAxis = this->ExtractAxis(axis, nonAxisIndex).SortFlat();
 				this->ReplaceAlong(sortedAxis, axis, nonAxisIndex);
-				index += stride;
+				index = updateExtractionIndex(index, stride, axis); 
 			}
 			return *this;
 		}
@@ -906,6 +917,9 @@ public:
 	const int& shapeAlong(int axis)const { 
 
 		try {
+			if (axis < 0) {
+				return m_shape.at(this->shape().size() - axis);
+			}
 			return m_shape.at(axis);
 		}
 		catch (const std::exception& ex) {
@@ -916,6 +930,9 @@ public:
 	int shapeAlong(int axis) {
 
 		try {
+			if (axis < 0) {
+				return m_shape.at(this->shape().size() - axis);
+			}	
 			return m_shape.at(axis);
 		}
 		catch (const std::exception& ex) {
@@ -1022,15 +1039,15 @@ private:
 	// Private Interface
 	// -------------------------
 
-	int flattenIndex(DynamicArray<int>& indices)const
+	int flattenIndex(const DynamicArray<int>& indices)const
 	{
-		return this->flattenIndex(m_data, this->shape());
+		return this->flattenIndex(indices.raw(), this->shape());
 	}
-	int flattenIndex(std::vector<int>& indices)const
+	int flattenIndex(const std::vector<int>& indices)const
 	{
 		return flattenIndex(indices, this->shape());
 	}
-	int flattenIndex(std::vector<int>& indices, std::vector<int> shape)const 
+	int flattenIndex(const std::vector<int>& indices, std::vector<int> shape)const 
 	{
 		
 		/*
@@ -1062,7 +1079,7 @@ private:
 		}
 		
 	}
-	std::vector<int> reconstructIndex(int index)const 
+	DynamicArray<int> reconstructIndex(int index)const 
 	{
 		try {
 			if (this->nDims() == 1) {
@@ -1116,7 +1133,19 @@ private:
 		else
 			return getStride(axis + 1);
 	}
+	int updateExtractionIndex(int index, int stride, int axis)
+	{
+		// Every time the index grows in one axis, this needs to be represented in the update
 
+		auto prev_idx = reconstructIndex(index);
+		auto new_idx = reconstructIndex(index+stride); 
+		auto diff = new_idx - prev_idx; 
+
+		if (diff[axis] == 1)
+			return index + this->shapeAlong(axis);
+		else
+			return index + stride;
+	}
 
 	void PrintDim(std::vector<int>& index, int dim)const
 	{
@@ -1178,7 +1207,7 @@ private:
 
 	std::vector<int> getNonAxisIndex(int flatIndex, int axis)const {
 
-		std::vector<int> index = reconstructIndex(flatIndex); 
+		auto index = reconstructIndex(flatIndex).raw(); 
 		index.erase(index.begin() + axis); 
 		return index;
 
@@ -1265,6 +1294,44 @@ private:
 	}
 
 
+	DynamicArray<int> getExtractionIndices(int axis)
+	{
+
+		auto table = Cnum::GetBinaryTable<int>(this->nDims());
+		auto axisIndices = table.ExtractAxis(0, axis);
+		return axisIndices[axisIndices == 1];
+	}
+
+
+	template<typename T>
+	static DynamicArray<T> GetBinaryTable(int nDims) {
+
+		int nRows = (int)std::pow(2, nDims);
+		int nCols = nDims;
+		int stride = nRows / 2;
+		DynamicArray<T> table;
+
+		// Loop column for column. The first column has first half 0 and second 1. Second column has first quarter 0 second 1 etc etc...
+
+		for (int col = 0; col < nDims; col++) {
+
+			DynamicArray<T> column = Cnum::UniformArray<T>({ nRows, 1 }, 0);
+
+			int value = 0;
+			for (int i = stride; i < nRows; i += 2 * stride) {
+				for (int j = i; j < i + stride; j++) {
+					column[j] = 1;
+				}
+			}
+			if (col == 0)
+				table = column;
+			else
+				table.Concatenate(column, 1);
+			stride /= 2;
+		}
+		return table;
+	}
+
 private:
 
 	//--------------------------
@@ -1280,4 +1347,3 @@ private:
 typedef DynamicArray<int> iArray;
 typedef DynamicArray<float> fArray;
 typedef DynamicArray<double> dArray;
-
