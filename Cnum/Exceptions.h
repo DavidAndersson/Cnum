@@ -47,6 +47,23 @@ public:
 	}
 
 	template<typename T>
+	static bool EnsureSize(std::vector<T>&& arr, int size)
+	{
+		if (arr.size() != size) {
+			throw std::invalid_argument(std::format("Array is not of size {}", size));
+		}
+		return true;
+	}
+	template<typename T>
+	static bool EnsureSize(DynamicArray<T>&& arr, int size)
+	{
+		if (arr.size() != size) {
+			throw std::invalid_argument(std::format("Array is not of size {}", size));
+		}
+		return true;
+	}
+
+	template<typename T>
 	static bool EnsureDim(const DynamicArray<T>& arr, int dim)
 	{
 		if (arr.nDims() != dim) {

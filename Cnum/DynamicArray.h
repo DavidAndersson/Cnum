@@ -615,9 +615,9 @@ public:
 	DynamicArray<T>& ReplaceAlong(DynamicArray<T>&& newData, int axis, std::vector<int>&& nonAxisIndices) {
 
 		try {
-			Exceptions::EnsureSize(nonAxisIndices, this->nDims() - 1); 
+			Exceptions::EnsureSize(std::move(nonAxisIndices), this->nDims() - 1); 
 			Exceptions::EnsureValidNonAxisIndex(*this, nonAxisIndices, axis); 
-			Exceptions::EnsureSize(newData, this->shapeAlong(axis)); 
+			Exceptions::EnsureSize(std::move(newData), this->shapeAlong(axis)); 
 
 			int stride = getStride(axis);
 			auto start_stop = DetermineStartEndIndexForAxis(axis, nonAxisIndices, 0, -1);
@@ -633,6 +633,34 @@ public:
 			std::cout << ex.what() << std::endl;
 			exit(0);
 		}
+	}
+
+	DynamicArray<T>& Reverse(int axis) 
+	{
+		int stride = this->getExtractionStepLength(axis);
+		for (int i = 0, index = 0; i < this->getNonAxisNumberOfElements(axis); i++) {
+			auto nonAxisIndex = getNonAxisIndex(index, axis);
+			DynamicArray<T> extracted = ExtractAxis(axis, nonAxisIndex);
+			std::reverse(extracted.begin(), extracted.end());
+			this->ReplaceAlong(extracted, axis, nonAxisIndex);
+			index += stride;
+		}
+		return *this;
+	}
+	DynamicArray<T>& Roll(int shift, int axis)
+	{
+		int stride = this->getExtractionStepLength(axis);
+		for (int i = 0, index = 0; i < this->getNonAxisNumberOfElements(axis); i++) {
+			auto nonAxisIndex = getNonAxisIndex(index, axis);
+			DynamicArray<T> extracted = ExtractAxis(axis, nonAxisIndex);
+			if (shift > 0)
+				std::rotate(extracted.rbegin(), extracted.rbegin() + shift, extracted.rend());
+			else
+				std::rotate(extracted.begin(), extracted.begin() - shift, extracted.end());
+			this->ReplaceAlong(extracted, axis, nonAxisIndex);
+			index += stride;
+		}
+		return *this;
 	}
 
 	DynamicArray<T>& Blend(DynamicArray<T>&& arr, DynamicArray<bool>&& condition) {
@@ -662,7 +690,7 @@ public:
 		try {
 			if (m_shape.empty()) {
 				m_data.push_back(value);
-				m_shape = std::vector<int>{ 1,1 };
+				m_shape = std::vector<int>(std::max(2, axis+1), 1);
 				return;
 			}
 			else {
@@ -718,7 +746,7 @@ public:
 			int stride = getStride(axis);
 			DynamicArray<T> out;
 			for (int i = start_stop.first; i <= start_stop.second; i += stride) {
-				out.append(m_data.at(i));
+				out.append(m_data.at(i), axis);
 			}
 			return out;
 		}
@@ -790,13 +818,14 @@ public:
 			DynamicArray<int> axisIdx({ this->shapeAlong(axis) }, 0);
 			DynamicArray<int> out(this->shape(), 0);
 
-			int stride = this->getStride(axis);
-			int step = stride * this->shapeAlong(axis);
-			for (int i = 0; i < this->size(); i += step) {
-				DynamicArray<T> data = this->ExtractAxis(axis, getNonAxisIndex(i, axis));
+			int stride = this->getExtractionStepLength(axis);
+			for (int i = 0, index = 0; i < this->getNonAxisNumberOfElements(axis); i++) {
+				auto nonAxisIndex = getNonAxisIndex(index, axis);
+				DynamicArray<T> data = this->ExtractAxis(axis, nonAxisIndex);
 				std::iota(axisIdx.begin(), axisIdx.end(), 0);
 				std::stable_sort(axisIdx.begin(), axisIdx.end(), [&](int i1, int i2) { return data[i1] < data[i2];  });
-				out.ReplaceAlong(axisIdx, axis, getNonAxisIndex(i, axis));
+				out.ReplaceAlong(axisIdx, axis, nonAxisIndex);
+				index += stride;
 			}
 			return out;
 		}
@@ -830,11 +859,12 @@ public:
 		try {
 			Exceptions::EnsureLargerDimThan(*this, axis); 
 
-			int stride = this->getStride(axis);
-			int step = stride * this->shapeAlong(axis);
-			for (int i = 0; i < this->size(); i += step) {
-				DynamicArray<T> sortedAxis = this->ExtractAxis(axis, getNonAxisIndex(i, axis)).SortFlat();
-				this->ReplaceAlong(sortedAxis, axis, getNonAxisIndex(i, axis));
+			int stride = this->getExtractionStepLength(axis);
+			for (int i = 0, index = 0; i < this->getNonAxisNumberOfElements(axis); i++) {
+				auto nonAxisIndex = getNonAxisIndex(index, axis);
+				DynamicArray<T> sortedAxis = this->ExtractAxis(axis, nonAxisIndex).SortFlat();
+				this->ReplaceAlong(sortedAxis, axis, nonAxisIndex);
+				index += stride;
 			}
 			return *this;
 		}
@@ -923,7 +953,6 @@ public:
 			std::cout << ex.what() << std::endl;
 			exit(0);
 		}
-		
 	}
 
 	// Iterators
@@ -942,6 +971,22 @@ public:
 	auto end()
 	{
 		return m_data.end();
+	}
+	auto rbegin()const
+	{
+		return m_data.rbegin();
+	}
+	auto rbegin()
+	{
+		return m_data.rbegin();
+	}
+	auto rend()const
+	{
+		return m_data.rend();
+	}
+	auto rend()
+	{
+		return m_data.rend();
 	}
 
 	const std::vector<T>& raw()const
@@ -1064,6 +1109,15 @@ private:
 		return std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<int>());
 	}
 
+	int getExtractionStepLength(int axis)
+	{
+		if (axis == this->shape().size()-1)
+			return m_shape[axis - 1];
+		else
+			return getStride(axis + 1);
+	}
+
+
 	void PrintDim(std::vector<int>& index, int dim)const
 	{
 		// In the lowest recursion (max dim) level - do the print
@@ -1174,16 +1228,16 @@ private:
 			return *this;
 		}
 		try {
-			Exceptions::EnsureSameNonAxisShape(*this, arr, axis); 
+			//Exceptions::EnsureSameNonAxisShape(*this, arr, axis); 
 
 			int stride = this->getStride(axis);
 
-			if (axis == 0) {
-				auto startPoint = (offset == -1) ? this->end() : this->begin() + offset * stride;
-				m_data.insert(startPoint, arr.begin(), arr.end());
-				m_shape[axis] += arr.shapeAlong(axis);
-			}
-			else {
+			//if (axis == 0) {
+			//	auto startPoint = (offset == -1) ? this->end() : this->begin() + offset * stride;
+			//	m_data.insert(startPoint, arr.begin(), arr.end());
+			//	m_shape[axis] += arr.shapeAlong(axis);
+			//}
+			//else {
 
 				int newNumberOfElements = this->size() + arr.size();
 				int startIndex = (offset == -1) ? this->shapeAlong(axis) : offset;
@@ -1200,7 +1254,7 @@ private:
 						j++;
 					}
 				}
-			}
+			//}
 			return *this;
 		}
 		catch (const std::exception& ex) {
