@@ -5,6 +5,7 @@
 #include <vector>
 #include <numeric>
 #include <functional>
+#include <numbers>
 
 class Cnum
 {
@@ -14,8 +15,8 @@ public:
 	// Constants
 	// -------------------------
 
-	static constexpr double pi = 3.14159265359;
-	static constexpr double e = 2.71828182846;
+	static constexpr double pi = std::numbers::pi;
+	static constexpr double e = std::numbers::e;
 
 public:
 

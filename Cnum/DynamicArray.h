@@ -46,17 +46,16 @@ public:
 	{}
 
 	// Copy Constructors
-	DynamicArray(const DynamicArray<T>& src)
-		: m_data(src.m_data), m_shape(src.m_shape) 
-	{
-		std::cout << "Made a copy" << std::endl;
-	};
+	DynamicArray(const DynamicArray<T>& src) = default;
 
 	// Move Constructors
-	DynamicArray(DynamicArray&& other) 
+	DynamicArray(DynamicArray&& other) noexcept
+		: DynamicArray()
 	{
-		*this = std::move(other);
+		swap(*this, other);
 	}
+
+
 	DynamicArray(const std::vector<T>&& other)
 		: m_data{ other }, m_shape{ std::vector<int>{ 1, (int)other.size() } }
 	{}
@@ -77,6 +76,8 @@ public:
 		: DynamicArray(std::move(other), std::move(shape))
 	{}
 
+
+	~DynamicArray() = default;
 
 	//--------------------------
 	// Operators
@@ -177,16 +178,13 @@ public:
 	}
 
 	// Assignment
-	DynamicArray<T> operator=(DynamicArray<T>& rhs) { 
-		return *this = std::move(rhs);
-	}
-	DynamicArray<T>& operator=( DynamicArray<T>&& rhs) noexcept {
-		m_data = rhs.m_data;
-		m_shape = rhs.m_shape;
-		std::cout << "Made a copy assignment" << std::endl;
+	DynamicArray<T>& operator=(const DynamicArray<T> other) 
+	{
+		// Copy and swap idiom. Copy is made in the parameter list
+		swap(*this, other); 
 		return *this;
 	}
-	DynamicArray<T>& operator=(std::vector<T>&& rhs)const {
+	DynamicArray<T>& operator=(const std::vector<T>&& rhs)const {
 		return DynamicArray<T>(rhs);
 	}
 	DynamicArray<T>& operator=(const std::vector<T>& rhs)const {
@@ -1357,6 +1355,13 @@ private:
 			std::cout << ex.what() << std::endl;
 			exit(0);
 		}
+	}
+
+
+	void swap(DynamicArray<T>& arr1, DynamicArray<T>& arr2)
+	{
+		std::swap(arr1.m_data, arr2.m_data); 
+		std::swap(arr1.m_shape, arr2.m_shape);
 	}
 
 

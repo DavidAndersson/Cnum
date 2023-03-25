@@ -21,12 +21,14 @@
 
 int main() 
 {
+	auto arr = Cnum::Array<double>({
+		0.22, 0.08, 0.35,
+		0.64, 0.79, 0.24,
+		0.13, 0.07, 0.06 }, { 3,3 });
 
-	auto test = Cnum::Array<int>({ 1, 2, 4, 7, 0, 1 }, {3,2});
+	arr.Transpose({ 0,1 });
+	arr.Print();
 
-	auto out =  test.AdjacentDiff( false); 
-
-	out.Print();
 
 	
 }
