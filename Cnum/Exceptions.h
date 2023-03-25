@@ -67,7 +67,7 @@ public:
 	static bool EnsureDim(const DynamicArray<T>& arr, int dim)
 	{
 		if (arr.nDims() != dim) {
-			throw std::invalid_argument(std::format("{} dimension array is incompatible with {} dimension", arr.nDims(), dim));
+			throw std::invalid_argument(std::format("{}-dimensional array is incompatible with {}-dimensional requirement", arr.nDims(), dim));
 		}
 		return true;
 	}
@@ -104,8 +104,8 @@ public:
 	template<typename T>
 	static bool EnsureLargerDimThan(const DynamicArray<T>& arr, int dim)
 	{
-		if (arr.nDims() < dim) {
-			throw std::invalid_argument(std::format("The dimension of the array must be larger than {} using dimension {}", arr.sshape(), dim));
+		if (arr.nDims() <= dim) {
+			throw std::invalid_argument(std::format("The dimension of the array must be larger than {} when using dimension {}", arr.sshape(), dim));
 		}
 		return true;
 	}
@@ -117,7 +117,7 @@ public:
 		for (int i = 0; i < arr.nDims(); i++) {
 			if (i != axis) {
 				if (nonAxisIndex[idx] > arr.shapeAlong(i)) {
-					throw std::invalid_argument(std::format("Error! {} is out of range for axis {} in shape {}", nonAxisIndex[idx], i, arr.sshape()));
+					throw std::invalid_argument(std::format("{} is out of range for axis {} in shape {}", nonAxisIndex[idx], i, arr.sshape()));
 				}
 				idx++;
 			}

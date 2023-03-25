@@ -39,7 +39,6 @@ namespace UnitTest
 				Assert::IsTrue(arr.isEqualTo(result));
 			}
 		}
-
 		TEST_METHOD(Test_Insert)
 		{
 			
@@ -87,7 +86,84 @@ namespace UnitTest
 			}
 			
 		}
+		TEST_METHOD(Test_Sort) 
+		{
 
+			dArray arr = Cnum::Array<double>({
+				0.22, 0.08, 0.83,
+				0.84, 0.79, 0.51,
+				0.75, 0.07, 0.06,
+				0.74, 0.27, 0.35,
+				0.67, 0.83, 0.74,
+				0.13, 0.81, 0.76,
+				0.43, 0.88, 0.93,
+				0.64, 0.93, 0.24,
+				0.61, 0.76, 0.99 },
+				{ 3,3,3 });
+
+
+			// Axis 0
+			{
+				auto arr_0 = arr; 
+				auto sorted = arr_0.Sort(0); 
+				auto result = Cnum::Array<double>({
+				0.22, 0.08, 0.35,
+				0.64, 0.79, 0.24,
+				0.13, 0.07, 0.06,
+
+				0.43, 0.27, 0.83,
+				0.67, 0.83, 0.51,
+				0.61, 0.76, 0.76,
+
+				0.74, 0.88, 0.93,
+				0.84, 0.93, 0.74,
+				0.75, 0.81, 0.99, }, { 3,3,3 });
+
+				Assert::IsTrue(sorted.isEqualTo(result));
+			}
+
+			// Axis 1
+			{
+				auto arr_1 = arr;
+				auto sorted = arr_1.Sort(1);
+				auto result = Cnum::Array<double>({
+					0.22, 0.07, 0.06,
+					0.75, 0.08, 0.51,
+					0.84, 0.79, 0.83,
+
+					0.13, 0.27, 0.35,
+					0.67, 0.81, 0.74,
+					0.74, 0.83, 0.76,
+
+					0.43, 0.76, 0.24,
+					0.61, 0.88, 0.93,
+					0.64, 0.93, 0.99 }, { 3, 3, 3 });
+
+				Assert::IsTrue(sorted.isEqualTo(result));
+			}
+
+			// Axis 2
+			{
+				auto arr_2 = arr;
+				auto sorted = arr_2.Sort(2);
+				auto result = Cnum::Array<double>({
+					0.08, 0.22, 0.83,
+					0.51, 0.79, 0.84,
+					0.06, 0.07, 0.75,
+
+					0.27, 0.35, 0.74,
+					0.67, 0.74, 0.83,
+					0.13, 0.76, 0.81,
+
+					0.43, 0.88, 0.93,
+					0.24, 0.64, 0.93,
+					0.61, 0.76, 0.99 }, { 3, 3, 3 });
+
+				Assert::IsTrue(sorted.isEqualTo(result));
+			}
+			
+
+		}
 		
 	};
 }
