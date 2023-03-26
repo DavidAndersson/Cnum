@@ -15,6 +15,11 @@
 
 		Add extractIndicesAlongAxis(axis, nonAxisIndices, condition) alt. extractIndicesAlongAxis(axis, nonAxisIndices, indices)
 
+		Add custom Exception class and use std::location (?) to print line number etc for exceptions
+
+		Add concepts to members so that its possible to use one overload for vectors, dArrays or others. 
+			- call the concept arrayLike ?
+
 */
 
 
