@@ -6,7 +6,7 @@
 
 
 
-static std::string toString(const arrayLike_1d auto& arr)
+static std::string toString(const ArrayLike_1d auto& arr)
 {
 	std::stringstream ss;
 	ss << "(";
@@ -25,7 +25,7 @@ static void PrintSpaces(int n) {
 }
 
 
-static int multiplyElements(const arrayLike_1d auto& arr)
+static int multiplyElements(const ArrayLike_1d auto& arr)
 {
 	return std::accumulate(arr.begin(), arr.end(), 1, std::multiplies<int>());
 }

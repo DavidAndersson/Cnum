@@ -23,7 +23,7 @@
 
 
 
-void test(const arrayLike_1d auto& arr)
+void test(const ArrayLike_1d auto& arr)
 {
 	for (int i = 0; i < arr.size(); i++) {
 		std::cout << arr[i] << " ";
@@ -37,8 +37,15 @@ int main()
 {
 
 	auto tst = Cnum::Array<int>({ 1,2,3,4,5,6 }, { 2,3 }); 
-	tst.Reshape(iArray{3,2});
+	tst.Transpose();
+
+	tst.Concatenate(iArray{ {1,1,1}, {3,1} }, 1); 
 
 	tst.Print();
+
+	auto d = tst.Extract_if(0, iArray{1}, [](int t) {return t > 4; });
+
+	d.Print();
 	
+
 }

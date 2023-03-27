@@ -30,7 +30,7 @@ public:
 	}
 
 	//template<typename T>
-	static bool EnsureSameSize(const arrayLike_1d auto& arr1, const arrayLike_1d auto& arr2)
+	static bool EnsureSameSize(const ArrayLike_1d auto& arr1, const ArrayLike_1d auto& arr2)
 	{
 		if (multiplyElements(arr1) != multiplyElements(arr2)) {
 			throw std::invalid_argument(std::format("{} is not of the same size as {}", toString(arr1), toString(arr2)));
@@ -39,8 +39,7 @@ public:
 	}
 
 
-	template<typename T>
-	static bool EnsureSize(const std::vector<T>& arr, int size, const std::string_view msg)
+	static bool EnsureSize(const ArrayLike_1d auto& arr, int size, const std::string_view msg)
 	{
 		if (arr.size() != size) {
 			throw std::invalid_argument(msg.data());
@@ -48,22 +47,14 @@ public:
 		return true;
 	}
 
-	template<typename T>
-	static bool EnsureSize(std::vector<T>&& arr, int size)
+	static bool EnsureSize(const iArrayLike_1d auto& arr, int size)
 	{
 		if (arr.size() != size) {
 			throw std::invalid_argument(std::format("Array is not of size {}", size));
 		}
 		return true;
 	}
-	template<typename T>
-	static bool EnsureSize(DynamicArray<T>&& arr, int size)
-	{
-		if (arr.size() != size) {
-			throw std::invalid_argument(std::format("Array is not of size {}", size));
-		}
-		return true;
-	}
+
 
 	template<typename T>
 	static bool EnsureDim(const DynamicArray<T>& arr, int dim)
@@ -93,7 +84,7 @@ public:
 	}
 
 	template<typename T>
-	static bool EnsurePermutation(const DynamicArray<T>& arr, std::vector<int>& permutation)
+	static bool EnsurePermutation(const DynamicArray<T>& arr, const iArrayLike_1d auto& permutation)
 	{
 		std::vector<int> permValues = std::vector<int>(arr.nDims());
 		std::iota(permValues.begin(), permValues.end(), 0);
@@ -113,7 +104,7 @@ public:
 	}
 
 	template<typename T>
-	static bool EnsureValidNonAxisIndex(const DynamicArray<T>& arr, std::vector<int>& nonAxisIndex, int axis)
+	static bool EnsureValidNonAxisIndex(const DynamicArray<T>& arr, const iArrayLike_1d auto& nonAxisIndex, int axis)
 	{
 		int idx = 0;
 		for (int i = 0; i < arr.nDims(); i++) {
