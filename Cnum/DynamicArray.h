@@ -12,6 +12,7 @@
 #include "Utils.h"
 #include "Exceptions.h"
 #include <string_view>
+#include "Meta.h"
 
 template<typename T>
 class DynamicArray
@@ -23,6 +24,19 @@ public:
 	// -------------------------
 
 	DynamicArray() = default;
+
+	DynamicArray(const arrayLike_1d auto& init)
+		: m_data{ std::vector<T>(init) }
+	{
+		m_shape = std::vector<int>{ 1, (int)init.size() };
+	}
+
+	DynamicArray(const std::initializer_list<T>&& init)
+		: m_data{ std::vector<T>(std::move(init))}
+	{
+		m_shape = std::vector<int>{ 1, (int)init.size() };
+	}
+
 	DynamicArray(const std::vector<T>& initializer, const std::vector<int>&& shape)
 		: DynamicArray(std::move(initializer), std::move(shape))
 	{}
@@ -130,7 +144,7 @@ public:
 		}
 	}   
 
-	T& operator[](int index)
+	T& operator[](int index)const
 	{
 		try {
 			Exceptions::EnsureDim(*this, 1); 
@@ -178,7 +192,7 @@ public:
 	}
 
 	// Assignment
-	DynamicArray<T>& operator=(const DynamicArray<T> other) 
+	DynamicArray<T>& operator=(DynamicArray<T> other) 
 	{
 		// Copy and swap idiom. Copy is made in the parameter list
 		swap(*this, other); 
@@ -189,6 +203,15 @@ public:
 	}
 	DynamicArray<T>& operator=(const std::vector<T>& rhs)const {
 		return DynamicArray<T>(rhs);
+	}
+	DynamicArray<T>& operator=(const arrayLike_1d auto& rhs)const 
+	{
+		this->m_shape = std::vector<int>(1, rhs.size()); 
+		std::vector<T> data; 
+		for (auto& e : rhs)
+			data.push_back(e); 
+		m_data = data; 
+		return *this;
 	}
 
 	// Addition
@@ -512,12 +535,16 @@ public:
 		std::transform(this->begin(), this->end(), this->begin(), [](T e) {return std::abs(e); });
 		return *this;
 	}
-	DynamicArray<T>& Reshape(const std::vector<int>& newShape)
+
+
+	//DynamicArray<T>& Reshape(const std::vector<int>& newShape)
+	DynamicArray<T>& Reshape(const arrayLike_1d auto& newShape)
 	{
 		try {
 			// The new shape must have the same number of elements as the previous had
 			Exceptions::EnsureSameSize(this->shape(), newShape);
-			m_shape = newShape;
+			m_shape.clear();
+			std::copy(newShape.begin(), newShape.end(), std::back_inserter(m_shape));
 			return *this;
 		}
 		catch (const std::exception& ex) {
@@ -1357,7 +1384,7 @@ private:
 		}
 	}
 
-
+	
 	void swap(DynamicArray<T>& arr1, DynamicArray<T>& arr2)
 	{
 		std::swap(arr1.m_data, arr2.m_data); 

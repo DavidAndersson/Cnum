@@ -3,6 +3,7 @@
 #include <format>
 #include <stdexcept>
 #include "Utils.h"
+#include "Meta.h"
 
 template<typename T>
 class DynamicArray;
@@ -28,14 +29,15 @@ public:
 		return true;
 	}
 
-	template<typename T>
-	static bool EnsureSameSize(const std::vector<T>& arr1, const std::vector<T>& arr2)
+	//template<typename T>
+	static bool EnsureSameSize(const arrayLike_1d auto& arr1, const arrayLike_1d auto& arr2)
 	{
 		if (multiplyElements(arr1) != multiplyElements(arr2)) {
 			throw std::invalid_argument(std::format("{} is not of the same size as {}", toString(arr1), toString(arr2)));
 		}
 		return true;
 	}
+
 
 	template<typename T>
 	static bool EnsureSize(const std::vector<T>& arr, int size, const std::string_view msg)
