@@ -2,8 +2,11 @@
 #include <vector>
 #include <string>
 #include <sstream>
+#include "Meta.h"
 
-static std::string toString(const std::vector<int> arr)
+
+
+static std::string toString(const ArrayLike_1d auto& arr)
 {
 	std::stringstream ss;
 	ss << "(";
@@ -21,8 +24,9 @@ static void PrintSpaces(int n) {
 		std::cout << " ";
 }
 
-static int multiplyElements(const std::vector<int>& vec)
+
+static int multiplyElements(const ArrayLike_1d auto& arr)
 {
-	return std::accumulate(vec.begin(), vec.end(), 1, std::multiplies<int>());
+	return std::accumulate(arr.begin(), arr.end(), 1, std::multiplies<int>());
 }
 

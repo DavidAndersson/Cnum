@@ -1,6 +1,6 @@
 #include "Cnum.h"
 #include <iostream>
-
+#include <concepts>
 
 /*
 	TODOs: 
@@ -15,20 +15,26 @@
 
 		Add extractIndicesAlongAxis(axis, nonAxisIndices, condition) alt. extractIndicesAlongAxis(axis, nonAxisIndices, indices)
 
-*/
+		Custom Exception class which uses std::location described in "Professional C++"
 
+		Add concepts and make many functions follow the input arrayLike
+
+*/
 
 
 int main() 
 {
-	auto arr = Cnum::Array<double>({
-		0.22, 0.08, 0.35,
-		0.64, 0.79, 0.24,
-		0.13, 0.07, 0.06 }, { 3,3 });
 
-	arr.Transpose({ 0,1 });
-	arr.Print();
+	auto tst = Cnum::array<int>({ 1,2,3,4,5,6 }, { 2,3 }); 
+	tst.transpose();
+
+	tst.concatenate(iArray{ {1,1,1}, {3,1} }, 1); 
 
 
+	auto d = tst.extract_if(0, iArray{1}, [](int t) {return t > 4; });
+
+	auto g = 1 + tst;
 	
+	g.print();
+
 }
