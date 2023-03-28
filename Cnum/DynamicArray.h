@@ -251,15 +251,11 @@ public:
 	}
 
 	// Addition
-	DynamicArray<T> operator+(const DynamicArray& rhs)const
-	{
-		return *this + std::move(rhs);
-	}
-	DynamicArray<T> operator+(const DynamicArray&& rhs)const
+	friend DynamicArray<T> operator+(const DynamicArray& lhs, const DynamicArray& rhs)
 	{
 		try {
-			Exceptions::EnsureSameShape(*this, rhs);
-			return PerformArithmeticOperation(*this, std::move(rhs), std::plus<>());
+			Exceptions::EnsureSameShape(lhs, rhs);
+			return PerformArithmeticOperation(lhs, rhs, std::plus<>());
 		}
 		catch (const std::exception& ex) {
 			std::cout << "Error in array addition -> ";
@@ -267,9 +263,17 @@ public:
 			exit(0);
 		}
 	}
-	DynamicArray<T> operator+(const T value)const
+	friend DynamicArray<T> operator+(const DynamicArray&& lhs, const DynamicArray&& rhs)
 	{
-		return *this + DynamicArray<T>(this->shape(), value);
+		return lhs + rhs;
+	}
+	friend DynamicArray<T> operator+(const T value, const DynamicArray& rhs)
+	{
+		return rhs + DynamicArray<T>(rhs.shape(), value);
+	}
+	friend DynamicArray<T> operator+(const DynamicArray& rhs, const T value)
+	{
+		return rhs + value;
 	}
 	void operator+=(const DynamicArray& rhs)
 	{
@@ -284,15 +288,11 @@ public:
 	}
 
 	// Subtraction
-	DynamicArray<T> operator-(const DynamicArray& rhs)const
-	{
-		return *this - std::move(rhs); 
-	}
-	DynamicArray<T> operator-(const DynamicArray&& rhs)const
+	friend DynamicArray<T> operator-(const DynamicArray& lhs, const DynamicArray& rhs)
 	{
 		try {
-			Exceptions::EnsureSameShape(*this, rhs);
-			return PerformArithmeticOperation(*this, std::move(rhs), std::minus<>());
+			Exceptions::EnsureSameShape(lhs, rhs);
+			return PerformArithmeticOperation(lhs, rhs, std::minus<>());
 		}
 		catch (const std::exception& ex) {
 			std::cout << "Error in array subtraction -> ";
@@ -300,9 +300,17 @@ public:
 			exit(0);
 		}
 	}
-	DynamicArray<T> operator-(const T value)const
+	friend DynamicArray<T> operator-(const DynamicArray&& lhs, const DynamicArray&& rhs)
 	{
-		 return *this - DynamicArray<T>(this->shape(), value);
+		return lhs - rhs;
+	}
+	friend DynamicArray<T> operator-(const T value, const DynamicArray& rhs)
+	{
+		return rhs - DynamicArray<T>(rhs.shape(), value);
+	}
+	friend DynamicArray<T> operator-(const DynamicArray& rhs, const T value)
+	{
+		return rhs - value;
 	}
 	void operator-=(const DynamicArray& rhs)
 	{
@@ -317,15 +325,11 @@ public:
 	}
 
 	// Multiplication
-	DynamicArray<T> operator*(const DynamicArray& rhs)const
-	{
-		return *this * std::move(rhs); 
-	}
-	DynamicArray<T> operator*(const DynamicArray&& rhs)const
+	friend DynamicArray<T> operator*(const DynamicArray& lhs, const DynamicArray& rhs)
 	{
 		try {
-			Exceptions::EnsureSameShape(*this, rhs);
-			return PerformArithmeticOperation(*this, std::move(rhs), std::multiplies<>());
+			Exceptions::EnsureSameShape(lhs, rhs);
+			return PerformArithmeticOperation(lhs, rhs, std::multiplies<>());
 		}
 		catch (const std::exception& ex) {
 			std::cout << "Error in array multiplication -> ";
@@ -333,9 +337,17 @@ public:
 			exit(0);
 		}
 	}
-	DynamicArray<T> operator*(const T value)const
+	friend DynamicArray<T> operator*(const DynamicArray&& lhs, const DynamicArray&& rhs)
 	{
-		return *this * DynamicArray<T>(this->shape(), value);
+		return lhs * rhs;
+	}
+	friend DynamicArray<T> operator*(const T value, const DynamicArray& rhs)
+	{
+		return rhs * DynamicArray<T>(rhs.shape(), value);
+	}
+	friend DynamicArray<T> operator*(const DynamicArray& rhs, const T value)
+	{
+		return rhs * value;
 	}
 	void operator*=(const DynamicArray& rhs)
 	{
@@ -350,22 +362,38 @@ public:
 	}
 
 	// Division
-	DynamicArray<T> operator/(const DynamicArray& rhs)const
-	{
-		return *this / std::move(rhs);
-	}
-	DynamicArray<T> operator/(const DynamicArray&& rhs)const
+	friend DynamicArray<T> operator/(const DynamicArray& lhs, const DynamicArray& rhs)
 	{
 		try {
 			Exceptions::EnsureSameShape(*this, rhs);
 			Exceptions::EnsureNoZeros(this->raw());
-			return PerformArithmeticOperation(*this, std::move(rhs), std::divides<>());
+			return PerformArithmeticOperation(lhs, rhs, std::divides<>());
 		}
 		catch (const std::exception& ex) {
 			std::cout << "Error in array division -> ";
 			std::cout << ex.what() << std::endl;
 			exit(0);
 		}
+	}
+	friend DynamicArray<T> operator+(const DynamicArray&& lhs, const DynamicArray&& rhs)
+	{
+		return lhs + rhs;
+	}
+	friend DynamicArray<T> operator+(const T value, const DynamicArray& rhs)
+	{
+		return rhs + DynamicArray<T>(rhs.shape(), value);
+	}
+	friend DynamicArray<T> operator+(const DynamicArray& rhs, const T value)
+	{
+		return rhs + value;
+	}
+	DynamicArray<T> operator/(const DynamicArray& rhs)const
+	{
+		return *this / std::move(rhs);
+	}
+	DynamicArray<T> operator/(const DynamicArray&& rhs)const
+	{
+		
 	}
 	DynamicArray<T> operator/(const T value)const
 	{
@@ -676,7 +704,7 @@ public:
 		try {
 			Exceptions::EnsureDim(*this, 1); 
 			m_data.insert(it, value);
-			m_shape[getDominantAxis_1d]++; 
+			m_shape[this->getDominantAxis_1d()]++;
 			return *this;
 		}
 		catch (const std::exception& ex) {
@@ -1342,7 +1370,7 @@ private:
 	}
 	
 	template<typename Operation>
-	static DynamicArray<T> PerformArithmeticOperation(const DynamicArray<T>& arr1, const DynamicArray<T>&& arr2, Operation op)
+	static DynamicArray<T> PerformArithmeticOperation(const DynamicArray<T>& arr1, const DynamicArray<T>& arr2, Operation op)
 	{
 		std::vector<T> data(arr1.size());
 		std::transform(arr1.begin(), arr1.raw().end(), arr2.begin(), data.begin(), op);

@@ -41,11 +41,15 @@ int main()
 
 	tst.Concatenate(iArray{ {1,1,1}, {3,1} }, 1); 
 
-	tst.Print();
 
 	auto d = tst.Extract_if(0, iArray{1}, [](int t) {return t > 4; });
 
-	d.Print();
+	
+
+
+	auto g = 1 + tst;
+
+	g.Print();
 	
 
 }
