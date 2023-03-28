@@ -33,12 +33,8 @@ int main()
 
 	auto d = tst.extract_if(0, iArray{1}, [](int t) {return t > 4; });
 
-	
-
-
 	auto g = 1 + tst;
-
-	g.print();
 	
+	g.print();
 
 }

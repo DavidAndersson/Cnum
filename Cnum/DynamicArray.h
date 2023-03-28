@@ -25,67 +25,45 @@ public:
 
 	DynamicArray() = default;
 
-	// Maybe not have these?
+	// Creation by array-like objects
 	DynamicArray(const ArrayLike_1d auto& init)
 	{
 		std::copy(init.begin(), init.end(), std::back_inserter(m_data));
 		m_shape = std::vector<int>{ 1, (int)init.size() };
 	}
 	DynamicArray(const ArrayLike_1d auto& init, const iArrayLike_1d auto& shape)
-		: std::copy(init.begin(), init.end(), std::back_inserter(m_data)), 
-		  std::copy(shape.begin(), shape.end(), std::back_inserter(m_shape))
 	{
 		try {
 			std::string msg = std::format("Cannot create array of size {} with shape {}", init.size(), toString(shape));
-			Exceptions::EnsureEqual(getNumberOfElements(shape), init.size(), msg);
+			Exceptions::EnsureEqual(getNumberOfElements(shape), (int)init.size(), msg);
+			std::copy(init.begin(), init.end(), std::back_inserter(m_data));
+			std::copy(shape.begin(), shape.end(), std::back_inserter(m_shape));
 		}
 		catch (const std::exception& ex) {
 			std::cout << ex.what() << std::endl;
 			exit(0);
 		}
 	}
-
-	// Creation by initializer list -> delegates to vector
-	DynamicArray(const std::initializer_list<T>& init)
-		: DynamicArray(std::vector(init))
-	{}
-	DynamicArray(const std::initializer_list<T>& init, const std::initializer_list<T>& shape)
-		: DynamicArray(std::vector(init), std::vector(shape))
+	DynamicArray(const iArrayLike_1d auto& shape, T initialValue)
 	{
-	}
-	DynamicArray(const std::initializer_list<T>& shape, T initialValue)
-		: DynamicArray(std::vector(shape), initialValue)
-	{
-	};
-
-	// Creation by vectors -> try to make this the arrayLike
-	DynamicArray(const std::vector<T>& init)
-		: m_data{ std::vector<T>(std::move(init)) }
-	{
-		m_shape = std::vector<int>{ 1, (int)init.size() };
-	}
-	DynamicArray(const std::vector<T>& init, const std::vector<T>& shape)
-		: m_data{ std::vector<T>(init) }, m_shape{ std::vector<T>(shape) }
-	{
-		try {
-			std::string msg = std::format("Cannot create array of size {} with shape {}", this->size(), toString(this->shape()));
-			Exceptions::EnsureEqual(getNumberOfElements(this->shape()), this->size(), msg);
-
-		}
-		catch (const std::exception& ex) {
-			std::cout << ex.what() << std::endl;
-			exit(0);
-		}
-	}
-	DynamicArray(const std::vector<T>& shape, T initialValue)
-		: m_shape{ std::vector(shape) }
-	{
-		m_data = std::vector<T>(getNumberOfElements(), initialValue);
-
+		std::copy(shape.begin(), shape.end(), std::back_inserter(m_shape));
 		if (m_shape.size() == 1) {
 			m_shape = std::vector<int>{ 1, m_shape[0] };
 		}
-	};
+
+		m_data = std::vector<T>(this->getNumberOfElements(), initialValue); 
+	}
+
+	// Creation by initializer list
+	DynamicArray(const std::initializer_list<T>& init)
+		: m_data{std::vector(init)}, m_shape{std::vector<int>{1, (int)init.size()}}
+	{}
+	DynamicArray(const std::initializer_list<T>& init, const std::initializer_list<int>& shape)
+		: m_data{std::vector(init)}, m_shape{std::vector(shape)}
+	{}
+	DynamicArray(const std::initializer_list<int>& shape, T initialValue)
+		: m_data{std::vector(getNumberOfElements(std::vector(shape)), initialValue )}, m_shape{std::vector(shape)}
+	{};
 
 	// Copy Constructor
 	DynamicArray(const DynamicArray<T>& src) = default;
@@ -196,7 +174,7 @@ public:
 			exit(0);
 		}
 	}
-	T& at(int index)
+	T& at(int index)const
 	{
 		try {
 			Exceptions::EnsureDim(*this, 1);
@@ -208,7 +186,7 @@ public:
 			exit(0);
 		}
 	}
-	T& at(const std::initializer_list<int>& index)
+	T& at(const std::initializer_list<int>& index)const
 	{
 		try {
 			Exceptions::EnsureDim(*this, (int)index.size());
@@ -880,7 +858,7 @@ public:
 		// No need for exception here since they are checked in extract_if()
 		return this->extract_if(axis, nonAxisIndex, [](T t) {return true; }, start, end);
 	}	
-	DynamicArray<T> extract_if(int axis, const iArrayLike_1d auto& nonAxisIndex, std::function<bool(T)>&& pred, int start=0, int end=-1)
+	DynamicArray<T> extract_if(int axis, const iArrayLike_1d auto& nonAxisIndex, std::function<bool(T)>&& pred, int start=0, int end=-1)const
 	{
 		try {
 			Exceptions::EnsureLargerDimThan(*this, axis);
