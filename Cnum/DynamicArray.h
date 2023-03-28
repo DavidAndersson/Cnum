@@ -25,6 +25,8 @@ public:
 
 	DynamicArray() = default;
 
+	// Constructor with int as argument - creates a 1d array with n elements = 0
+
 	// Creation by array-like objects
 	DynamicArray(const ArrayLike_1d auto& init)
 	{
@@ -82,7 +84,7 @@ public:
 	// Operators
 	// -------------------------
 
-	// Indexing
+	// Indexing  - Update to take arrayLike and possibly initializer list. Overload with const& as well (need to make that func const as well)
 	T& operator[](std::vector<int>&& index)
 	{
 		try {
@@ -225,7 +227,7 @@ public:
 	{
 		try {
 			Exceptions::EnsureSameShape(lhs, rhs);
-			return performArithmeticOperation(lhs, rhs, std::plus<>());
+			return performBinaryArithmeticOperation(lhs, rhs, std::plus<>());
 		}
 		catch (const std::exception& ex) {
 			std::cout << "Error in array addition -> ";
@@ -262,7 +264,7 @@ public:
 	{
 		try {
 			Exceptions::EnsureSameShape(lhs, rhs);
-			return performArithmeticOperation(lhs, rhs, std::minus<>());
+			return performBinaryArithmeticOperation(lhs, rhs, std::minus<>());
 		}
 		catch (const std::exception& ex) {
 			std::cout << "Error in array subtraction -> ";
@@ -293,13 +295,17 @@ public:
 	void operator-=(const T rhs) {
 		*this = *this - rhs;
 	}
+	DynamicArray<T> operator-()
+	{
+		return performUnaryArithmeticOperation(*this, [](T t) {return t *= -1; }); 
+	}
 
 	// Multiplication
 	friend DynamicArray<T> operator*(const DynamicArray& lhs, const DynamicArray& rhs)
 	{
 		try {
 			Exceptions::EnsureSameShape(lhs, rhs);
-			return performArithmeticOperation(lhs, rhs, std::multiplies<>());
+			return performBinaryArithmeticOperation(lhs, rhs, std::multiplies<>());
 		}
 		catch (const std::exception& ex) {
 			std::cout << "Error in array multiplication -> ";
@@ -337,7 +343,7 @@ public:
 		try {
 			Exceptions::EnsureSameShape(*this, rhs);
 			Exceptions::EnsureNoZeros(this->raw());
-			return performArithmeticOperation(lhs, rhs, std::divides<>());
+			return performBinaryArithmeticOperation(lhs, rhs, std::divides<>());
 		}
 		catch (const std::exception& ex) {
 			std::cout << "Error in array division -> ";
@@ -532,13 +538,36 @@ public:
 	}
 
 	// Streaming
-	friend std::ostream& operator << (std::ostream& stream, DynamicArray<T>& arr) {
+	friend std::ostream& operator << (std::ostream& stream, const DynamicArray<T>& arr) {
 		return stream << std::move(arr);
 	}
-	friend std::ostream& operator << (std::ostream& stream, DynamicArray<T>&& arr) {
+	friend std::ostream& operator << (std::ostream& stream, const DynamicArray<T>&& arr) {
 		arr.print();
 		return stream;
 	}
+	friend std::istream& operator >> (std::istream& stream, DynamicArray<T>& arr)
+	{
+		try {
+			Exceptions::EnsureDim(arr, 1); 
+
+			T value;
+			stream >> value;
+			arr.append(value);
+			return stream;
+		}
+		catch (const std::exception& ex) {
+			std::cout << "Error in >> operator -> ";
+			std::cout << ex.what() << std::endl;
+			exit(0);
+		}
+	}
+
+	// Conversion, consider making explicit
+	operator std::vector<T>()const
+	{
+		return m_data;
+	}
+
 
 public:
 
@@ -1327,11 +1356,18 @@ private:
 
 	// Actions
 	template<typename Operation>
-	static DynamicArray<T> performArithmeticOperation(const DynamicArray<T>& arr1, const DynamicArray<T>& arr2, Operation op)
+	static DynamicArray<T> performBinaryArithmeticOperation(const DynamicArray<T>& arr1, const DynamicArray<T>& arr2, Operation binaryOp)
 	{
 		std::vector<T> data(arr1.size());
-		std::transform(arr1.begin(), arr1.raw().end(), arr2.begin(), data.begin(), op);
+		std::transform(arr1.begin(), arr1.raw().end(), arr2.begin(), data.begin(), binaryOp);
 		return DynamicArray<T>(data, arr1.shape());
+	}
+	template<typename Operation>
+	static DynamicArray<T> performUnaryArithmeticOperation(const DynamicArray<T>& arr, Operation unaryOp)
+	{
+		std::vector<T> data(arr.size());
+		std::transform(arr.begin(), arr.raw().end(), data.begin(), unaryOp);
+		return DynamicArray<T>(data, arr.shape());
 	}
 	void incrementExtractionIndex(DynamicArray<int>& index, int axis, int dim) {
 

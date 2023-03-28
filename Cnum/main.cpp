@@ -1,6 +1,5 @@
 #include "Cnum.h"
 #include <iostream>
-#include <concepts>
 
 /*
 	TODOs: 
@@ -35,6 +34,11 @@ int main()
 
 	auto g = 1 + tst;
 	
-	g.print();
+	auto q = iArray{ 1,2,3 }; 
+
+	std::vector<int> s = (std::vector<int>) q; 
+
+
+
 
 }
