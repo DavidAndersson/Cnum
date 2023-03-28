@@ -25,7 +25,7 @@
 int main() 
 {
 
-	auto tst = Cnum::Array<int>({ 1,2,3,4,5,6 }, { 2,3 }); 
+	auto tst = Cnum::array<int>({ 1,2,3,4,5,6 }, { 2,3 }); 
 	tst.transpose();
 
 	tst.concatenate(iArray{ {1,1,1}, {3,1} }, 1); 

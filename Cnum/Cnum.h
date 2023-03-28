@@ -6,6 +6,7 @@
 #include <numeric>
 #include <functional>
 #include <numbers>
+#include "Meta.h"
 
 class Cnum
 {
@@ -26,17 +27,18 @@ public:
 
 
 	template<typename T>
-	static Cnum::Rect<T> GetRect(DynamicArray<T> lowPoint, DynamicArray<T> highPoint) {
+	static Cnum::Rect<T> getRect(DynamicArray<T> lowPoint, DynamicArray<T> highPoint) {
 		return Rect(lowPoint, highPoint);
 	}
 
 	Cnum() = delete;
 	
+
 	// Static Creators
 
 	// Overload to only take end
 	template<typename T>
-	static DynamicArray<T> Arange(T start, T end, T stepSize) {
+	static DynamicArray<T> arange(T start, T end, T stepSize) {
 
 		try {
 			if (Exceptions::EnsureInsideRangeSym(start, end, stepSize)) {
@@ -64,12 +66,12 @@ public:
 	}
 
 	template<typename T>
-	static DynamicArray<T> Arange(T end) {
+	static DynamicArray<T> arange(T end) {
 		return Arange(0, end, 1);
 	}
 
 	template<typename T>
-	static DynamicArray<T> Linspace(T start, T end, int nSteps) {
+	static DynamicArray<T> linspace(T start, T end, int nSteps) {
 		T rangeLength = end - start;
 		T stepSize = rangeLength / (nSteps - 1);
 
@@ -82,11 +84,11 @@ public:
 	}
 
 	template<typename T>
-	static DynamicArray<T> FromFile(std::string_view filePath, char delimiter = ' ') {
+	static DynamicArray<T> fromFile(std::string_view filePath, char delimiter = ' ') {
 
 		try {
-			auto dataFile = OpenFile(filePath);
-			return ReadDataFromFile(dataFile, delimiter);
+			auto dataFile = openFile(filePath);
+			return readDataFromFile(dataFile, delimiter);
 		}
 		catch (const std::exception& ex) {
 			std::cout << "Error in FromFile() -> ";
@@ -96,31 +98,48 @@ public:
 	}
 
 	template<typename T>
-	static DynamicArray<T> UniformArray(std::vector<int> shape, T value) {
+	static DynamicArray<T> uniformArray(const iArrayLike_1d auto& shape, T value) {
+		return DynamicArray(shape, value);
+	}
+	template<typename T>
+	static DynamicArray<T> uniformArray(const std::initializer_list<T>& shape, T value) {
 		return DynamicArray(shape, value);
 	}
 
 	template<typename T>
-	static DynamicArray<T> Array(std::vector<T>&& initiallizer, std::vector<int> shape) {
+	static DynamicArray<T> array(const ArrayLike_1d auto& init, const iArrayLike_1d auto& shape) {
 		try {
-			return DynamicArray<T>(initiallizer, shape);
+			return DynamicArray<T>(init, shape);
 		}
 		catch (const std::exception& ex) {
 			std::cout << ex.what() << std::endl;
 			exit(0);
 		}
 	}
-
 	template<typename T>
-	static DynamicArray<T> Array(std::vector<T>&& initiallizer) {
-		return DynamicArray(initiallizer);
+	static DynamicArray<T> array(const std::initializer_list<T>& init, const std::initializer_list<T> shape) {
+		try {
+			return DynamicArray<T>(init, shape);
+		}
+		catch (const std::exception& ex) {
+			std::cout << ex.what() << std::endl;
+			exit(0);
+		}
+	}
+	template<typename T>
+	static DynamicArray<T> array(const ArrayLike_1d auto& init) {
+		return DynamicArray(init);
+	}
+	template<typename T>
+	static DynamicArray<T> array(const std::initializer_list<T>& init) {
+		return DynamicArray(init);
 	}
 
 
 	// Static Actions
 
 	template<typename T>
-	static T Dot(DynamicArray<T>& arr1, DynamicArray<T>& arr2) {
+	static T dot(DynamicArray<T>& arr1, DynamicArray<T>& arr2) {
 
 		try {
 			Exceptions::EnsureSameSize(arr1, arr2);
@@ -136,8 +155,8 @@ public:
 	}
 
 	template<typename T>
-	static DynamicArray<T> concatenate(DynamicArray<T>& arr1, DynamicArray<T>& arr2, int axis) {
-		return concatenate(std::move(arr1), std::move(arr2), axis);
+	static DynamicArray<T> concatenate(DynamicArray<T> arr1, DynamicArray<T> arr2, int axis) {
+		return concatenate(arr1,arr2, axis);
 	}
 	template<typename T>
 	static DynamicArray<T> concatenate(DynamicArray<T>&& arr1, DynamicArray<T>&& arr2, int axis) {
@@ -145,56 +164,49 @@ public:
 	}
 
 	template<typename T>
-	static DynamicArray<T> transpose(DynamicArray<T>& arr) {
-		auto copy = arr; 
-		return copy.transpose();
+	static DynamicArray<T> transpose(DynamicArray<T> arr) {
+		return arr.transpose();
 	}
 	template<typename T>
-	static DynamicArray<T> transpose(DynamicArray<T>& arr, DynamicArray<int>&& permutation) {
-		auto copy = arr;
-		return copy.transpose(std::move(permutation));
-	}
-	template<typename T>
-	static DynamicArray<T> transpose(DynamicArray<T>& arr, std::vector<int>&& permutation) {
-		auto copy = arr;
-		return copy.transpose(permutation);
+	static DynamicArray<T> transpose(DynamicArray<T> arr, std::vector<int>&& permutation) {
+		return arr.transpose(permutation);
 	}
 
 	template<typename T>
-	static DynamicArray<T> Flatten(DynamicArray<T>& arr) {
-		auto copy = arr;
-		return copy.Flatten();
+	static DynamicArray<T> flatten(DynamicArray<T> arr) {
+		return arr.flatten();
 	}
 
 	template<typename T>
-	static DynamicArray<T>& Abs(DynamicArray<T>&& arr) {
+	static DynamicArray<T>& abs(DynamicArray<T>&& arr) {
 		return arr.abs();
 	}
 
 	template<typename T>
-	static DynamicArray<T> Abs(DynamicArray<T>& arr) {
-		auto copy = arr; 
-		return copy.abs();
+	static DynamicArray<T> abs(DynamicArray<T> arr) {
+		return arr.abs();
 	}
 
 	template<typename T>
-	static DynamicArray<T> MinimumOf(DynamicArray<T>& arr1, DynamicArray<T>& arr2) {
-
+	static DynamicArray<T> minimumOf(DynamicArray<T>& arr1, DynamicArray<T>& arr2) 
+	{
 		try {
 			Exceptions::EnsureSameShape(arr1, arr2); 
+
+			DynamicArray<T> out = arr1;
+			std::transform(arr1.begin(), arr1.end(), arr2.begin(), out.begin(), [](T v1, T v2) {return std::min(v1, v2); });
+			return out;
 		}
 		catch (const std::exception& ex) {
 			std::cout << ex.what() << std::endl;
 			exit(0);
 		}
-		DynamicArray<T> out = arr1; 
-		std::transform(arr1.begin(), arr1.end(), arr2.begin(), out.begin(), [](T v1, T v2) {return std::min(v1, v2);});
-		return out;
+		
 
 	}
 
 	template<typename T>
-	static DynamicArray<T> MaximumOf(DynamicArray<T>& arr1, DynamicArray<T>& arr2) {
+	static DynamicArray<T> maximumOf(DynamicArray<T>& arr1, DynamicArray<T>& arr2) {
 
 		try {
 			Exceptions::EnsureSameShape(arr1, arr2);
@@ -210,65 +222,66 @@ public:
 	}
 
 	template<typename T>
-	static T Max(DynamicArray<T>& arr) {
+	static T max(DynamicArray<T>& arr) {
 		return arr.max();
 	}
 	template<typename T>
-	static T Min(DynamicArray<T>& arr) {
+	static T min(DynamicArray<T>& arr) {
 		return arr.min();
 	}
 
 
 	// Searching
-	static DynamicArray<int> FindWhere(DynamicArray<bool>&& condition) {
-		return condition.find(std::move(condition));
+	template<typename T>
+	static DynamicArray<int> find(DynamicArray<T>&& arr, DynamicArray<bool>&& condition) {
+		return find(arr, condition);
 	}
 	template<typename T>
-	static DynamicArray<int> FindWhere(DynamicArray<T>&& arr, DynamicArray<bool>&& condition) {
-		return arr.find(std::move(condition));
-	}
-	template<typename T>
-	static DynamicArray<int> FindWhere(DynamicArray<T>& arr, DynamicArray<bool>&& condition)
+	static DynamicArray<int> find(DynamicArray<T>& arr, DynamicArray<bool>&& condition)
 	{
-		return arr.find(std::move(condition));
+		return arr.find(condition);
 	}
+	template<typename T>
+	static DynamicArray<int> find_if(DynamicArray<T>& arr, std::function<bool(T)>&& condition)
+	{
+		return arr.find_if(condition);
+	}
+
+
 
 	// Sorting
 	template<typename T>
-	DynamicArray<T> SortAndFlatten(DynamicArray<T> arr)const
+	DynamicArray<T> sortFlat(DynamicArray<T> arr)const
 	{
-		return arr.SortAndFlatten();
+		return arr.sortFlat();
 	}
 	//template<typename T>
 	//DynamicArray<T> sort();
 
 
 	template<typename T>
-	static DynamicArray<T> BlendIf(DynamicArray<T>& trueConditionArray, DynamicArray<T>& falseConditionArray, DynamicArray<bool>&& condition) {
-		auto copy = trueConditionArray;
-		return copy.Blend(std::move(falseConditionArray), std::move(condition));
+	static DynamicArray<T> blend_if(DynamicArray<T> trueConditionArray, DynamicArray<T>& falseConditionArray, DynamicArray<bool>&& condition) {
+		return trueConditionArray.blend_if(falseConditionArray, condition);
 	}
 	template<typename T>
-	static DynamicArray<T> BlendIf(DynamicArray<T>& trueConditionArray, DynamicArray<T>& falseConditionArray, DynamicArray<bool>& condition) {
-		auto copy = trueConditionArray;
-		return copy.Blend(std::move(falseConditionArray), std::move(condition));
+	static DynamicArray<T> blend_if(DynamicArray<T> trueConditionArray, DynamicArray<T>& falseConditionArray, DynamicArray<bool>& condition) {
+		return trueConditionArray.blend_if(falseConditionArray, condition);
 	}
 	template<typename T>
-	static DynamicArray<T> BlendIf(DynamicArray<T>&& trueConditionArray, DynamicArray<T>&& falseConditionArray, DynamicArray<bool>&& condition) {
-		return trueConditionArray.Blend(falseConditionArray, condition);
+	static DynamicArray<T> blend_if(DynamicArray<T> trueConditionArray, DynamicArray<T>&& falseConditionArray, DynamicArray<bool>&& condition) {
+		return trueConditionArray.blend_if(falseConditionArray, condition);
 	}
 	template<typename T>
-	static DynamicArray<T> BlendIf(DynamicArray<T>&& trueConditionArray, DynamicArray<T>&& falseConditionArray, bool condition) {
+	static DynamicArray<T> blend_if(DynamicArray<T> trueConditionArray, DynamicArray<T>&& falseConditionArray, bool condition) {
+		return trueConditionArray.blend_if(falseConditionArray, DynamicArray<bool>(trueConditionArray.shape(), condition));
+	}
+	template<typename T>
+	static DynamicArray<T> blend_if(DynamicArray<T> trueConditionArray, DynamicArray<T>& falseConditionArray, bool condition) {
 		return trueConditionArray.Blend(falseConditionArray, DynamicArray<bool>(trueConditionArray.shape(), condition));
-	}
-	template<typename T>
-	static DynamicArray<T> BlendIf(DynamicArray<T>& trueConditionArray, DynamicArray<T>& falseConditionArray, bool condition) {
-		auto copy = trueConditionArray;
-		return copy.Blend(std::move(falseConditionArray), DynamicArray<bool>(trueConditionArray.shape(), condition));
 	}
 
 	template<typename T>
-	static DynamicArray<T> GetBinaryTable(int nDims) {
+	static DynamicArray<T> getBinaryTable(int nDims) {
 		
 		int nRows = (int)std::pow(2, nDims);
 		int nCols = nDims;
@@ -279,7 +292,7 @@ public:
 
 		for (int col = 0; col < nDims; col++) {
 
-			DynamicArray<T> column = Cnum::UniformArray<T>({ nRows, 1 }, 0);
+			DynamicArray<T> column = Cnum::uniformArray<T>({ nRows, 1 }, 0);
 
 			int value = 0;
 			for (int i = stride; i < nRows; i+=2*stride) {
@@ -297,7 +310,7 @@ public:
 	}
 
 	template<typename T>
-	static void ToFile(std::string_view filename, DynamicArray<T>& data, char writeMode = 'w', char delimiter = ' ')
+	static void toFile(std::string_view filename, DynamicArray<T>& data, char writeMode = 'w', char delimiter = ' ')
 	{
 		// Problems:
 		//	Two different delimiters can be used if the write mode is append
@@ -331,7 +344,7 @@ private:
 	// Private Member Functions
 	// -------------------------
 
-	static std::fstream OpenFile(std::string_view filePath) {
+	static std::fstream openFile(std::string_view filePath) {
 		std::fstream dataFile(filePath.data(), std::ios::in);
 
 		if (dataFile.is_open() == false) {
@@ -343,7 +356,7 @@ private:
 	}
 
 	template<typename T>
-	static DynamicArray<T> ReadDataFromFile(std::fstream& dataFile, char delimiter = ' ') {
+	static DynamicArray<T> readDataFromFile(std::fstream& dataFile, char delimiter = ' ') {
 
 		int rowCount = 0, colCount = 0, finalColCount = 0;
 		std::vector<T> initializer;
