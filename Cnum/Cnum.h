@@ -221,16 +221,16 @@ public:
 
 	// Searching
 	static DynamicArray<int> FindWhere(DynamicArray<bool>&& condition) {
-		return condition.Find(std::move(condition));
+		return condition.find(std::move(condition));
 	}
 	template<typename T>
 	static DynamicArray<int> FindWhere(DynamicArray<T>&& arr, DynamicArray<bool>&& condition) {
-		return arr.Find(std::move(condition));
+		return arr.find(std::move(condition));
 	}
 	template<typename T>
 	static DynamicArray<int> FindWhere(DynamicArray<T>& arr, DynamicArray<bool>&& condition)
 	{
-		return arr.Find(std::move(condition));
+		return arr.find(std::move(condition));
 	}
 
 	// Sorting

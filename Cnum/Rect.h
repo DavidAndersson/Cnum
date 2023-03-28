@@ -57,7 +57,7 @@ public:
 	}
 
 	DynamicArray<T> Center()const {
-		return DynamicArray<T>( m_coordinates.ReduceAlongAxis(0) / (T)2 );
+		return DynamicArray<T>( m_coordinates.reduceAlongAxis(0) / (T)2 );
 	}
 
 	std::vector<Rect> Subdivide(){

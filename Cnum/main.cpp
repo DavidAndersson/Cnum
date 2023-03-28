@@ -37,19 +37,19 @@ int main()
 {
 
 	auto tst = Cnum::Array<int>({ 1,2,3,4,5,6 }, { 2,3 }); 
-	tst.Transpose();
+	tst.transpose();
 
-	tst.Concatenate(iArray{ {1,1,1}, {3,1} }, 1); 
+	tst.concatenate(iArray{ {1,1,1}, {3,1} }, 1); 
 
 
-	auto d = tst.Extract_if(0, iArray{1}, [](int t) {return t > 4; });
+	auto d = tst.extract_if(0, iArray{1}, [](int t) {return t > 4; });
 
 	
 
 
 	auto g = 1 + tst;
 
-	g.Print();
+	g.print();
 	
 
 }
