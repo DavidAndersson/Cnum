@@ -39,7 +39,7 @@ namespace UnitTest
 				Assert::IsTrue(arr.isEqualTo(result));
 			}
 		}
-		TEST_METHOD(Test_Insert)
+		TEST_METHOD(Test_insert)
 		{
 			
 			{
@@ -68,7 +68,7 @@ namespace UnitTest
 				Assert::IsTrue(arr.isEqualTo(result));
 			}
 		}
-		TEST_METHOD(Test_Transpose)
+		TEST_METHOD(Test_transpose)
 		{			
 			{
 				// 3D

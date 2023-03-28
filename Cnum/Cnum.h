@@ -136,28 +136,28 @@ public:
 	}
 
 	template<typename T>
-	static DynamicArray<T> Concatenate(DynamicArray<T>& arr1, DynamicArray<T>& arr2, int axis) {
-		return Concatenate(std::move(arr1), std::move(arr2), axis);
+	static DynamicArray<T> concatenate(DynamicArray<T>& arr1, DynamicArray<T>& arr2, int axis) {
+		return concatenate(std::move(arr1), std::move(arr2), axis);
 	}
 	template<typename T>
-	static DynamicArray<T> Concatenate(DynamicArray<T>&& arr1, DynamicArray<T>&& arr2, int axis) {
-		return arr1.Concatenate(arr2, axis);
+	static DynamicArray<T> concatenate(DynamicArray<T>&& arr1, DynamicArray<T>&& arr2, int axis) {
+		return arr1.concatenate(arr2, axis);
 	}
 
 	template<typename T>
-	static DynamicArray<T> Transpose(DynamicArray<T>& arr) {
+	static DynamicArray<T> transpose(DynamicArray<T>& arr) {
 		auto copy = arr; 
-		return copy.Transpose();
+		return copy.transpose();
 	}
 	template<typename T>
-	static DynamicArray<T> Transpose(DynamicArray<T>& arr, DynamicArray<int>&& permutation) {
+	static DynamicArray<T> transpose(DynamicArray<T>& arr, DynamicArray<int>&& permutation) {
 		auto copy = arr;
-		return copy.Transpose(std::move(permutation));
+		return copy.transpose(std::move(permutation));
 	}
 	template<typename T>
-	static DynamicArray<T> Transpose(DynamicArray<T>& arr, std::vector<int>&& permutation) {
+	static DynamicArray<T> transpose(DynamicArray<T>& arr, std::vector<int>&& permutation) {
 		auto copy = arr;
-		return copy.Transpose(permutation);
+		return copy.transpose(permutation);
 	}
 
 	template<typename T>
@@ -240,7 +240,7 @@ public:
 		return arr.SortAndFlatten();
 	}
 	//template<typename T>
-	//DynamicArray<T> Sort();
+	//DynamicArray<T> sort();
 
 
 	template<typename T>
@@ -290,7 +290,7 @@ public:
 			if (col == 0)
 				table = column;
 			else
-				table.Concatenate(column, 1);
+				table.concatenate(column, 1);
 			stride /= 2;
 		}
 		return table;

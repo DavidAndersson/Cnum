@@ -214,7 +214,7 @@
 //
 //// Modify this so its mutating. Add function in Cnum which copies
 //template<typename T>
-//DynamicArray<T> DynamicArray<T>::Transpose()
+//DynamicArray<T> DynamicArray<T>::transpose()
 //{
 //	DynamicArray<T> copy = *this;
 //	std::reverse(copy.m_shape.begin(), copy.m_shape.end());
@@ -241,7 +241,7 @@
 //}
 //
 //template<typename T>
-//DynamicArray<T> DynamicArray<T>::ExtractAxis(int axis, std::vector<int>nonAxisLock, int start, int end)const
+//DynamicArray<T> DynamicArray<T>::extract(int axis, std::vector<int>nonAxisLock, int start, int end)const
 //{
 //	// Error checking
 //	if (axis > m_shape.size()) {
@@ -298,7 +298,7 @@
 //
 //
 //template<typename T>
-//DynamicArray<T> DynamicArray<T>::ReduceAlongAxis(int axis) const
+//DynamicArray<T> DynamicArray<T>::reduceAlongAxis(int axis) const
 //{
 //	// The axis which the sum is along gets reduced to 1
 //	std::vector<int> returnShape = m_shape;
@@ -307,7 +307,7 @@
 //
 //	for (int i = 0; i < getNumberOfElements(returnShape); i++) {
 //
-//		returnArray[i] = this->ExtractAxis(axis, i).Reduce(0, std::plus());
+//		returnArray[i] = this->extract(axis, i).reduce(0, std::plus());
 //
 //	}
 //	return returnArray;
@@ -315,7 +315,7 @@
 //
 //// Only tested in 2 dimensions
 //template<typename T>
-//void DynamicArray<T>::Concatenate(DynamicArray<T> other, int axis, int offset)
+//void DynamicArray<T>::concatenate(DynamicArray<T> other, int axis, int offset)
 //{
 //	// If the array is uninitialized i.e. empty, the concatenation will simply act as assignment
 //	if (m_data.empty()){
@@ -367,7 +367,7 @@
 //	// Goes through the elements of the 1d point, and checks if it is contained by the correct axis in the parent
 //	// Note that the method is inclusive at the lower end and exclusive at the upper end
 //	for (int i = 0; i < point.m_data.size(); i++) {
-//		if ((point[i] >= this->ExtractAxis(0, i).min() && point[i] < this->ExtractAxis(0, i).max()) == false) {
+//		if ((point[i] >= this->extract(0, i).min() && point[i] < this->extract(0, i).max()) == false) {
 //			return false;
 //		}
 //	}

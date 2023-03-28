@@ -16,7 +16,7 @@ public:
 		}
 	};
 
-	void Insert(objType& object, DynamicArray<posType>& pos) {
+	void insert(objType& object, DynamicArray<posType>& pos) {
 		if (!m_boundary.Contains(pos)) {
 			return;
 		}
@@ -31,7 +31,7 @@ public:
 			}
 
 			for (auto& child : m_children)
-				child->Insert(object, pos);
+				child->insert(object, pos);
 		}
 	}
 
@@ -76,7 +76,7 @@ private:
 		// Re-distribute the points in the parent to the children
 		for (int i = 0; i < m_positions.size(); i++) {
 			for (auto& child : m_children)
-				child->Insert(m_objects[i], m_positions[i]);
+				child->insert(m_objects[i], m_positions[i]);
 		}
 
 		// Remove all the data from the parent

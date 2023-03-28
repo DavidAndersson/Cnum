@@ -71,7 +71,7 @@ public:
 		if (arr1.shapeAlong(axis) != arr2.shapeAlong(axis)) {
 			throw std::invalid_argument(msg.data());
 		}
-		//return true;
+		return true;
 	}
 
 	template<typename T>

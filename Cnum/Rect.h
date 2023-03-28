@@ -15,19 +15,19 @@ public:
 			exit(1);
 		}
 		if (lowPoint.shapeAlong(0) > 1) {
-			lowPoint.Transpose();
+			lowPoint.transpose();
 		}	
 		if (highPoint.shapeAlong(0) > 1) {
-			highPoint.Transpose();
+			highPoint.transpose();
 		}
 			
-		m_coordinates = Cnum::Concatenate(lowPoint, highPoint);
+		m_coordinates = Cnum::concatenate(lowPoint, highPoint);
 	}
 
 	bool isOverlappingWith(Cnum::Rect<T>& other)const {
 
 		for (int i = 0; i < m_coordinates.shape().size(); i++) {
-			auto coords = m_coordinates.ExtractAxis(1, i);
+			auto coords = m_coordinates.extract(1, i);
 			if (other.m_coordinates.Contains(coords)) {
 				return true;
 			}
@@ -49,7 +49,7 @@ public:
 		// Goes through the elements of the point, and checks if it is contained by the correct axis in the parent
 		// Note that the method is inclusive at the lower end and exclusive at the upper end
 		for (int i = 0; i < point.m_data.size(); i++) {
-			if ((point[i] >= m_coordinates.ExtractAxis(0, i).min() && point[i] < m_coordinates.ExtractAxis(0, i).max()) == false) {
+			if ((point[i] >= m_coordinates.extract(0, i).min() && point[i] < m_coordinates.extract(0, i).max()) == false) {
 				return false;
 			}
 		}
@@ -66,12 +66,12 @@ public:
 		std::vector<Rect> children;
 
 		// Place center coords in between the two other coords
-		DynamicArray<T> coords = Cnum::Concatenate(m_coordinates, this->Center(), 0, 1);
+		DynamicArray<T> coords = Cnum::concatenate(m_coordinates, this->Center(), 0, 1);
 
 		auto table = Cnum::GetBinaryTable<T>(m_dim);
 
 		for (int i = 0; i < nChildren; i++) {
-			auto indices = table.ExtractAxis(1, i); 
+			auto indices = table.extract(1, i); 
 
 
 			// Holding the coordinates of the low and high point of the Rect
