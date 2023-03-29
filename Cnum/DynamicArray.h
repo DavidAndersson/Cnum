@@ -25,7 +25,7 @@ public:
 
 	DynamicArray() = default;
 
-	// Constructor with int as argument - creates a 1d array with n elements = 0
+	// Change all ints - for sizes to size_t
 
 	// Creation by array-like objects
 	DynamicArray(const ArrayLike_1d auto& init)
@@ -67,6 +67,14 @@ public:
 		: m_data{std::vector(getNumberOfElements(std::vector(shape)), initialValue )}, m_shape{std::vector(shape)}
 	{};
 
+	// Creation by size
+	DynamicArray(const int size)
+		: m_shape{ std::vector{1, size} }, m_data{std::vector<T>(size)}
+	{}
+	DynamicArray(const int size, const T initialValue)
+		: m_shape{ std::vector{1, size} }, m_data{ std::vector(size, initialValue) }
+	{}
+
 	// Copy Constructor
 	DynamicArray(const DynamicArray<T>& src) = default;
 
@@ -84,25 +92,11 @@ public:
 	// Operators
 	// -------------------------
 
-	// Indexing  - Update to take arrayLike and possibly initializer list. Overload with const& as well (need to make that func const as well)
-	T& operator[](std::vector<int>&& index)
+	T& operator[](const std::initializer_list<int> index)const
 	{
 		try {
-			Exceptions::EnsureDim(*this, (int)index.size());
-			return m_data.at(flattenIndex(index));
-		}
-		catch (const std::exception& ex) {
-			std::cout << "Error in [] access -> ";
-			std::cout << ex.what() << std::endl;
-			exit(0);
-		}
-		
-	}
-	T& operator[](std::vector<int>& index)
-	{
-		try {
-			Exceptions::EnsureDim(*this, (int)index.size());
-			return m_data.at(flattenIndex(index));
+			Exceptions::EnsureDim(*this, index.size());
+			return (T&)m_data.at(flattenIndex(DynamicArray{index}));
 		}
 		catch (const std::exception& ex) {
 			std::cout << "Error in [] access -> ";
@@ -110,26 +104,6 @@ public:
 			exit(0);
 		}
 	}
-	T& operator[](DynamicArray<int>& index) {
-		try {
-			Exceptions::EnsureDim(*this, index.size());
-			return m_data.at(flattenIndex(index.raw()));
-		}
-		catch (const std::exception& ex) {
-			std::cout << ex.what() << std::endl;
-			exit(0);
-		}
-	}
-	T& operator[](DynamicArray<int>&& index) {
-		try {
-			Exceptions::EnsureDim(*this, index.size());
-			return m_data.at(flattenIndex(index.raw()));
-		}
-		catch (const std::exception& ex) {
-			std::cout << ex.what() << std::endl;
-			exit(0);
-		}
-	}   
 	T& operator[](int index)const
 	{
 		try {
@@ -142,25 +116,7 @@ public:
 			exit(0);
 		}
 	}
-	DynamicArray<T> operator[](DynamicArray<bool>&& logicalIndices) {
-		try {
-			Exceptions::EnsureSameShape(*this, logicalIndices);
-			DynamicArray<T> data;
-			for (int i = 0; i < logicalIndices.size(); i++) {
-				if (logicalIndices.raw()[i] == true)
-					data.append(m_data[i]);
-			}
-			return data;
-		}
-		catch (const std::exception& ex) {
-			std::cout << "Error in [] access -> ";
-			std::cout << ex.what() << std::endl;
-			exit(0);
-		}
-
-		
-	}
-	DynamicArray<T> operator[](DynamicArray<bool>& logicalIndices) {
+	const DynamicArray<T> operator[](DynamicArray<bool>&& logicalIndices)const {
 		try {
 			Exceptions::EnsureSameShape(*this, logicalIndices);
 			DynamicArray<T> data;
@@ -176,7 +132,23 @@ public:
 			exit(0);
 		}
 	}
-	T& at(int index)const
+	const DynamicArray<T> operator[](DynamicArray<bool>& logicalIndices)const {
+		try {
+			Exceptions::EnsureSameShape(*this, logicalIndices);
+			DynamicArray<T> data;
+			for (int i = 0; i < logicalIndices.size(); i++) {
+				if (logicalIndices.raw()[i] == true)
+					data.append(m_data[i]);
+			}
+			return data;
+		}
+		catch (const std::exception& ex) {
+			std::cout << "Error in [] access -> ";
+			std::cout << ex.what() << std::endl;
+			exit(0);
+		}
+	}
+	T& at(int index)
 	{
 		try {
 			Exceptions::EnsureDim(*this, 1);
@@ -188,7 +160,55 @@ public:
 			exit(0);
 		}
 	}
-	T& at(const std::initializer_list<int>& index)const
+	T& at(const DynamicArray<int>& index) 
+	{
+		try {
+			Exceptions::EnsureDim(*this, index.size());
+			return (T&)m_data.at(flattenIndex(index));
+		}
+		catch (const std::exception& ex) {
+			std::cout << "Error in at() access -> ";
+			std::cout << ex.what() << std::endl;
+			exit(0);
+		}
+	}
+	T& at(const std::initializer_list<int>& index)
+	{
+		try {
+			Exceptions::EnsureDim(*this, (int)index.size());
+			return m_data.at(flattenIndex(std::vector(index)));
+		}
+		catch (const std::exception& ex) {
+			std::cout << "Error in at() access -> ";
+			std::cout << ex.what() << std::endl;
+			exit(0);
+		}
+	}
+	const T& at(int index)const
+	{
+		try {
+			Exceptions::EnsureDim(*this, 1);
+			return (T&)m_data.at(index);
+		}
+		catch (const std::exception& ex) {
+			std::cout << "Error in at() access -> ";
+			std::cout << ex.what() << std::endl;
+			exit(0);
+		}
+	}
+	const T& at(const DynamicArray<int>& index)const
+	{
+		try {
+			Exceptions::EnsureDim(*this, index.size());
+			return (T&)m_data.at(flattenIndex(index));
+		}
+		catch (const std::exception& ex) {
+			std::cout << "Error in at() access -> ";
+			std::cout << ex.what() << std::endl;
+			exit(0);
+		}
+	}
+	const T& at(const std::initializer_list<int>& index)const
 	{
 		try {
 			Exceptions::EnsureDim(*this, (int)index.size());
@@ -227,7 +247,7 @@ public:
 	{
 		try {
 			Exceptions::EnsureSameShape(lhs, rhs);
-			return performBinaryArithmeticOperation(lhs, rhs, std::plus<>());
+			return binaryOperation(lhs, rhs, std::plus<>());
 		}
 		catch (const std::exception& ex) {
 			std::cout << "Error in array addition -> ";
@@ -264,7 +284,7 @@ public:
 	{
 		try {
 			Exceptions::EnsureSameShape(lhs, rhs);
-			return performBinaryArithmeticOperation(lhs, rhs, std::minus<>());
+			return binaryOperation(lhs, rhs, std::minus<>());
 		}
 		catch (const std::exception& ex) {
 			std::cout << "Error in array subtraction -> ";
@@ -297,7 +317,7 @@ public:
 	}
 	DynamicArray<T> operator-()
 	{
-		return performUnaryArithmeticOperation(*this, [](T t) {return t *= -1; }); 
+		return unaryOperation(*this, [](T t) {return t *= -1; }); 
 	}
 
 	// Multiplication
@@ -305,7 +325,7 @@ public:
 	{
 		try {
 			Exceptions::EnsureSameShape(lhs, rhs);
-			return performBinaryArithmeticOperation(lhs, rhs, std::multiplies<>());
+			return binaryOperation(lhs, rhs, std::multiplies<>());
 		}
 		catch (const std::exception& ex) {
 			std::cout << "Error in array multiplication -> ";
@@ -343,7 +363,7 @@ public:
 		try {
 			Exceptions::EnsureSameShape(*this, rhs);
 			Exceptions::EnsureNoZeros(this->raw());
-			return performBinaryArithmeticOperation(lhs, rhs, std::divides<>());
+			return binaryOperation(lhs, rhs, std::divides<>());
 		}
 		catch (const std::exception& ex) {
 			std::cout << "Error in array division -> ";
@@ -644,7 +664,7 @@ public:
 				auto indices = reconstructIndex(i);
 				std::vector<int> temp = std::vector<int>(this->nDims(), 0);
 				for (int j = 0; j < temp.size(); j++) {
-					temp.at(j) = indices[(permutation.at(j))];
+					temp.at(j) = indices.at(permutation.at(j));
 				}
 				newData.at(flattenIndex(temp, newShape)) = m_data.at(i);
 			}
@@ -915,7 +935,7 @@ public:
 		try {
 			Exceptions::EnsureDim(*this, 1); 
 
-			DynamicArray<T> out({ this->size() }, 0);
+			DynamicArray<T> out(this->size(), 0);
 			if (forwardDiff)
 				std::adjacent_difference(m_data.begin(), m_data.end(), out.begin(), [](int a, int b) {return a - b; });
 			else
@@ -1254,46 +1274,40 @@ private:
 	// -------------------------
 
 	// Indexing
-	int flattenIndex(const DynamicArray<int>& indices)const
+	int flattenIndex(const iArrayLike_1d auto& index)const
 	{
-		return this->flattenIndex(indices.raw(), this->shape());
+		return this->flattenIndex(index, this->shape());
 	}
-	int flattenIndex(const std::vector<int>& indices)const
+	int flattenIndex(const iArrayLike_1d auto& index, std::vector<int> shape)const
 	{
-		return flattenIndex(indices, this->shape());
-	}
-	int flattenIndex(const std::vector<int>& indices, std::vector<int> shape)const 
-	{
-		
 		/*
-			General Formula:
-				The 1D index is generalized into
-				x_1 * (nx_2 * ... nx_n - 1) + ... x_n-1 * nx_n-1  + x_n
+		General Formula:
+			The 1D index is generalized into
+			x_1 * (nx_2 * ... nx_n - 1) + ... x_n-1 * nx_n-1  + x_n
 
-				where x_1 ... x_n are the indices specified by the user, and nx_1 ... nx_n are the dimension-size for the n-th dimension
+			where x_1 ... x_n are the indices specified by the user, and nx_1 ... nx_n are the dimension-size for the n-th dimension
 
-				Example: 4D index (1,2,1,0) where the shape is (4,4,4,4).
+			Example: 4D index (1,2,1,0) where the shape is (4,4,4,4).
 
-				1 * 4*4*4 + 2 * 4*4 + 1 * 4 + 0	= 64 + 32 + 4 = 100
-			*/
-
+			1 * 4*4*4 + 2 * 4*4 + 1 * 4 + 0	= 64 + 32 + 4 = 100
+		*/
 
 		try {
 
-			int index = 0;
+			int flatIndex = 0;
 
-			for (int j = 0; j < indices.size() - 1; j++)
-				index += indices.at(j) * std::accumulate(shape.begin() + j + 1, shape.end(), 1, std::multiplies<int>());
+			for (int j = 0; j < index.size() - 1; j++)
+				flatIndex += index.at(j) * std::accumulate(shape.begin() + j + 1, shape.end(), 1, std::multiplies<int>());
 
-			index += indices.at(indices.size() - 1);
-			return index;
+			flatIndex += index.at(index.size() - 1);
+			return flatIndex;
 		}
 		catch (const std::exception& ex) {
 			std::cout << ex.what() << std::endl;
 			exit(0);
 		}
-		
 	}
+
 	std::vector<int> getNonAxisIndex(int flatIndex, int axis)const {
 
 		auto index = reconstructIndex(flatIndex).raw();
@@ -1356,32 +1370,31 @@ private:
 
 	// Actions
 	template<typename Operation>
-	static DynamicArray<T> performBinaryArithmeticOperation(const DynamicArray<T>& arr1, const DynamicArray<T>& arr2, Operation binaryOp)
+	static DynamicArray<T> binaryOperation(const DynamicArray<T>& arr1, const DynamicArray<T>& arr2, Operation binaryOp)
 	{
-		std::vector<T> data(arr1.size());
-		std::transform(arr1.begin(), arr1.raw().end(), arr2.begin(), data.begin(), binaryOp);
-		return DynamicArray<T>(data, arr1.shape());
+		DynamicArray<T> out(arr1.size());
+		std::transform(arr1.begin(), arr1.raw().end(), arr2.begin(), out.begin(), binaryOp);
+		return out.reshape(arr1.shape());
 	}
 	template<typename Operation>
-	static DynamicArray<T> performUnaryArithmeticOperation(const DynamicArray<T>& arr, Operation unaryOp)
+	static DynamicArray<T> unaryOperation(const DynamicArray<T>& arr, Operation unaryOp)
 	{
-		std::vector<T> data(arr.size());
-		std::transform(arr.begin(), arr.raw().end(), data.begin(), unaryOp);
-		return DynamicArray<T>(data, arr.shape());
+		DynamicArray<T> out(arr.size());
+		std::transform(arr.begin(), arr.raw().end(), out.begin(), unaryOp);
+		return out.reshape(arr.shape());
 	}
 	void incrementExtractionIndex(DynamicArray<int>& index, int axis, int dim) {
 
 		if (dim == -1)
 			return;
 
-		if (index[dim] + 1 > this->shapeAlong(dim) - 1 || dim == axis) {
-			index[dim] = 0;
+		if (index.at(dim) + 1 > this->shapeAlong(dim) - 1 || dim == axis) {
+			index.at(dim) = 0;
 			incrementExtractionIndex(index, axis, dim - 1);
 		}
 		else {
-			index[dim]++;
+			index.at(dim)++;
 		}
-			
 	}
 	void printDim(std::vector<int>& index, int dim)const
 	{
@@ -1401,7 +1414,7 @@ private:
 			}
 			return;
 		}
-		// For the higher ranks, recursively call up wards in rank
+		// For the higher ranks, recursively call upwards in rank
 		std::cout << "[";
 		for (int i = 0; i < m_shape[dim]; i++) {
 			index[dim] = i; 
@@ -1427,6 +1440,7 @@ private:
 
 			int stride = this->getStride(axis);
 
+			// If the axis is 0 then the data can be put at the end of the array
 			if (axis == 0) {
 				auto startPoint = (offset == -1) ? this->end() : this->begin() + offset * stride;
 				m_data.insert(startPoint, arr.begin(), arr.end());
@@ -1443,9 +1457,8 @@ private:
 				int j = 0;
 
 				for (int i = startIndex; i < newNumberOfElements; i += stepLength) {
-					int offset = j;
 					for (int k = 0; k < arr.shapeAlong(axis); k++) {
-						m_data.insert(this->begin() + i + k, arr[arr.reconstructIndex(j)]);
+						m_data.insert(this->begin() + i + k, arr.at(arr.reconstructIndex(j)));
 						j++;
 					}
 				}
@@ -1460,21 +1473,21 @@ private:
 	}
 
 	// Creators
-	static DynamicArray<bool> createLogicalArray(const DynamicArray<T>& arr1, const DynamicArray<T>& arr2, std::function<bool(T, T)> func)
+	static DynamicArray<bool> createLogicalArray(const DynamicArray<T>& arr1, const DynamicArray<T>&& arr2, std::function<bool(T, T)> func)
 	{
-		return createLogicalArray(arr1, std::move(arr2), func);
+		return createLogicalArray(arr1, arr2, func);
 	}
-	static DynamicArray<bool> createLogicalArray(const DynamicArray<T>& arr1, const DynamicArray<T>&& arr2, std::function<bool(T,T)> func)
+	static DynamicArray<bool> createLogicalArray(const DynamicArray<T>& arr1, const DynamicArray<T>& arr2, std::function<bool(T,T)> func)
 	{
-		std::vector<bool> out(arr1.size(), false);
+		DynamicArray<bool> out(arr1.size(), false);
 		std::transform(arr1.begin(), arr1.end(), arr2.begin(), out.begin(), func);
-		return DynamicArray<bool>(out, arr1.shape());
+		return out.reshape(arr1.shape());
 	}
-	static DynamicArray<bool> createLogicalArray(const DynamicArray<T>& arr1, T value, std::function<bool(T)> func)
+	static DynamicArray<bool> createLogicalArray(const DynamicArray<T>& arr, T value, std::function<bool(T)> func)
 	{
-		std::vector<bool> out(arr1.size(), false);
-		std::transform(arr1.begin(), arr1.end(), out.begin(), func);
-		return DynamicArray<bool>(out, arr1.shape());
+		DynamicArray<bool> out(arr.size(), false); 
+		std::transform(arr.begin(), arr.end(), out.begin(), func);
+		return out.reshape(arr.shape());
 	}
 	
 	// Misc
