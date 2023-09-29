@@ -735,7 +735,7 @@ public:
 		try {
 			Exceptions::EnsureSize(std::move(nonAxisIndices), this->nDims() - 1); 
 			Exceptions::EnsureValidNonAxisIndex(*this, nonAxisIndices, axis); 
-			Exceptions::EnsureSize(std::move(newData), this->shapeAlong(axis)); 
+			//Exceptions::EnsureSize(std::move(newData), this->shapeAlong(axis)); 
 
 			int stride = getStride(axis);
 			auto start_stop = determineStartEndIndexForAxis(axis, nonAxisIndices, 0, -1);
@@ -1129,6 +1129,26 @@ public:
 			std::cout << ex.what() << std::endl;
 			exit(0);
 		}
+	}
+
+	// Static Methods
+	static DynamicArray<T> matrixMul(DynamicArray<T>& arr1, DynamicArray<T>& arr2)
+	{
+		// arr1 and 2 must both be 2d
+		// width of arr1 must be equal to the height of arr2
+
+		DynamicArray<T> output = DynamicArray({ arr1.shapeAlong(0), arr2.shapeAlong(1) }, 0);
+
+		for (int i = 0; i < arr1.shapeAlong(0); i++) {
+			for (int j = 0; j < arr2.shapeAlong(1); j++) {
+				T sum = 0; 
+				for (int k = 0; k < arr1.shapeAlong(0); k++) {
+					sum += arr1.at({ i,k }) * arr2.at({ k,j });
+				}
+				output.at({ i,j }) = sum;
+			}
+		}
+		return output;
 	}
 
 	// Boolean checks	

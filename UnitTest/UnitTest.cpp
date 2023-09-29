@@ -30,8 +30,8 @@ namespace UnitTest
 
 			}
 			{
-				arr = Cnum::uniformArray<int>({ 2,2,2 }, 0);
-				in = Cnum::array<int>({ 1,2,3,4,5,6,7,8,9,10,11,12 }, { 2,2,3 });
+				iArray arr = Cnum::uniformArray<int>({ 2,2,2 }, 0);
+				iArray in = Cnum::array<int>({ 1,2,3,4,5,6,7,8,9,10,11,12 }, { 2,2,3 });
 
 				// axis 2
 				arr.concatenate(in, 2);
@@ -162,6 +162,21 @@ namespace UnitTest
 				Assert::IsTrue(sorted.isEqualTo(result));
 			}
 			
+
+		}
+		TEST_METHOD(Test_MatMul) {
+
+			iArray arr = { {1,2,3,4,5,6,7,8,9}, {3,3} };
+			iArray arr2 = { {1,2,3,4,5,6,7,8,9,10,11,12}, {3,4} };
+
+			iArray result = DynamicArray<int>::matrixMul(arr, arr2);
+
+			iArray correctResult = Cnum::array<int>({
+				38,44,50,56,
+				83,98,113,128,
+				128, 152, 176, 200}, { 3,4 });
+
+			Assert::IsTrue(result.isEqualTo(correctResult));
 
 		}
 		

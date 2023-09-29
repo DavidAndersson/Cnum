@@ -117,7 +117,7 @@ public:
 		}
 	}
 	template<typename T>
-	static DynamicArray<T> array(const std::initializer_list<T>& init, const std::initializer_list<T> shape) {
+	static DynamicArray<T> array(const std::initializer_list<T>& init, const std::initializer_list<int> shape) {
 		try {
 			return DynamicArray<T>(init, shape);
 		}

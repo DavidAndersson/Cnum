@@ -26,7 +26,11 @@
 int main() 
 {
 
-	iArray test = std::vector<int>{ 1,2,3 }; 
+	iArray test = { {1,2,3,4,5,6,7,8,9}, {3,3} };
+	iArray test2 = { {1,2,3,4,5,6,7,8,9,10,11,12}, {3,4} };
 
+	iArray result = DynamicArray<int>::matrixMul(test, test2); 
+
+	result.print();
 
 }

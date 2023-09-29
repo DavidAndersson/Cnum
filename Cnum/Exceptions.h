@@ -43,7 +43,7 @@ public:
 	{
 		if (arr.size() != size) {
 			throw std::invalid_argument(msg.data());
-		}
+		}		
 		return true;
 	}
 
