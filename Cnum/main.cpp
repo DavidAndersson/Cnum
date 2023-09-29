@@ -18,11 +18,15 @@
 
 		Add concepts and make many functions follow the input arrayLike
 
+		Use ranges for algorithms such as sort etc
+
 */
 
 
 int main() 
 {
+
+	iArray test = std::vector<int>{ 1,2,3 }; 
 
 
 }

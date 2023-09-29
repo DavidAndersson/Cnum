@@ -228,6 +228,15 @@ public:
 		swap(*this, other); 
 		return *this;
 	}
+	DynamicArray<T>& operator=(DynamicArray<T>&& other)noexcept 
+	{
+		if (this == &other)
+			return *this; 
+
+		m_data = std::move(other.m_data); 
+		m_shape = std::move(other.m_shape);
+		return *this;
+	}
 	DynamicArray<T>& operator=(const std::vector<T>&& rhs)const {
 		return DynamicArray<T>(rhs);
 	}
@@ -404,7 +413,7 @@ public:
 	{
 		try {
 			Exceptions::EnsureSameShape(*this, rhs);
-			return createLogicalArray(*this, std::move(rhs), [](T v1, T v2) {return v1 == v2; });
+			return createLogicalArray(*this, std::move(rhs), std::equal_to<>());
 		}
 		catch (const std::exception& ex) {
 			std::cout << "Error in == operator -> ";
@@ -413,7 +422,7 @@ public:
 		}
 	}
 	DynamicArray<bool> operator==(const T rhs)const {
-		return createLogicalArray(*this, rhs, [&](T v) {return v == rhs; });
+		return createLogicalArray(*this, rhs, std::equal_to<>());
 	}
 				 
 	// Anti-Equalint
@@ -425,7 +434,7 @@ public:
 	{
 		try {
 			Exceptions::EnsureSameShape(*this, rhs);
-			return createLogicalArray(*this, std::move(rhs), [](T v1, T v2) {return v1 != v2; });
+			return createLogicalArray(*this, std::move(rhs), std::not_equal_to<>());
 		}
 		catch (const std::exception& ex) {
 			std::cout << "Error in != operator -> ";
@@ -434,7 +443,7 @@ public:
 		}
 	}
 	DynamicArray<bool> operator!=(const T rhs)const {
-		return createLogicalArray(*this, rhs, [&](T v) {return v != rhs; });
+		return createLogicalArray(*this, rhs, std::not_equal_to<>());
 	}
 				 
 	// Less than 
@@ -449,7 +458,7 @@ public:
 	{
 		try {
 			Exceptions::EnsureSameShape(*this, rhs);
-			return createLogicalArray(*this, std::move(rhs), [](T v1, T v2) {return v1 < v2; });
+			return createLogicalArray(*this, std::move(rhs), std::less<>());
 		}
 		catch (const std::exception& ex) {
 			std::cout << "Error in < operator -> ";
@@ -470,7 +479,7 @@ public:
 	{
 		try {
 			Exceptions::EnsureSameShape(*this, rhs);
-			return createLogicalArray(*this, std::move(rhs), [](T v1, T v2) {return v1 > v2; });
+			return createLogicalArray(*this, std::move(rhs), std::greater<>());
 		}
 		catch (const std::exception& ex) {
 			std::cout << "Error in > operator -> ";
@@ -491,7 +500,7 @@ public:
 	{
 		try {
 			Exceptions::EnsureSameShape(*this, rhs);
-			return createLogicalArray(*this, std::move(rhs), [](T v1, T v2) {return v1 <= v2; });
+			return createLogicalArray(*this, std::move(rhs), std::less_equal<>());
 		}
 		catch (const std::exception& ex) {
 			std::cout << "Error in <= operator -> ";
@@ -512,7 +521,7 @@ public:
 	{
 		try {
 			Exceptions::EnsureSameShape(*this, rhs);
-			return createLogicalArray(*this, std::move(rhs), [](T v1, T v2) {return v1 >= v2; });
+			return createLogicalArray(*this, std::move(rhs), std::greater_equal<>());
 		}
 		catch (const std::exception& ex) {
 			std::cout << "Error in >= operator -> ";
@@ -530,7 +539,7 @@ public:
 	{
 		try {
 			Exceptions::EnsureSameShape(*this, rhs); 
-			return createLogicalArray(*this, rhs, [](int v1, int v2) {return v1 && v2; });
+			return createLogicalArray(*this, rhs, std::logical_and<>());
 		}
 		catch (const std::exception& ex) {
 			std::cout << "Error in && operator -> ";
@@ -548,7 +557,7 @@ public:
 	{
 		try {
 			Exceptions::EnsureSameShape(*this, rhs);
-			return createLogicalArray(*this, rhs, [](bool v1, bool v2) {return v1 || v2; });
+			return createLogicalArray(*this, rhs, std::logical_or<>());
 		}
 		catch (const std::exception& ex) {
 			std::cout << "Error in || operator -> ";
