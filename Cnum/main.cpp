@@ -20,6 +20,10 @@
 
 		Use ranges for algorithms such as sort etc
 
+
+		PRIO. 
+		1. Replace exceptions with assertions
+
 */
 
 
@@ -31,6 +35,9 @@ int main()
 
 	iArray result = DynamicArray<int>::matrixMul(test, test2); 
 
-	result.print();
+	iArray res = result * 10; 
+	iArray res2 = 10 * result;
+
+	res2.print();
 
 }

@@ -268,13 +268,9 @@ public:
 	{
 		return lhs + rhs;
 	}
-	friend DynamicArray<T> operator+(const T value, const DynamicArray& rhs)
+	friend DynamicArray<T> operator+(const DynamicArray& lhs, const T value)
 	{
-		return rhs + DynamicArray<T>(rhs.shape(), value);
-	}
-	friend DynamicArray<T> operator+(const DynamicArray& rhs, const T value)
-	{
-		return rhs + value;
+		return lhs + DynamicArray<T>(lhs.shape(), value);
 	}
 	void operator+=(const DynamicArray& rhs)
 	{
@@ -305,13 +301,9 @@ public:
 	{
 		return lhs - rhs;
 	}
-	friend DynamicArray<T> operator-(const T value, const DynamicArray& rhs)
+	friend DynamicArray<T> operator-(const DynamicArray& lhs, const T value)
 	{
-		return rhs - DynamicArray<T>(rhs.shape(), value);
-	}
-	friend DynamicArray<T> operator-(const DynamicArray& rhs, const T value)
-	{
-		return rhs - value;
+		return lhs - DynamicArray<T>(lhs.shape(), value);
 	}
 	void operator-=(const DynamicArray& rhs)
 	{
@@ -350,9 +342,9 @@ public:
 	{
 		return rhs * DynamicArray<T>(rhs.shape(), value);
 	}
-	friend DynamicArray<T> operator*(const DynamicArray& rhs, const T value)
+	friend DynamicArray<T> operator*(const DynamicArray& lhs, const T value)
 	{
-		return rhs * value;
+		return value * lhs;
 	}
 	void operator*=(const DynamicArray& rhs)
 	{
@@ -370,8 +362,8 @@ public:
 	friend DynamicArray<T> operator/(const DynamicArray& lhs, const DynamicArray& rhs)
 	{
 		try {
-			Exceptions::EnsureSameShape(*this, rhs);
-			Exceptions::EnsureNoZeros(this->raw());
+			//Exceptions::EnsureSameShape(*this, rhs);
+			//Exceptions::EnsureNoZeros(this->raw());
 			return binaryOperation(lhs, rhs, std::divides<>());
 		}
 		catch (const std::exception& ex) {
@@ -384,13 +376,9 @@ public:
 	{
 		return lhs / rhs;
 	}
-	friend DynamicArray<T> operator/(const T value, const DynamicArray& rhs)
-	{
-		return rhs / DynamicArray<T>(rhs.shape(), value);
-	}
 	friend DynamicArray<T> operator/(const DynamicArray& rhs, const T value)
 	{
-		return rhs / value;
+		return rhs / DynamicArray<T>(rhs.shape(), value);;
 	}
 	void operator/=(const DynamicArray& rhs)
 	{
