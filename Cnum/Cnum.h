@@ -155,8 +155,29 @@ public:
 	}
 
 	template<typename T>
+	static DynamicArray<T> matrixMul(DynamicArray<T>& arr1, DynamicArray<T>& arr2)
+	{
+		// arr1 and 2 must both be 2d
+		// width of arr1 must be equal to the height of arr2
+
+		DynamicArray<T> output = DynamicArray({ arr1.shapeAlong(0), arr2.shapeAlong(1) }, 0);
+
+		for (int i = 0; i < arr1.shapeAlong(0); i++) {
+			for (int j = 0; j < arr2.shapeAlong(1); j++) {
+				T sum = 0;
+				for (int k = 0; k < arr1.shapeAlong(0); k++) {
+					sum += arr1.at({ i,k }) * arr2.at({ k,j });
+				}
+				output.at({ i,j }) = sum;
+			}
+		}
+		return output;
+	}
+
+
+	template<typename T>
 	static DynamicArray<T> concatenate(DynamicArray<T> arr1, DynamicArray<T> arr2, int axis) {
-		return concatenate(arr1,arr2, axis);
+		return concatenate(arr1, arr2, axis);
 	}
 	template<typename T>
 	static DynamicArray<T> concatenate(DynamicArray<T>&& arr1, DynamicArray<T>&& arr2, int axis) {

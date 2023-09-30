@@ -22,7 +22,8 @@
 
 
 		PRIO. 
-		1. Replace exceptions with assertions
+		Replace exceptions with assertions
+		Add diff_1d and intersect_1d
 
 */
 
@@ -30,20 +31,26 @@
 int main() 
 {
 
-	iArray test = { {1,2,3,4,5,6,7,8,9}, {3,3} };
-	iArray test2 = { {1,2,3,4,5,6,7,8,9}, {3,3} };
+	iArray test = { {0,0,0,0,0,0,0,0,0}, {3,3} };
+	//iArray test2 = { {1,2,3,4,5,6,7,8,9}, {3,3} };
 
-	iArray test3(0, 10); 
+	//test[{0, 0}];
 
-	test3.replaceAlong({ 10,9,8,7,6,5,4,3,2,1 }, 0, { 0 }); 
+	//test2.blend_if(test, [](int v) {return v > 5; });
 
-	test.reshape({3,3});
+	//test2.print();
 
-	test[test > 5].print();
+	//iArray tst(test.size());
+
+	//test.reshape({3,3});
+
+	test.replace_if(10, [](int val) {return val < 1;  });
+
+	test.print();
 
 	test[test == 2].print();
 
-	auto res = test / test2; 
+	//auto res = test / test2; 
 
 
 }

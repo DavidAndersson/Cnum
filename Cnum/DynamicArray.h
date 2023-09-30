@@ -69,20 +69,14 @@ public:
 	{};
 
 	// Creation by size
-	DynamicArray(const int size)
-		: m_shape{ std::vector{1, size} }, m_data{std::vector<T>(size)}
+	DynamicArray(const size_t size)
+		: m_shape{ std::vector{1, (int)size} }, m_data{std::vector<T>(size)}
 	{}
 
-	/*
-	DynamicArray(const int size, const T initialValue)
-		: m_shape{ std::vector{1, size} }, m_data{ std::vector(size, initialValue) }
-	{}*/
-
-	DynamicArray(const int start, const int end)
-		: m_data{ std::vector<T>(end - start, 0) }, m_shape{ std::vector<int>{ 1, end - start } }
-	{
-		std::iota(m_data.begin(), m_data.end(), start); 	
-	}
+	
+	DynamicArray(const size_t size, const T initialValue)
+		: m_shape{ std::vector<int>{1, (int)size} }, m_data{ std::vector<T>(size, initialValue) }
+	{}
 
 	// Copy Constructor
 	DynamicArray(const DynamicArray<T>& src) = default;
@@ -164,15 +158,8 @@ public:
 	}
 	const T& at(const std::initializer_list<int>& index)const
 	{
-		try {
-			Exceptions::EnsureDim(*this, (int)index.size());
-			return m_data.at(flattenIndex(std::vector(index)));
-		}
-		catch (const std::exception& ex) {
-			std::cout << "Error in at() access -> ";
-			std::cout << ex.what() << std::endl;
-			exit(0);
-		}
+		assert(this->nDims() == index.size());
+		return m_data.at(flattenIndex(std::vector(index)));
 	}
 
 	// Assignment
@@ -447,7 +434,7 @@ public:
 	// Mutating methods
 	DynamicArray<T>& flatten()
 	{
-		m_shape = { 1, this->size() };
+		m_shape = { 1, (int)this->size() };
 		return *this;
 	} 
 	DynamicArray<T>& abs()
@@ -485,7 +472,7 @@ public:
 				The default permutation is to reverse the shape
 		*/
 
-		assert(permutation.isPermutation(DynamicArray<int>(0, this->nDims())));
+		assert(permutation.isPermutation(DynamicArray::arange(0, this->nDims())));
 		assert(this->nDims() > 1);
 
 		std::vector<T> newData = std::vector<T>(this->size(), 0);
@@ -533,24 +520,6 @@ public:
 		return this->join(arr, axis, offset);
 	}
 	
-	DynamicArray<T>& replaceAlong(DynamicArray<T>& newData, int axis, DynamicArray<int>&& nonAxisIndices) {
-		return this->replaceAlong(std::move(newData), axis, std::move(nonAxisIndices));
-	}
-	DynamicArray<T>& replaceAlong(DynamicArray<T>&& newData, int axis, DynamicArray<int>&& nonAxisIndices) {
-
-		//assert(nonAxisIndices.size() == this->nDims() - 1);
-		//assert(newData.size() == this->shapeAlong(axis));
-
-		int stride = getStride(axis);
-		auto start_stop = determineStartEndIndexForAxis(axis, nonAxisIndices, 0, -1);
-		int j = 0;
-		for (int i = start_stop.first; i <= start_stop.second; i += stride) {
-			m_data.at(i) = newData[j];
-			j++;
-		}
-		return *this;
-	}
-
 	DynamicArray<T>& reverse(int axis) 
 	{
 		assert(this->nDims() > axis);
@@ -598,16 +567,23 @@ public:
 		}
 		return *this;	
 	}
+	DynamicArray<T>& blend_if(DynamicArray<T>&& arr, std::function<bool(T)>&& condition) {
+		return blend_if(arr, std::move(condition));
+	}
 	DynamicArray<T>& blend_if(DynamicArray<T>& arr, std::function<bool(T)>&& condition) {
 		
 		assert(this->sameShapeAs(arr));
 
-		for (int i = 0; i < condition.size(); i++) {
-			if (condition(arr.at(i)) == true) {
-				m_data.at(i) = arr.at(i);
+		for (int i = 0; i < arr.size(); i++) {
+			if (condition(this->m_data.at(i)) == true) {
+				this->m_data.at(i) = arr.m_data.at(i);
 			}
 		}
 		return *this;
+	}
+
+	DynamicArray<T>& replace_if(T replacement, std::function<bool(T)>&& condition) {
+		return blend_if(DynamicArray(this->shape(), replacement), std::move(condition));
 	}
 
 	DynamicArray<T>& erase(int index)
@@ -811,24 +787,12 @@ public:
 		return *this;
 	}
 
-	// Static Methods
-	static DynamicArray<T> matrixMul(DynamicArray<T>& arr1, DynamicArray<T>& arr2)
+	// statics
+	static DynamicArray<int> arange(const int start, const int end)
 	{
-		// arr1 and 2 must both be 2d
-		// width of arr1 must be equal to the height of arr2
-
-		DynamicArray<T> output = DynamicArray({ arr1.shapeAlong(0), arr2.shapeAlong(1) }, 0);
-
-		for (int i = 0; i < arr1.shapeAlong(0); i++) {
-			for (int j = 0; j < arr2.shapeAlong(1); j++) {
-				T sum = 0; 
-				for (int k = 0; k < arr1.shapeAlong(0); k++) {
-					sum += arr1.at({ i,k }) * arr2.at({ k,j });
-				}
-				output.at({ i,j }) = sum;
-			}
-		}
-		return output;
+		m_data = std::vector<T>(end - start);
+		m_shape = std::vector<int>{ 1, end - start };
+		std::iota(m_data.begin(), m_data.end(), start);
 	}
 
 	// Boolean checks	
@@ -845,9 +809,11 @@ public:
 
 	// Prints
 	void print()const {
-		auto startIndex = std::vector<int>(this->nDims(), 0);
 		std::cout << "Cnum::Array(";
-		printDim(startIndex, 0);
+		if (this->size() > 0) {
+			DynamicArray<int> startIndex(this->nDims(), 0);
+			printDim(startIndex, 0);
+		}
 		std::cout << ")" << std::endl;
 	}
 	
@@ -883,9 +849,9 @@ public:
 		else
 			return dims;
 	}
-	int size()const 
+	size_t size()const 
 	{
-		return (int)m_data.size();
+		return m_data.size();
 	};
 	int getStride(int axis = 0)const
 	{
@@ -992,7 +958,7 @@ private:
 		for (int j = 0; j < index.size() - 1; j++)
 			flatIndex += index.at(j) * std::accumulate(shape.begin() + j + 1, shape.end(), 1, std::multiplies<int>());
 
-		flatIndex += index.at(index.size() - 1);
+		flatIndex += index.at((int)index.size() - 1);
 		return flatIndex;
 	}
 
@@ -1078,7 +1044,7 @@ private:
 			index.at(dim)++;
 		}
 	}
-	void printDim(std::vector<int>& index, int dim)const
+	void printDim(DynamicArray<int>& index, int dim)const
 	{
 		// In the lowest recursion (max dim) level - do the print
 		if (dim == m_shape.size()-1) {
@@ -1145,6 +1111,23 @@ private:
 		}
 		return *this;
 	}
+	DynamicArray<T>& replaceAlong(DynamicArray<T>& newData, int axis, DynamicArray<int>&& nonAxisIndices) {
+		return this->replaceAlong(std::move(newData), axis, std::move(nonAxisIndices));
+	}
+	DynamicArray<T>& replaceAlong(DynamicArray<T>&& newData, int axis, DynamicArray<int>&& nonAxisIndices) {
+
+		//assert(nonAxisIndices.size() == this->nDims() - 1);
+		//assert(newData.size() == this->shapeAlong(axis));
+
+		int stride = getStride(axis);
+		auto start_stop = determineStartEndIndexForAxis(axis, nonAxisIndices, 0, -1);
+		int j = 0;
+		for (int i = start_stop.first; i <= start_stop.second; i += stride) {
+			m_data.at(i) = newData[j];
+			j++;
+		}
+		return *this;
+	}
 
 	// Creators
 	static DynamicArray<bool> createLogicalArray(const DynamicArray<T>& arr1, const DynamicArray<T>&& arr2, std::function<bool(T, T)> func)
@@ -1153,13 +1136,13 @@ private:
 	}
 	static DynamicArray<bool> createLogicalArray(const DynamicArray<T>& arr1, const DynamicArray<T>& arr2, std::function<bool(T,T)> func)
 	{
-		DynamicArray<bool> out(arr1.size(), false);
+		DynamicArray<bool> out(arr1.size());
 		std::transform(arr1.begin(), arr1.end(), arr2.begin(), out.begin(), func);
 		return out.reshape(arr1.shape());
 	}
 	static DynamicArray<bool> createLogicalArray(const DynamicArray<T>& arr, T value, std::function<bool(T)> func)
 	{
-		DynamicArray<bool> out(arr.size(), false); 
+		DynamicArray<bool> out(arr.size()); 
 		std::transform(arr.begin(), arr.end(), out.begin(), func);
 		return out.reshape(arr.shape());
 	}
