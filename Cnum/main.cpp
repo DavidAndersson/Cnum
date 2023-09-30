@@ -31,13 +31,19 @@ int main()
 {
 
 	iArray test = { {1,2,3,4,5,6,7,8,9}, {3,3} };
-	iArray test2 = { {1,2,3,4,5,6,7,8,9,10,11,12}, {3,4} };
+	iArray test2 = { {1,2,3,4,5,6,7,8,9}, {3,3} };
 
-	iArray result = DynamicArray<int>::matrixMul(test, test2); 
+	iArray test3(0, 10); 
 
-	iArray res = result * 10; 
-	iArray res2 = 10 * result;
+	test3.replaceAlong({ 10,9,8,7,6,5,4,3,2,1 }, 0, { 0 }); 
 
-	res2.print();
+	test.reshape({3,3});
+
+	test[test > 5].print();
+
+	test[test == 2].print();
+
+	auto res = test / test2; 
+
 
 }
