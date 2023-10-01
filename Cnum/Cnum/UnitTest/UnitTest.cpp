@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "CppUnitTest.h"
-#include "../Cnum/DynamicArray.h"
-#include "../Cnum/Cnum.h"
+#include "../DynamicArray.h"
+#include "../Cnum.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 

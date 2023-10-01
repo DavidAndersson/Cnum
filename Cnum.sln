@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.33424.131
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Cnum", "Cnum\Cnum.vcxproj", "{D0F43F51-B0D6-4EF0-B39F-589C44CD626C}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Cnum", "Cnum\Cnum\Cnum.vcxproj", "{D0F43F51-B0D6-4EF0-B39F-589C44CD626C}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UnitTest", "UnitTest\UnitTest.vcxproj", "{EFD164C2-D9D7-4964-9196-DE2C208E89D6}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UnitTest", "Cnum\Cnum\UnitTest\UnitTest.vcxproj", "{EFD164C2-D9D7-4964-9196-DE2C208E89D6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
