@@ -1,5 +1,6 @@
 #include "Cnum.h"
 #include <iostream>
+#include "../PhysicsEngine/Core.cpp"; 
 
 /*
 	TODOs: 
@@ -30,7 +31,7 @@
 
 int main() 
 {
-
+	printSomething();
 	iArray test = { {0,0,0,0,0,0,0,0,0}, {3,3} };
 	//iArray test2 = { {1,2,3,4,5,6,7,8,9}, {3,3} };
 
