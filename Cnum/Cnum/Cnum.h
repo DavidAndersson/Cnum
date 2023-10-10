@@ -1,5 +1,5 @@
 #pragma once
-#include "DynamicArray.h"
+#include <iostream>
 #include <algorithm>
 #include <iterator>
 #include <vector>
@@ -7,31 +7,73 @@
 #include <functional>
 #include <numbers>
 #include "Meta.h"
+#include "Exceptions.h"
+#include <string_view>
+#include <fstream>
+#include <format>
 
-class Cnum
-{
-public: 
 
-	//--------------------------
-	// Constants
-	// -------------------------
-
-	static constexpr double pi = std::numbers::pi;
-	static constexpr double e = std::numbers::e;
-
+template<typename T>
+class numeric {
 public:
+	numeric(T val)
+		:m_value{val}{}
+	numeric() = delete;
+	T operator/(T value) { return m_value / value; }
+	T operator*(T value) { return m_value * value; }
+	T operator+(T value) { return m_value + value; }
+	T operator-(T value) { return m_value - value; }
+private:
+	T m_value;
+};
 
+
+namespace Cnum {
+
+	template<typename T>
+	class DynamicArray;
 
 	template<typename T>
 	class Rect;
 
 
-	template<typename T>
-	static Cnum::Rect<T> getRect(DynamicArray<T> lowPoint, DynamicArray<T> highPoint) {
-		return Rect(lowPoint, highPoint);
+	typedef DynamicArray<int> iArray;
+	typedef DynamicArray<float> fArray;
+	typedef DynamicArray<double> dArray;
+
+
+	namespace Constants {
+		static constexpr double pi = std::numbers::pi;
+		static constexpr double e = std::numbers::e;
 	}
 
-	Cnum() = delete;
+
+	namespace Rotation {
+		enum class Axis {
+			X,
+			Y,
+			Z
+		};
+
+		struct Radians : public numeric<double>{};
+		struct Degrees : public numeric<double>{};
+
+		Radians toRadians(Degrees angleDegrees) {
+			return Radians(angleDegrees / (180.0 / Cnum::Constants::pi));
+		}
+
+		Degrees toDegrees(Radians angleRadians) {
+			return Degrees(angleRadians / (Cnum::Constants::pi / 180.0));
+		}
+
+	}
+
+
+
+	template<typename T>
+	static Rect<T> getRect(DynamicArray<T> lowPoint, DynamicArray<T> highPoint) {
+		return Rect(lowPoint, highPoint);
+	}
 	
 
 	// Static Creators
@@ -83,8 +125,8 @@ public:
 		return DynamicArray<T>{initializer};
 	}
 
-	template<typename T>
-	static DynamicArray<T> fromFile(std::string_view filePath, char delimiter = ' ') {
+	//template<typename T>
+	/*static DynamicArray<T> fromFile(std::string_view filePath, char delimiter = ' ') {
 
 		try {
 			auto dataFile = openFile(filePath);
@@ -95,7 +137,7 @@ public:
 			std::cout << ex.what() << std::endl;
 			exit(0);
 		}
-	}
+	}*/
 
 	template<typename T>
 	static DynamicArray<T> uniformArray(const iArrayLike_1d auto& shape, T value) {
@@ -272,7 +314,7 @@ public:
 
 	// Sorting
 	template<typename T>
-	DynamicArray<T> sortFlat(DynamicArray<T> arr)const
+	DynamicArray<T> sortFlat(DynamicArray<T> arr)
 	{
 		return arr.sortFlat();
 	}
@@ -359,7 +401,6 @@ public:
 		}
 	}
 
-private:
 
 	//--------------------------
 	// Private Member Functions

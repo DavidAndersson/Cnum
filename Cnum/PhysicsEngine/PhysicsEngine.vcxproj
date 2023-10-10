@@ -129,6 +129,10 @@
   <ItemGroup>
     <ClCompile Include="Core.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="RigidBody.h" />
+    <ClInclude Include="SystemState.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

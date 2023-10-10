@@ -3,17 +3,18 @@
 #include <numeric>
 #include <iostream>
 #include <string>
-#include <fstream>
 #include <format>
 #include <algorithm>
 #include <iterator>
 #include <functional>
 #include <math.h>
 #include "Utils.h"
-#include "Exceptions.h"
-#include <string_view>
 #include "Meta.h"
 #include <assert.h>
+
+
+namespace Cnum
+{
 
 template<typename T>
 class DynamicArray
@@ -167,15 +168,6 @@ public:
 	{
 		// Copy and swap idiom. Copy is made in the parameter list
 		swap(*this, other); 
-		return *this;
-	}
-	DynamicArray<T>& operator=(DynamicArray<T>&& other)noexcept 
-	{
-		if (this == &other)
-			return *this; 
-
-		m_data = std::move(other.m_data); 
-		m_shape = std::move(other.m_shape);
 		return *this;
 	}
 
@@ -449,6 +441,16 @@ public:
 		std::copy(newShape.begin(), newShape.end(), std::back_inserter(m_shape));
 		return *this;	
 	}
+	DynamicArray<T>& normalize()
+	{
+		*this /= this->norm();
+		return *this;
+	}
+
+	DynamicArray<T>& raiseTo(T exponent)
+	{
+		return unaryOperation(*this, [exponent](T value) {return std::pow(value, exponent); });
+	}
 
 	DynamicArray<T>& transpose() {
 
@@ -552,6 +554,41 @@ public:
 		return *this;
 	}
 
+	DynamicArray<T>& rotate(Cnum::Rotation::Axis axisOfRotation, Cnum::Rotation::Degrees theta) {
+		switch (axisOfRotation) {
+		case (Cnum::Rotation::Axis::X):
+			return this->rotate({ 1, 0, 0 }, Cnum::Rotation::toRadians(theta));
+		case (Cnum::Rotation::Axis::Y):
+			return this->rotate({ 0, 1, 0 }, Cnum::Rotation::toRadians(theta));
+		case (Cnum::Rotation::Axis::Z):
+			return this->rotate({ 0, 0, 1 }, Cnum::Rotation::toRadians(theta));
+		}
+	}
+	DynamicArray<T>& rotate(DynamicArray<T>&& axisOfRotation, Cnum::Rotation::Degrees theta) {
+		return this->rotate(axisOfRotation, Cnum::Rotation::toRadians(theta));
+	}
+	DynamicArray<T>& rotate(Cnum::Rotation::Axis axisOfRotation, Cnum::Rotation::Radians theta) {
+		switch (axisOfRotation) {
+		case (Cnum::Rotation::Axis::X):
+			return this->rotate({ 1, 0, 0 }, theta);
+		case (Cnum::Rotation::Axis::Y):
+			return this->rotate({ 0, 1, 0 }, theta);
+		case (Cnum::Rotation::Axis::Z):
+			return this->rotate({ 0, 0, 1 }, theta);
+		}
+	}
+	DynamicArray<T>& rotate(DynamicArray<T>&& axisOfRotation, Cnum::Rotation::Radians theta) {
+		assert(this->size() == 3);
+		assert(this->nDims() == 1);
+		assert(axisOfRotation.size() == 3);
+		assert(axisOfRotation.nDims() == 1);
+
+		axisOfRotation.normalize();
+		Cnum::Quaternion<T> q1(std::cos(theta / 2), axisOfRotation * std::sin(theta / 2));
+		*this = (q1 * (*this) * q1.inverse()).to3D().normalize();
+		return *this;
+	}
+
 	DynamicArray<T>& blend_if(DynamicArray<T>&& arr, DynamicArray<bool>&& condition) {
 		return this->blend_if(arr, condition);
 	}
@@ -611,6 +648,10 @@ public:
 	T reduce(T initVal, Operation op)const {
 		return std::accumulate(m_data.begin(), m_data.end(), initVal, op);
 	}
+	T norm() {
+		auto copy = *this;
+		return (T)std::pow(copy.raiseTo(2).reduce(0, std::plus<>()), 0.5);
+	}
 
 	template<typename Operation>
 	DynamicArray<T> reduceAlongAxis(int axis, Operation op)const
@@ -630,7 +671,16 @@ public:
 	}
 
 	// Extractions
-	DynamicArray<T> extract(int axis, int nonAxisIndex, int start = 0, int end = -1)const 
+	DynamicArray<T> extract(int start, int end)const {
+		assert(this->nDims() == 1); 
+		DynamicArray<T> out; 
+		end = (end < 0) ? m_shape.at(this->getDominantAxis_1d()) + end + 1: end;
+		for (int i = start; i < end; i++) {
+			out.append(m_data.at(i)); 
+		}
+		return out;
+	}
+	DynamicArray<T> extract(int axis, int nonAxisIndex, int start, int end = -1)const 
 	{
 		// No need for exception here since they are checked in extract_if()
 		return this->extract_if(axis, std::vector<int>(1, nonAxisIndex), [](T t) {return true; }, start, end);
@@ -648,7 +698,7 @@ public:
 		auto start_stop = determineStartEndIndexForAxis(axis, nonAxisIndex, start, end);
 		int stride = getStride(axis);
 		DynamicArray<T> out;
-		for (int i = start_stop.first; i <= start_stop.second; i += stride) {
+		for (int i = start_stop.first; i < start_stop.second; i += stride) {
 			if (pred(m_data.at(i)))
 				out.append(m_data.at(i), axis);
 		}
@@ -1031,6 +1081,12 @@ private:
 		std::transform(arr.begin(), arr.raw().end(), out.begin(), unaryOp);
 		return out.reshape(arr.shape());
 	}
+	template<typename Operation>
+	DynamicArray<T>& unaryOperation(DynamicArray<T>& arr, Operation unaryOp)
+	{
+		std::transform(arr.begin(), arr.end(), arr.begin(), unaryOp);
+		return arr;
+	}
 	void incrementExtractionIndex(DynamicArray<int>& index, int axis, int dim) {
 
 		if (dim == -1)
@@ -1156,7 +1212,7 @@ private:
 	std::pair<int, int> determineStartEndIndexForAxis(int axis, const DynamicArray<int>& nonAxisIndex, int start, int end)const
 	{ 
 		if (this->nDims() == 1) {
-			end = (end < 0) ? m_shape.at(this->getDominantAxis_1d()) + end : end;
+			end = (end < 0) ? m_shape.at(this->getDominantAxis_1d()) + end + 1 : end;
 			return std::make_pair(start, end);
 		}
 
@@ -1186,7 +1242,8 @@ private:
 
 };
 
-
 typedef DynamicArray<int> iArray;
 typedef DynamicArray<float> fArray;
 typedef DynamicArray<double> dArray;
+
+}

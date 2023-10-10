@@ -1,6 +1,8 @@
 #include "Cnum.h"
 #include <iostream>
 #include "../PhysicsEngine/Core.cpp"; 
+#include "Quaternion.h"
+#include "DynamicArray.h"
 
 /*
 	TODOs: 
@@ -23,35 +25,18 @@
 
 
 		PRIO. 
-		Replace exceptions with assertions
 		Add diff_1d and intersect_1d
 
 */
 
 
+using namespace Cnum;
+
 int main() 
-{
-	printSomething();
-	iArray test = { {0,0,0,0,0,0,0,0,0}, {3,3} };
-	//iArray test2 = { {1,2,3,4,5,6,7,8,9}, {3,3} };
+{	
+	fArray rotated( {0.0f, 1.0f, 0.0f });
 
-	//test[{0, 0}];
-
-	//test2.blend_if(test, [](int v) {return v > 5; });
-
-	//test2.print();
-
-	//iArray tst(test.size());
-
-	//test.reshape({3,3});
-
-	test.replace_if(10, [](int val) {return val < 1;  });
-
-	test.print();
-
-	test[test == 2].print();
-
-	//auto res = test / test2; 
-
+	rotated.rotate(Rotation::Axis::X, Rotation::Degrees(90));
+	rotated.print();
 
 }

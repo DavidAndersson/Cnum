@@ -24,6 +24,7 @@
     <ClInclude Include="Exceptions.h" />
     <ClInclude Include="kdTree.h" />
     <ClInclude Include="Meta.h" />
+    <ClInclude Include="Quaternion.h" />
     <ClInclude Include="Rect.h" />
     <ClInclude Include="Utils.h" />
   </ItemGroup>
