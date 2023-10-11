@@ -416,6 +416,7 @@ public:
 	{
 		return m_data;
 	}
+	
 
 public:
 
@@ -487,12 +488,12 @@ public:
 
 		// Swap places of the data w.r.t the permutation
 		for (int i = 0; i < newData.size(); i++) {
-			auto indices = reconstructIndex(i);
-			std::vector<int> temp = std::vector<int>(this->nDims(), 0);
-			for (int j = 0; j < temp.size(); j++) {
-				temp.at(j) = indices.at(permutation.at(j));
+			iArray normalIndex = reconstructIndex(i);
+			iArray permutatedIndex(this->nDims(), 0);
+			for (int j = 0; j < permutatedIndex.size(); j++) {
+				permutatedIndex.at(j) = normalIndex.at(permutation.at(j));
 			}
-			newData.at(flattenIndex(temp, newShape)) = m_data.at(i);
+			newData.at(flattenIndex(permutatedIndex, newShape)) = m_data.at(i);
 		}
 
 		m_data = newData;  m_shape = newShape;
@@ -522,6 +523,11 @@ public:
 		return this->join(arr, axis, offset);
 	}
 	
+	DynamicArray<T>& reverse() {
+		assert(this->nDims() == 1);
+		std::reverse(m_data.begin(), m_data.end()); 
+		return *this;
+	}
 	DynamicArray<T>& reverse(int axis) 
 	{
 		assert(this->nDims() > axis);
@@ -562,9 +568,11 @@ public:
 			return this->rotate({ 0, 1, 0 }, Cnum::Rotation::toRadians(theta));
 		case (Cnum::Rotation::Axis::Z):
 			return this->rotate({ 0, 0, 1 }, Cnum::Rotation::toRadians(theta));
+		default:
+			return *this;
 		}
 	}
-	DynamicArray<T>& rotate(DynamicArray<T>&& axisOfRotation, Cnum::Rotation::Degrees theta) {
+	DynamicArray<T>& rotate(const DynamicArray<T>&& axisOfRotation, Cnum::Rotation::Degrees theta) {
 		return this->rotate(axisOfRotation, Cnum::Rotation::toRadians(theta));
 	}
 	DynamicArray<T>& rotate(Cnum::Rotation::Axis axisOfRotation, Cnum::Rotation::Radians theta) {
@@ -584,7 +592,7 @@ public:
 		assert(axisOfRotation.nDims() == 1);
 
 		axisOfRotation.normalize();
-		Cnum::Quaternion<T> q1(std::cos(theta / 2), axisOfRotation * std::sin(theta / 2));
+		Cnum::Quaternion<T> q1((T)std::cos(theta / 2), axisOfRotation * std::sin(theta / 2));
 		*this = (q1 * (*this) * q1.inverse()).to3D().normalize();
 		return *this;
 	}
@@ -619,7 +627,7 @@ public:
 		return *this;
 	}
 
-	DynamicArray<T>& replace_if(T replacement, std::function<bool(T)>&& condition) {
+	DynamicArray<T>& replace_if(std::function<bool(T)>&& condition, T replacement) {
 		return blend_if(DynamicArray(this->shape(), replacement), std::move(condition));
 	}
 
@@ -630,6 +638,7 @@ public:
 		m_shape[getDominantAxis_1d()]--;
 		return *this;
 	}
+	// erase Axis
 
 	void append(const T value, int axis = 1) {
 
@@ -654,7 +663,7 @@ public:
 	}
 
 	template<typename Operation>
-	DynamicArray<T> reduceAlongAxis(int axis, Operation op)const
+	DynamicArray<T> reduceAlongAxis(int axis, Operation op, T initValue)const
 	{
 		assert(this->nDims() == axis);
 
@@ -665,7 +674,7 @@ public:
 
 		for (int i = 0; i < getNumberOfElements(returnShape); i++) {
 			std::vector<int> nonAxisIndex = getNonAxisIndex(i, axis);
-			returnArray[i] = this->extract(axis, nonAxisIndex).reduce(0, op);
+			returnArray[i] = this->extract(axis, nonAxisIndex).reduce(initValue, op);
 		}
 		return returnArray;
 	}
@@ -705,22 +714,20 @@ public:
 		return out;
 	}
 
-	DynamicArray<T> adjacentDiff(bool forwardDiff = true)
+	DynamicArray<T>& adjacentDiff(bool forwardDiff = true)
 	{
 		assert(this->nDims() == 1); 
-
-		DynamicArray<T> out(this->size(), 0);
 		if (forwardDiff)
-			std::adjacent_difference(m_data.begin(), m_data.end(), out.begin(), [](int a, int b) {return a - b; });
+			std::adjacent_difference(m_data.begin(), m_data.end(), m_data.begin(), [](int a, int b) {return a - b; });
 		else
-			std::adjacent_difference(m_data.begin(), m_data.end(), out.begin(), [](int a, int b) {return b - a; });
+			std::adjacent_difference(m_data.begin(), m_data.end(), m_data.begin(), [](int a, int b) {return b - a; });
 
-		out.erase(0);
-		return out;		
+		this->erase(0);
+		return *this;
 	}
-	DynamicArray<T> adjacentDiff(int axis, bool forwardDiff = true)
+	DynamicArray<T>& adjacentDiff(int axis, bool forwardDiff = true)
 	{
-		//assert(this->nDims() > 1); 
+		assert(this->nDims() > 1); 
 		assert(this->nDims() > axis); 
 
 		DynamicArray<T> out;
@@ -728,21 +735,13 @@ public:
 
 		for (int i = 0; i < this->getNonAxisNumberOfElements(axis); i++) {
 			auto nonAxisIndex = getNonAxisIndex(index, axis);
-			DynamicArray<T> extracted = extract(axis, nonAxisIndex);
-
-			if (forwardDiff)
-				std::adjacent_difference(extracted.begin(), extracted.end(), extracted.begin(), [](int a, int b) {return a - b; });
-			else
-				std::adjacent_difference(extracted.begin(), extracted.end(), extracted.begin(), [](int a, int b) {return b - a; });
-
-			extracted.erase(0);
-			out.concatenate(extracted, axis);
+			DynamicArray<T> axisDiff = extract(axis, nonAxisIndex).adjacentDiff(forwardDiff);
+			out.concatenate(axisDiff, axis);
 			this->incrementExtractionIndex(index, axis, this->nDims() - 1);
 		}
-		auto newShape = this->shape();
-		newShape[axis]--;
-		out.reshape(newShape);
-		return out;
+		m_shape[axis]--;
+		*this = out.reshape(m_shape);
+		return *this; 
 	}
 
 	// Searching
@@ -910,11 +909,14 @@ public:
 				- How far you have to move in the 1d vector to get to the next element along the specified axis
 		*/
 
-		assert(this->nDims() > axis);
-		if (this->nDims() == 1)
-			return 1; 
-		else
+		if (this->nDims() == 1) {
+			return 1;
+		}
+		else {
+			assert(this->nDims() > axis);
 			return std::accumulate(m_shape.begin() + 1 + axis, m_shape.end(), 1, std::multiplies<>());
+		}
+			
 	}
 
 	// Iterators
@@ -1220,7 +1222,7 @@ private:
 		startIndex.insert(startIndex.begin()+axis, start);
 
 		auto endIndex = startIndex;
-		endIndex.at(axis) = (end < 0) ? m_shape.at(axis) + end : end;
+		endIndex.at(axis) = (end < 0) ? m_shape.at(axis) + end + 1: end;
 
 		return std::make_pair(flattenIndex(startIndex), flattenIndex(endIndex)); 
 	}

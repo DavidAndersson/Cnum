@@ -78,38 +78,26 @@ namespace Cnum {
 
 	// Static Creators
 
-	// Overload to only take end
 	template<typename T>
 	static DynamicArray<T> arange(T start, T end, T stepSize) {
-
-		try {
-			if (Exceptions::EnsureInsideRangeSym(start, end, stepSize)) {
-				
-				bool toBeReversed = false;
-				if (start > end) {
-					std::swap(start, end);
-					toBeReversed = true;
-				}
-				std::vector<T> initializer;
-				for (T i = start; i <= end; i += stepSize) {
-					initializer.push_back(i);
-				}
-				if (toBeReversed) {
-					std::reverse(initializer.begin(), initializer.end());
-				}
-				return DynamicArray<T>{initializer};
-			}
+		bool toBeReversed = false;
+		if (start > end) {
+			std::swap(start, end);
+			toBeReversed = true;
 		}
-		catch (const std::exception& ex) {
-			std::cout << ex.what() << std::endl;
-			exit(0);
+		std::vector<T> initializer;
+		for (T i = start; i <= end; i += stepSize) {
+			initializer.push_back(i);
 		}
-		
+		if (toBeReversed) {
+			std::reverse(initializer.begin(), initializer.end());
+		}
+		return DynamicArray<T>{initializer};
 	}
 
 	template<typename T>
 	static DynamicArray<T> arange(T end) {
-		return Arange(0, end, 1);
+		return arange(0, end, 1);
 	}
 
 	template<typename T>

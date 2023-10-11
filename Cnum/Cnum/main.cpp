@@ -39,4 +39,14 @@ int main()
 	rotated.rotate(Rotation::Axis::X, Rotation::Degrees(90));
 	rotated.print();
 
+	rotated.reverse();
+	rotated.print();
+
+
+	iArray arr = uniformArray({3,3}, 1);
+	arr.adjacentDiff(1, false);
+	arr.print();
+
+
+
 }
