@@ -96,37 +96,35 @@ public:
 	// Operators
 	// -------------------------
 
-	T& operator[](const std::initializer_list<int> index)const
+	T& operator[](const iArray& index)const
 	{
-		// Make sure that the dimension of the array matches the number of indices passed in
 		assert(this->nDims() == index.size());
 		return (T&)m_data.at(flattenIndex(DynamicArray{ index }));
  	}
 	T& operator[](int index)const
 	{
-		// Make sure that the array is 1-dimensional
 		assert(this->nDims() == 1);
 		return (T&)m_data.at(index);
 	}
-	const DynamicArray<T> operator[](DynamicArray<bool>&& logicalIndices)const {
+	const DynamicArray<T> operator[](iArray&& logicalIndices)const {
 
 		assert(this->sameShapeAs(logicalIndices));
 
 		DynamicArray<T> data;
 		for (int i = 0; i < logicalIndices.size(); i++) {
-			if (logicalIndices.raw()[i] == true)
+			if (logicalIndices.at(i))
 				data.append(m_data[i]);
 		}
 		return data;
 
 
 	}
-	const DynamicArray<T> operator[](DynamicArray<bool>& logicalIndices)const {
+	const DynamicArray<T> operator[](iArray& logicalIndices)const {
 		
 		assert(this->sameShapeAs(logicalIndices)); 
 		DynamicArray<T> data;
 		for (int i = 0; i < logicalIndices.size(); i++) {
-			if (logicalIndices.raw()[i] == true)
+			if (logicalIndices.at(i))
 				data.append(m_data[i]);
 		}
 		return data;
@@ -137,30 +135,20 @@ public:
 		assert(this->nDims() == 1); 
 		return (T&)m_data.at(index);
 	}
-	T& at(const DynamicArray<int>& index) 
+	T& at(const iArray& index) 
 	{
 		assert(this->nDims() == index.size()); 
 		return (T&)m_data.at(flattenIndex(index));
-	}
-	T& at(const std::initializer_list<int>& index)
-	{
-		assert(this->nDims() == index.size());
-		return m_data.at(flattenIndex(std::vector(index)));
 	}
 	const T& at(int index)const
 	{
 		assert(this->nDims() == 1);
 		return (T&)m_data.at(index);
 	}
-	const T& at(const DynamicArray<int>& index)const
+	const T& at(const iArray& index)const
 	{
 		assert(this->nDims() == index.size());
 		return (T&)m_data.at(flattenIndex(index));
-	}
-	const T& at(const std::initializer_list<int>& index)const
-	{
-		assert(this->nDims() == index.size());
-		return m_data.at(flattenIndex(std::vector(index)));
 	}
 
 	// Assignment
@@ -285,106 +273,106 @@ public:
 	}
 
 	// Equailty
-	DynamicArray<bool> operator==(const DynamicArray<T>& rhs)const
+	iArray operator==(const DynamicArray<T>& rhs)const
 	{
 		return *this == std::move(rhs);
 	}
-	DynamicArray<bool> operator==(const DynamicArray<T>&& rhs)const
+	iArray operator==(const DynamicArray<T>&& rhs)const
 	{
 		assert(this->sameShapeAs(rhs)); 
 		return createLogicalArray(*this, std::move(rhs), std::equal_to<>());
 	}
-	DynamicArray<bool> operator==(const T value)const {
+	iArray operator==(const T value)const {
 		return createLogicalArray(*this, DynamicArray<T>(this->shape(), value), std::equal_to<>());
 	}
 				 
 	// Anti-Equality
-	DynamicArray<bool> operator!=(const DynamicArray<T>& rhs)const
+	iArray operator!=(const DynamicArray<T>& rhs)const
 	{
 		return *this != std::move(rhs);
 	}
-	DynamicArray<bool> operator!=(const DynamicArray<T>&& rhs)const
+	iArray operator!=(const DynamicArray<T>&& rhs)const
 	{
 		
 		return createLogicalArray(*this, std::move(rhs), std::not_equal_to<>());
 	}
-	DynamicArray<bool> operator!=(const T value)const {
+	iArray operator!=(const T value)const {
 		return createLogicalArray(*this, DynamicArray<T>(this->shape(), value), std::not_equal_to<>());
 	}
 				 
 	// Less than 
-	DynamicArray<bool> operator < (T value)const {
+	iArray operator < (T value)const {
 		return *this < DynamicArray<T>(this->shape(), value);
 	}
-	DynamicArray<bool> operator < (const DynamicArray<T>& rhs)const
+	iArray operator < (const DynamicArray<T>& rhs)const
 	{
 		return *this < std::move(rhs);
 	}
-	DynamicArray<bool> operator < (const DynamicArray<T>&& rhs)const
+	iArray operator < (const DynamicArray<T>&& rhs)const
 	{
 		assert(this->sameShapeAs(rhs));
 		return createLogicalArray(*this, std::move(rhs), std::less<>());
 	}
 				 
 	// Larger than
-	DynamicArray<bool> operator > (T value)const {
+	iArray operator > (T value)const {
 		return *this > DynamicArray<T>(this->shape(), value); 
 	}
-	DynamicArray<bool> operator > (const DynamicArray<T>& rhs)const
+	iArray operator > (const DynamicArray<T>& rhs)const
 	{
 		return *this > std::move(rhs);
 	}
-	DynamicArray<bool> operator > (const DynamicArray<T>&& rhs)const
+	iArray operator > (const DynamicArray<T>&& rhs)const
 	{
 		assert(this->sameShapeAs(rhs));
 		return createLogicalArray(*this, std::move(rhs), std::greater<>());
 	}
 
 	// Less or equal than
-	DynamicArray<bool> operator <= (T value)const {
+	iArray operator <= (T value)const {
 		return *this <= DynamicArray<T>(this->shape(), value);
 	}
-	DynamicArray<bool> operator <= (const DynamicArray<T>& rhs)const
+	iArray operator <= (const DynamicArray<T>& rhs)const
 	{
 		return *this <= std::move(rhs);
 	}
-	DynamicArray<bool> operator <= (const DynamicArray<T>&& rhs)const
+	iArray operator <= (const DynamicArray<T>&& rhs)const
 	{
 		assert(this->sameShapeAs(rhs));
 		return createLogicalArray(*this, std::move(rhs), std::less_equal<>());
 	}
 
 	// Larger or equal than
-	DynamicArray<bool> operator >= (T value)const {
+	iArray operator >= (T value)const {
 		return *this >= DynamicArray<T>(this->shape(), value);
 	}
-	DynamicArray<bool> operator >= (const DynamicArray<T>& rhs)const
+	iArray operator >= (const DynamicArray<T>& rhs)const
 	{
 		return *this >= std::move(rhs);
 	}
-	DynamicArray<bool> operator >= (const DynamicArray<T>&& rhs)const
+	iArray operator >= (const DynamicArray<T>&& rhs)const
 	{
 		assert(this->sameShapeAs(rhs));
 		return createLogicalArray(*this, std::move(rhs), std::greater_equal<>());
 	}
 
 	// Logical AND operator
-	DynamicArray<bool> operator && (const DynamicArray<bool>& rhs)const
+	iArray operator && (const iArray& rhs)const
 	{
 		return *this && std::move(rhs);
 	}
-	DynamicArray<bool> operator && (const DynamicArray<bool>&& rhs)const
+	iArray operator && (const iArray&& rhs)const
 	{
 		assert(this->sameShapeAs(rhs));
 		return createLogicalArray(*this, rhs, std::logical_and<>());
 	}
 
 	// Logical OR operator
-	DynamicArray<bool> operator || (const DynamicArray<bool>& rhs)const
+	iArray operator || (const iArray& rhs)const
 	{
 		return *this || std::move(rhs);
 	}
-	DynamicArray<bool> operator || (const DynamicArray<bool>&& rhs)const
+	iArray operator || (const iArray&& rhs)const
 	{
 		assert(this->sameShapeAs(rhs));
 		return createLogicalArray(*this, rhs, std::logical_or<>());
@@ -448,7 +436,8 @@ public:
 		return *this;
 	}
 
-	DynamicArray<T>& raiseTo(T exponent)
+	template<typename S>
+	DynamicArray<T>& raiseTo(S exponent)
 	{
 		return unaryOperation(*this, [exponent](T value) {return std::pow(value, exponent); });
 	}
@@ -592,21 +581,21 @@ public:
 		assert(axisOfRotation.nDims() == 1);
 
 		axisOfRotation.normalize();
-		Cnum::Quaternion<T> q1((T)std::cos(theta / 2), axisOfRotation * std::sin(theta / 2));
+		Cnum::Quaternion<T> q1((T)std::cos(theta / 2), axisOfRotation * (T)std::sin(theta / 2));
 		*this = (q1 * (*this) * q1.inverse()).to3D().normalize();
 		return *this;
 	}
 
-	DynamicArray<T>& blend_if(DynamicArray<T>&& arr, DynamicArray<bool>&& condition) {
+	DynamicArray<T>& blend_if(DynamicArray<T>&& arr, iArray&& condition) {
 		return this->blend_if(arr, condition);
 	}
-	DynamicArray<T>& blend_if(DynamicArray<T>& arr, DynamicArray<bool>& condition) {
+	DynamicArray<T>& blend_if(DynamicArray<T>& arr, iArray& condition) {
 		
 		assert(this->sameShapeAs(arr)); 
 		assert(this->sameShapeAs(condition));
 
 		for (int i = 0; i < condition.size(); i++) {
-			if (condition.at(i) == true) {
+			if (condition.at(i)) {
 				m_data.at(i) = arr[i];
 			}
 		}
@@ -640,16 +629,21 @@ public:
 	}
 	// erase Axis
 
-	void append(const T value, int axis = 1) {
+	void append(const T value) {
 
-		if (m_shape.empty()) {
+		if (m_data.empty()) {
 			m_data.push_back(value);
-			m_shape = std::vector<int>(std::max(2, axis + 1), 1);
+			m_shape = std::vector<int>{ 1,1 };
 			return;
 		}
 		assert(this->nDims() == 1); 
 		m_data.push_back(value);
-		m_shape.at(axis)++; 
+		if (m_data.size() == 1) {
+			m_shape.at(1)++;
+		}else {
+			m_shape.at(this->getDominantAxis_1d())++;
+		}
+		
 	}
 
 	// Reductions
@@ -663,7 +657,7 @@ public:
 	}
 
 	template<typename Operation>
-	DynamicArray<T> reduceAlongAxis(int axis, Operation op, T initValue)const
+	DynamicArray<T> reduceAlongAxis(int axis, T initValue, Operation op)const
 	{
 		assert(this->nDims() == axis);
 
@@ -694,12 +688,12 @@ public:
 		// No need for exception here since they are checked in extract_if()
 		return this->extract_if(axis, std::vector<int>(1, nonAxisIndex), [](T t) {return true; }, start, end);
 	}
-	DynamicArray<T> extract(int axis, std::vector<int>& nonAxisIndex, int start=0, int end=-1)const
+	DynamicArray<T> extract(int axis, iArray& nonAxisIndex, int start=0, int end=-1)const
 	{
 		// No need for exception here since they are checked in extract_if()
 		return this->extract_if(axis, nonAxisIndex, [](T t) {return true; }, start, end);
 	}	
-	DynamicArray<T> extract_if(int axis, const iArrayLike_1d auto& nonAxisIndex, std::function<bool(T)>&& pred, int start=0, int end=-1)const
+	DynamicArray<T> extract_if(int axis, const iArray& nonAxisIndex, std::function<bool(T)>&& pred, int start=0, int end=-1)const
 	{
 		assert(this->nDims() > axis); 
 		assert(nonAxisIndex.size() == this->nDims() - 1);
@@ -709,7 +703,7 @@ public:
 		DynamicArray<T> out;
 		for (int i = start_stop.first; i < start_stop.second; i += stride) {
 			if (pred(m_data.at(i)))
-				out.append(m_data.at(i), axis);
+				out.append(m_data.at(i)); // Potential error. Append now defaults to row vector perhaps it needs to be flipped
 		}
 		return out;
 	}
@@ -745,20 +739,20 @@ public:
 	}
 
 	// Searching
-	DynamicArray<int> find(DynamicArray<bool>&& condition)
+	iArray find(iArray&& condition)
 	{
 		assert(this->sameShapeAs(condition));
 		int axis = (this->nDims() > 1) ? 0 : 1;
-		DynamicArray<int> outIndices;
+		iArray outIndices;
 		for (int i = 0; i < condition.size(); i++) {
-			if (condition.raw()[i] == true) {
+			if (condition.at(i)) {
 				auto idx = this->reconstructIndex(i);
 				outIndices.concatenate(idx, axis);
 			}
 		}
 		return outIndices;
 	}
-	DynamicArray<int> find_if(std::function<bool(T)>&& pred)
+	iArray find_if(std::function<bool(T)>&& pred)
 	{
 		int axis = (this->nDims() > 1) ? 0 : 1;
 		DynamicArray<int> outIndices;
@@ -772,7 +766,7 @@ public:
 	}
 
 	// Sorting
-	DynamicArray<int> argsort() 
+	iArray argsort() 
 	{
 		assert(this->nDims() == 1); 
 		DynamicArray<int> out(this->shape(), 0);
@@ -780,7 +774,7 @@ public:
 		std::stable_sort(out.begin(), out.end(), [&](int i1, int i2) { return m_data.at(i1) < m_data.at(i2);  });
 		return out;
 	}
-	DynamicArray<int> argSort(int axis) {
+	iArray argSort(int axis) {
 
 		/*
 			What are the indices returned? 
@@ -1128,7 +1122,9 @@ private:
 			printDim(index, dim + 1);
 			if (i == m_shape[dim] - 1) {
 				std::cout << "]";
-				if (dim > 0 && index[dim - 1] != m_shape[dim - 1] - 1) { std::cout << "," << std::endl; }
+				if (dim > 0 && index[dim - 1] != m_shape[dim - 1] - 1) { 
+					std::cout << "," << std::endl; 
+				}
 			}
 			else
 				std::cout << std::endl;
@@ -1152,7 +1148,7 @@ private:
 		}
 		else {
 
-			int newNumberOfElements = this->size() + arr.size();
+			size_t newNumberOfElements = this->size() + arr.size();
 			int startIndex = (offset == -1) ? this->shapeAlong(axis) : offset;
 
 			// Update the shape first so that the stepLength can be computed correctly
@@ -1160,7 +1156,7 @@ private:
 			int stepLength = stride * this->shapeAlong(axis);
 			int j = 0;
 
-			for (int i = startIndex; i < newNumberOfElements; i += stepLength) {
+			for (size_t i = startIndex; i < newNumberOfElements; i += stepLength) {
 				for (int k = 0; k < arr.shapeAlong(axis); k++) {
 					m_data.insert(this->begin() + i + k, arr.at(arr.reconstructIndex(j)));
 					j++;
@@ -1188,19 +1184,19 @@ private:
 	}
 
 	// Creators
-	static DynamicArray<bool> createLogicalArray(const DynamicArray<T>& arr1, const DynamicArray<T>&& arr2, std::function<bool(T, T)> func)
+	static iArray createLogicalArray(const DynamicArray<T>& arr1, const DynamicArray<T>&& arr2, std::function<bool(T, T)> func)
 	{
 		return createLogicalArray(arr1, arr2, func);
 	}
-	static DynamicArray<bool> createLogicalArray(const DynamicArray<T>& arr1, const DynamicArray<T>& arr2, std::function<bool(T,T)> func)
+	static iArray createLogicalArray(const DynamicArray<T>& arr1, const DynamicArray<T>& arr2, std::function<bool(T,T)> func)
 	{
-		DynamicArray<bool> out(arr1.size());
+		DynamicArray<int> out(arr1.size());
 		std::transform(arr1.begin(), arr1.end(), arr2.begin(), out.begin(), func);
 		return out.reshape(arr1.shape());
 	}
-	static DynamicArray<bool> createLogicalArray(const DynamicArray<T>& arr, T value, std::function<bool(T)> func)
+	static iArray createLogicalArray(const DynamicArray<T>& arr, T value, std::function<bool(T)> func)
 	{
-		DynamicArray<bool> out(arr.size()); 
+		DynamicArray<int> out(arr.size()); 
 		std::transform(arr.begin(), arr.end(), out.begin(), func);
 		return out.reshape(arr.shape());
 	}
