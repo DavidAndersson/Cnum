@@ -1,7 +1,7 @@
 #include "Cnum.h"
 #include <iostream>
 #include "Quaternion.h"
-#include "DynamicArray.h"
+#include "ndArray.h"
 
 /*
 	TODOs: 
@@ -34,7 +34,7 @@ using namespace Cnum;
 int main() 
 {	
 
-	iArray arr = ndArray::initializedArray<int>({ 1,2,3,4,5,6,7,8,9,10,11,12 }, { 2,2,3 });
+	iArray arr = Array::initializedArray<int>({ 1,2,3,4,5,6,7,8,9,10,11,12 }, { 2,2,3 });
 	arr.print();
 	arr.transpose({ 0,2,1 });
 	arr.print();

@@ -7,7 +7,7 @@ template<typename T>
 class Cnum::Rect
 {
 public: 
-	Rect(DynamicArray<T> lowPoint, DynamicArray<T> highPoint)
+	Rect(ndArray<T> lowPoint, ndArray<T> highPoint)
 		:m_dim{ lowPoint.shapeAlong(1) }
 	{
 		if (lowPoint.nDims() != > 1 || highPoint.nDims() > 1) {
@@ -35,7 +35,7 @@ public:
 		return false;
 	}
 
-	bool Contains(DynamicArray<T>& point)const
+	bool Contains(ndArray<T>& point)const
 	{
 		assert(point->nDims() == 1); 
 		assert(m_dim == point.size()); 
@@ -50,8 +50,8 @@ public:
 		return true;
 	}
 
-	DynamicArray<T> Center()const {
-		return DynamicArray<T>( m_coordinates.reduceAlongAxis(0) / (T)2 );
+	ndArray<T> Center()const {
+		return ndArray<T>( m_coordinates.reduceAlongAxis(0) / (T)2 );
 	}
 
 	std::vector<Rect> Subdivide(){
@@ -60,7 +60,7 @@ public:
 		std::vector<Rect> children;
 
 		// Place center coords in between the two other coords
-		DynamicArray<T> coords = Cnum::concatenate(m_coordinates, this->Center(), 0, 1);
+		ndArray<T> coords = Cnum::concatenate(m_coordinates, this->Center(), 0, 1);
 
 		auto table = Cnum::GetBinaryTable<T>(m_dim);
 
@@ -69,8 +69,8 @@ public:
 
 
 			// Holding the coordinates of the low and high point of the Rect
-			DynamicArray<T> low; 
-			DynamicArray<T> high;
+			ndArray<T> low; 
+			ndArray<T> high;
 
 			// Correctly setting the coorindates of the children based on the binary table and the parent coordinates
 			for (int j = 0; j < indices.size(); j++) {
@@ -88,7 +88,7 @@ public:
 	
 
 private:
-	DynamicArray<T> m_coordinates;
+	ndArray<T> m_coordinates;
 	int m_dim; 
 };
 

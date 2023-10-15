@@ -31,15 +31,15 @@ private:
 namespace Cnum {
 
 	template<typename T>
-	class DynamicArray;
+	class ndArray;
 
 	template<typename T>
 	class Rect;
 
 
-	typedef DynamicArray<int> iArray;
-	typedef DynamicArray<float> fArray;
-	typedef DynamicArray<double> dArray;
+	typedef ndArray<int> iArray;
+	typedef ndArray<float> fArray;
+	typedef ndArray<double> dArray;
 
 
 	namespace Constants {
@@ -71,25 +71,25 @@ namespace Cnum {
 
 
 	template<typename T>
-	static Rect<T> getRect(DynamicArray<T>& lowPoint, DynamicArray<T>& highPoint) {
+	static Rect<T> getRect(ndArray<T>& lowPoint, ndArray<T>& highPoint) {
 		return Rect(lowPoint, highPoint);
 	}
 	
 
 	// Static Creators
 
-	namespace ndArray {
+	namespace Array {
 
 		// Creators 
 
 		template<typename T>
-		static DynamicArray<T> arange(T start, T end, T stepSize) {
+		static ndArray<T> arange(T start, T end, T stepSize) {
 			bool toBeReversed = false;
 			if (start > end) {
 				std::swap(start, end);
 				toBeReversed = true;
 			}
-			DynamicArray<T> arr;
+			ndArray<T> arr;
 			for (T i = start; i < end; i += stepSize) {
 				arr.append(i);
 			}
@@ -100,16 +100,16 @@ namespace Cnum {
 		}
 
 		template<typename T>
-		static DynamicArray<T> arange(T end) {
+		static ndArray<T> arange(T end) {
 			return arange(0, end, 1);
 		}
 
 		template<typename T>
-		static DynamicArray<T> linspace(T start, T end, int nSteps) {
+		static ndArray<T> linspace(T start, T end, int nSteps) {
 			T rangeLength = end - start;
 			T stepSize = rangeLength / (nSteps - 1);
 
-			DynamicArray<T> arr;
+			ndArray<T> arr;
 			for (int i = 0; i < nSteps; i++) {
 				arr.append(start + i * stepSize);
 			}
@@ -117,148 +117,148 @@ namespace Cnum {
 		}
 
 		template<typename T>
-		static DynamicArray<T> uniformArray(const iArray& shape, T value) {
-			return DynamicArray<T>(shape, value);
+		static ndArray<T> uniformArray(const iArray& shape, T value) {
+			return ndArray<T>(shape, value);
 		}
 
 		template<typename T>
-		static DynamicArray<T> uniformArray(const int size, T value){
-			return DynamicArray<T>(iArray{size}, value);
+		static ndArray<T> uniformArray(const int size, T value){
+			return ndArray<T>(iArray{size}, value);
 		}
 
 		template<typename T>
-		static DynamicArray<T> initializedArray(const DynamicArray<T>&& init, const iArray& shape) {
-			return DynamicArray<T>(init, shape);
+		static ndArray<T> initializedArray(const ndArray<T>&& init, const iArray& shape) {
+			return ndArray<T>(init, shape);
 		}
 
 
 		// Actions
 
 		template<typename T>
-		static DynamicArray<T> abs(DynamicArray<T> arr) {
+		static ndArray<T> abs(ndArray<T> arr) {
 			return arr.abs();
 		}
 
 		template<typename T>
-		static DynamicArray<T> blend_if(DynamicArray<T> base, DynamicArray<T>& blendArray, iArray&& condition) {
+		static ndArray<T> blend_if(ndArray<T> base, ndArray<T>& blendArray, iArray&& condition) {
 			return base.blend_if(std::move(blendArray), std::move(condition));
 		}
 
 		template<typename T>
-		static DynamicArray<T> concatenate(DynamicArray<T> arr1, const DynamicArray<T>& arr2, int axis) {
+		static ndArray<T> concatenate(ndArray<T> arr1, const ndArray<T>& arr2, int axis) {
 			return arr1.concatenate(arr2, axis);
 		}
 
 		template<typename T>
-		static DynamicArray<T> erase(DynamicArray<T> arr, int index) {
+		static ndArray<T> erase(ndArray<T> arr, int index) {
 			return arr.erase(index);
 		}
 
 		template<typename T>
-		static iArray find(DynamicArray<T> arr, iArray& condition)
+		static iArray find(ndArray<T> arr, iArray& condition)
 		{
 			return arr.find(condition);
 		}
 
 		template<typename T>
-		static iArray find_if(DynamicArray<T>& arr, std::function<bool(T)>&& condition)
+		static iArray find_if(ndArray<T>& arr, std::function<bool(T)>&& condition)
 		{
 			return arr.find_if(condition);
 		}
 
 		template<typename T>
-		static DynamicArray<T> flatten(DynamicArray<T> arr) {
+		static ndArray<T> flatten(ndArray<T> arr) {
 			return arr.flatten();
 		}
 
 		template<typename T, typename iter>
-		static DynamicArray<T> insert(DynamicArray<T> arr, iter it, T value) {
+		static ndArray<T> insert(ndArray<T> arr, iter it, T value) {
 			return arr.insert(it, value);
 		}
 
 		template<typename T>
-		static DynamicArray<T> insert(DynamicArray<T> base, const DynamicArray<T>& insertion, int axis, int offset) {
+		static ndArray<T> insert(ndArray<T> base, const ndArray<T>& insertion, int axis, int offset) {
 			return base.insert(insertion, axis, offset);
 		}
 
 		template<typename T>
-		static DynamicArray<T> minimumOf(DynamicArray<T> arr1, DynamicArray<T> arr2) {
+		static ndArray<T> minimumOf(ndArray<T> arr1, ndArray<T> arr2) {
 			return arr1.blend_if(std::move(arr2), arr2 < arr1);
 		}
 
 		template<typename T>
-		static DynamicArray<T> maximumOf(DynamicArray<T> arr1, DynamicArray<T> arr2) {
+		static ndArray<T> maximumOf(ndArray<T> arr1, ndArray<T> arr2) {
 			return arr1.blend_if(std::move(arr2), arr2 > arr1);
 		}
 
 		template<typename T>
-		static DynamicArray<T> normalize(DynamicArray<T> arr) {
+		static ndArray<T> normalize(ndArray<T> arr) {
 			return arr.normalize();
 		}
 
 		template<typename T>
-		static DynamicArray<T> raiseTo(DynamicArray<T> arr, T exponent){
+		static ndArray<T> raiseTo(ndArray<T> arr, T exponent){
 			return arr.raiseTo(exponent);
 		}
 
 		template<typename T, typename Operation>
-		static DynamicArray<T> reduce(DynamicArray<T>& arr, T initVal, Operation op) {
+		static ndArray<T> reduce(ndArray<T>& arr, T initVal, Operation op) {
 			return arr.reduce(initVal, op);
 		}
 
 		template<typename T, typename Operation>
-		DynamicArray<T> reduceAlongAxis(DynamicArray<T>& arr, int axis, T initValue, Operation op) {
+		ndArray<T> reduceAlongAxis(ndArray<T>& arr, int axis, T initValue, Operation op) {
 			arr.reduceAlongAxis(axis, initValue, op);
 		}
 
 		template<typename T>
-		static DynamicArray<T> replace_if(DynamicArray<T> arr, std::function<bool(T)>&& condition, T replacement) {
+		static ndArray<T> replace_if(ndArray<T> arr, std::function<bool(T)>&& condition, T replacement) {
 			arr.replace_if(condition, replacement);
 		}
 
 		template<typename T>
-		static DynamicArray<T> reshape(DynamicArray<T> arr, iArray&& newShape) {
+		static ndArray<T> reshape(ndArray<T> arr, iArray&& newShape) {
 			return arr.reshape(newShape);
 		}
 
 		template<typename T>
-		static DynamicArray<T> reverse(DynamicArray<T> arr) {
+		static ndArray<T> reverse(ndArray<T> arr) {
 			return arr.reverse();
 		}
 
 		template<typename T>
-		static DynamicArray<T> reverse(DynamicArray<T> arr, int axis) {
+		static ndArray<T> reverse(ndArray<T> arr, int axis) {
 			return arr.reverse(axis);
 		}
 
 		template<typename T>
-		static DynamicArray<T> roll(DynamicArray<T> arr, int shift, int axis) {
+		static ndArray<T> roll(ndArray<T> arr, int shift, int axis) {
 			return arr.roll(shift, axis);
 		}
 
 		template<typename T>
-		DynamicArray<T> sort(DynamicArray<T> arr) {
+		ndArray<T> sort(ndArray<T> arr) {
 			return arr.sort();
 		}
 
 		template<typename T>
-		DynamicArray<T> sort(DynamicArray<T> arr, int axis) {
+		ndArray<T> sort(ndArray<T> arr, int axis) {
 			return arr.sort(axis);
 		}
 
 		template<typename T>
-		DynamicArray<T> sortFlat(DynamicArray<T> arr)
+		ndArray<T> sortFlat(ndArray<T> arr)
 		{
 			return arr.sortFlat();
 		}
 
 		template<typename T>
-		static DynamicArray<T> transpose(DynamicArray<T> arr) {
+		static ndArray<T> transpose(ndArray<T> arr) {
 			return arr.transpose();
 		}
 
 		template<typename T>
-		static DynamicArray<T> transpose(DynamicArray<T> arr, iArray&& permutation) {
+		static ndArray<T> transpose(ndArray<T> arr, iArray&& permutation) {
 			return arr.transpose(permutation);
 		}
 
@@ -268,7 +268,7 @@ namespace Cnum {
 	
 
 	//template<typename T>
-	/*static DynamicArray<T> fromFile(std::string_view filePath, char delimiter = ' ') {
+	/*static ndArray<T> fromFile(std::string_view filePath, char delimiter = ' ') {
 
 		try {
 			auto dataFile = openFile(filePath);
@@ -288,7 +288,7 @@ namespace Cnum {
 	// Static Actions
 
 	template<typename T>
-	static T dot(DynamicArray<T>& arr1, DynamicArray<T>& arr2) {
+	static T dot(ndArray<T>& arr1, ndArray<T>& arr2) {
 
 		assert(arr1.size() == arr2.size); 
 		assert(arr1->nDims() == 1); 
@@ -297,12 +297,12 @@ namespace Cnum {
 	}
 
 	template<typename T>
-	static DynamicArray<T> matrixMul(DynamicArray<T>& arr1, DynamicArray<T>& arr2)
+	static ndArray<T> matrixMul(ndArray<T>& arr1, ndArray<T>& arr2)
 	{
 		// arr1 and 2 must both be 2d
 		// width of arr1 must be equal to the height of arr2
 
-		DynamicArray<T> output = DynamicArray({ arr1.shapeAlong(0), arr2.shapeAlong(1) }, 0);
+		ndArray<T> output = ndArray({ arr1.shapeAlong(0), arr2.shapeAlong(1) }, 0);
 
 		for (int i = 0; i < arr1.shapeAlong(0); i++) {
 			for (int j = 0; j < arr2.shapeAlong(1); j++) {
@@ -323,18 +323,18 @@ namespace Cnum {
 
 
 	template<typename T>
-	static DynamicArray<T> getBinaryTable(int nDims) {
+	static ndArray<T> getBinaryTable(int nDims) {
 		
 		int nRows = (int)std::pow(2, nDims);
 		int nCols = nDims;
 		int stride = nRows / 2;
-		DynamicArray<T> table;
+		ndArray<T> table;
 
 		// Loop column for column. The first column has first half 0 and second 1. Second column has first quarter 0 second 1 etc etc...
 
 		for (int col = 0; col < nDims; col++) {
 
-			DynamicArray<T> column = Cnum::ndArray::uniformArray<T>({ nRows, 1 }, 0);
+			ndArray<T> column = Cnum::ndArray::uniformArray<T>({ nRows, 1 }, 0);
 
 			int value = 0;
 			for (int i = stride; i < nRows; i+=2*stride) {
@@ -352,7 +352,7 @@ namespace Cnum {
 	}
 
 	template<typename T>
-	static void toFile(std::string_view filename, DynamicArray<T>& data, char writeMode = 'w', char delimiter = ' ')
+	static void toFile(std::string_view filename, ndArray<T>& data, char writeMode = 'w', char delimiter = ' ')
 	{
 		// Problems:
 		//	Two different delimiters can be used if the write mode is append
@@ -397,7 +397,7 @@ namespace Cnum {
 	}
 
 	template<typename T>
-	static DynamicArray<T> readDataFromFile(std::fstream& dataFile, char delimiter = ' ') {
+	static ndArray<T> readDataFromFile(std::fstream& dataFile, char delimiter = ' ') {
 
 		int rowCount = 0, colCount = 0, finalColCount = 0;
 		std::vector<T> initializer;
@@ -416,7 +416,7 @@ namespace Cnum {
 			finalColCount = colCount;
 			rowCount++;
 		}
-		return DynamicArray<T>(initializer, std::vector<int>{rowCount, finalColCount});
+		return ndArray<T>(initializer, std::vector<int>{rowCount, finalColCount});
 	}
 
 

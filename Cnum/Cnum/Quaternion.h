@@ -1,10 +1,10 @@
 #pragma once
-//#include "DynamicArray.h"
+//#include "ndArray.h"
 #include <cmath>
 #include <assert.h>
 
 template<typename T>
-class DynamicArray;
+class ndArray;
 
 namespace Cnum
 {
@@ -14,14 +14,14 @@ namespace Cnum
 	{
 
 	public:
-		Quaternion(const DynamicArray<T>& arr)
+		Quaternion(const ndArray<T>& arr)
 			: m_real{ arr[0] }, m_imag{ arr.extract(1, -1) }
 		{
 			assert(arr.nDims() == 1);
 			assert(arr.size() == 4);
 		}
 
-		Quaternion(T realPart, const DynamicArray<T>& imaginaryPart)
+		Quaternion(T realPart, const ndArray<T>& imaginaryPart)
 			: m_real{ realPart }, m_imag{ imaginaryPart }
 		{
 			assert(m_imag.nDims() == 1);
@@ -29,14 +29,14 @@ namespace Cnum
 		}
 
 
-		Quaternion<T> operator*(const DynamicArray<T>& rhs) {
+		Quaternion<T> operator*(const ndArray<T>& rhs) {
 			assert(rhs.size() == 3);
 			assert(rhs.nDims() == 1);
 			return *this * Quaternion<T>(0, rhs);
 		}
 		Quaternion<T> operator*(const Quaternion<T>& rhs)
 		{
-			DynamicArray<T>imag = DynamicArray<T>();
+			ndArray<T>imag = ndArray<T>();
 			T realPart = m_real * rhs.m_real - m_imag[0] * rhs.m_imag[0] - m_imag[0] * rhs.m_imag[0] - m_imag[0] * rhs.m_imag[0];
 			imag.append(m_real * rhs.m_imag[0] + m_imag[0] * rhs.m_real + m_imag[1] * rhs.m_imag[2] - m_imag[2] * rhs.m_imag[1]);
 			imag.append(m_real * rhs.m_imag[1] - m_imag[0] * rhs.m_imag[2] + m_imag[1] * rhs.m_real + m_imag[2] * rhs.m_imag[0]);
@@ -44,7 +44,7 @@ namespace Cnum
 			return Quaternion(realPart, imag);
 		}
 
-		static DynamicArray<T> Rotate(DynamicArray<T> pos, DynamicArray<T>&& axisOfRotation, T theta) {
+		static ndArray<T> Rotate(ndArray<T> pos, ndArray<T>&& axisOfRotation, T theta) {
 			assert(pos.size() == 3);
 			assert(pos.nDims() == 1);
 			assert(axisOfRotation.size() == 3);
@@ -59,13 +59,13 @@ namespace Cnum
 		Quaternion inverse() {
 			return Quaternion(m_real, m_imag * -1);
 		}
-		DynamicArray<T> to3D() {
+		ndArray<T> to3D() {
 			return m_imag;
 		}
 
 	private:
 		T m_real;
-		DynamicArray<T> m_imag;
+		ndArray<T> m_imag;
 
 	};
 }

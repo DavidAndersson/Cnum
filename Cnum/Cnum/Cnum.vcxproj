@@ -20,7 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Cnum.h" />
-    <ClInclude Include="DynamicArray.h" />
+    <ClInclude Include="ndArray.h" />
     <ClInclude Include="kdTree.h" />
     <ClInclude Include="Meta.h" />
     <ClInclude Include="Quaternion.h" />
@@ -28,7 +28,6 @@
     <ClInclude Include="Utils.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="DynamicArray.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

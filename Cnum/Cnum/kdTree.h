@@ -16,7 +16,7 @@ public:
 		}
 	};
 
-	void insert(objType& object, DynamicArray<posType>& pos) {
+	void insert(objType& object, ndArray_<posType>& pos) {
 		if (!m_boundary.Contains(pos)) {
 			return;
 		}
@@ -89,7 +89,7 @@ private:
 	Cnum::Rect<posType> m_boundary;
 	int m_capacity = 1; 
 	std::vector<objType> m_objects;
-	std::vector<DynamicArray<posType>> m_positions;
+	std::vector<ndArray_<posType>> m_positions;
 	bool m_divided = false;
 	int m_dim = 0;
 
