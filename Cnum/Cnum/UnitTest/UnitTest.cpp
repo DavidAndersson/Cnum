@@ -1,13 +1,15 @@
 #include "pch.h"
 #include "CppUnitTest.h"
-#include "../DynamicArray.h"
 #include "../Cnum.h"
+#include "../DynamicArray.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
-using namespace Cnum;
+
 
 namespace UnitTest
 {
+	using namespace Cnum;
+
 	TEST_CLASS(UnitTest)
 	{
 	public:
@@ -42,7 +44,7 @@ namespace UnitTest
 		}
 		TEST_METHOD(Test_insert)
 		{
-			
+
 			{
 				// axis 0
 				iArray arr = ndArray::uniformArray<int>({ 2,2 }, 0);
@@ -70,7 +72,7 @@ namespace UnitTest
 			}
 		}
 		TEST_METHOD(Test_transpose)
-		{			
+		{
 			{
 				// 3D
 				iArray arr = ndArray::initializedArray<int>({ 1,2,3,4,5,6,7,8,9,10,11,12 }, { 2,2,3 });
@@ -85,9 +87,9 @@ namespace UnitTest
 				dArray answer = ndArray::initializedArray<double>({ 0.64, 0.87, 0.31, 0.49,0.17, 0.02, 0.34, 0.28, 0.74, 0.29, 0.08, 0.45, 0.60, 0.69, 0.04, 0.23, 0.76, 0.44, 0.89, 0.60 }, { 5,4 });
 				Assert::IsTrue(arr.isEqualTo(answer));
 			}
-			
+
 		}
-		TEST_METHOD(Test_Sort) 
+		TEST_METHOD(Test_Sort)
 		{
 
 			dArray arr = ndArray::initializedArray<double>({
@@ -105,8 +107,8 @@ namespace UnitTest
 
 			// Axis 0
 			{
-				auto arr_0 = arr; 
-				auto sorted = arr_0.sort(0); 
+				auto arr_0 = arr;
+				auto sorted = arr_0.sort(0);
 				auto result = ndArray::initializedArray<double>({
 				0.22, 0.08, 0.35,
 				0.64, 0.79, 0.24,
@@ -162,7 +164,7 @@ namespace UnitTest
 
 				Assert::IsTrue(sorted.isEqualTo(result));
 			}
-			
+
 
 		}
 		TEST_METHOD(Test_MatMul) {
@@ -175,11 +177,10 @@ namespace UnitTest
 			iArray correctResult = ndArray::initializedArray<int>({
 				38,44,50,56,
 				83,98,113,128,
-				128, 152, 176, 200}, { 3,4 });
+				128, 152, 176, 200 }, { 3,4 });
 
 			Assert::IsTrue(result.isEqualTo(correctResult));
 
 		}
-		
 	};
 }

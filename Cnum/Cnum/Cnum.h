@@ -7,11 +7,11 @@
 #include <functional>
 #include <numbers>
 #include "Meta.h"
-#include "Exceptions.h"
 #include <string_view>
 #include <fstream>
 #include <format>
-
+#include <assert.h>
+#include <string_view>
 
 template<typename T>
 class numeric {
@@ -90,7 +90,7 @@ namespace Cnum {
 				toBeReversed = true;
 			}
 			DynamicArray<T> arr;
-			for (T i = start; i <= end; i += stepSize) {
+			for (T i = start; i < end; i += stepSize) {
 				arr.append(i);
 			}
 			if (toBeReversed) {
@@ -119,6 +119,11 @@ namespace Cnum {
 		template<typename T>
 		static DynamicArray<T> uniformArray(const iArray& shape, T value) {
 			return DynamicArray<T>(shape, value);
+		}
+
+		template<typename T>
+		static DynamicArray<T> uniformArray(const int size, T value){
+			return DynamicArray<T>(iArray{size}, value);
 		}
 
 		template<typename T>
@@ -285,17 +290,10 @@ namespace Cnum {
 	template<typename T>
 	static T dot(DynamicArray<T>& arr1, DynamicArray<T>& arr2) {
 
-		try {
-			Exceptions::EnsureSameSize(arr1, arr2);
-			Exceptions::EnsureDim(arr1, 1);
-			Exceptions::EnsureDim(arr2, 1);
-
-			return std::inner_product(arr1.begin(), arr1.end(), arr2.begin(), 0);
-		}
-		catch (const std::exception& ex) {
-			std::cout << ex.what() << std::endl;
-			exit(0);
-		}
+		assert(arr1.size() == arr2.size); 
+		assert(arr1->nDims() == 1); 
+		assert(arr2->nDims() == 1);
+		return std::inner_product(arr1.begin(), arr1.end(), arr2.begin(), 0);
 	}
 
 	template<typename T>

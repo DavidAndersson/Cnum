@@ -11,7 +11,7 @@
 #include "Utils.h"
 #include "Meta.h"
 #include <assert.h>
-
+#include "Quaternion.h"
 
 namespace Cnum
 {
@@ -29,7 +29,6 @@ public:
 
 	// Change all ints - for sizes to size_t
 
-	// Creation by array-like objects
 	DynamicArray(const ArrayLike_1d auto& init)
 	{
 		std::copy(init.begin(), init.end(), std::back_inserter(m_data));
@@ -38,8 +37,6 @@ public:
 	DynamicArray(const ArrayLike_1d auto& init, const iArrayLike_1d auto& shape)
 	{
 		try {
-			std::string msg = std::format("Cannot create array of size {} with shape {}", init.size(), toString(shape));
-			Exceptions::EnsureEqual(getNumberOfElements(shape), (int)init.size(), msg);
 			std::copy(init.begin(), init.end(), std::back_inserter(m_data));
 			std::copy(shape.begin(), shape.end(), std::back_inserter(m_shape));
 		}
@@ -55,7 +52,7 @@ public:
 			m_shape = std::vector<int>{ 1, m_shape[0] };
 		}
 
-		m_data = std::vector<T>(this->getNumberOfElements(), initialValue); 
+		m_data = std::vector<T>(this->getNumberOfElements(), initialValue);
 	}
 
 	// Creation by initializer list
@@ -423,13 +420,17 @@ public:
 		std::transform(this->begin(), this->end(), this->begin(), [](T e) {return std::abs(e); });
 		return *this;
 	}
-	DynamicArray<T>& reshape(const DynamicArray<int>&&  newShape)
+	DynamicArray<T>& reshape(iArray&& newShape)
 	{
 		assert(this->size() == newShape.reduce(1, std::multiplies<>()));
 		m_shape.clear();
 		std::copy(newShape.begin(), newShape.end(), std::back_inserter(m_shape));
 		return *this;	
 	}
+	DynamicArray<T>& reshape(iArray& newShape) {
+		return this->reshape(std::move(newShape));
+	}
+
 	DynamicArray<T>& normalize()
 	{
 		*this /= this->norm();
@@ -464,7 +465,7 @@ public:
 				The default permutation is to reverse the shape
 		*/
 
-		assert(permutation.isPermutation(DynamicArray::arange(0, this->nDims())));
+		assert(permutation.isPermutation(Cnum::ndArray::arange(this->nDims())));
 		assert(this->nDims() > 1);
 
 		std::vector<T> newData = std::vector<T>(this->size(), 0);
@@ -627,6 +628,16 @@ public:
 		m_shape[getDominantAxis_1d()]--;
 		return *this;
 	}
+	template<typename iter>
+	DynamicArray<T>& erase(iter it)
+	{
+		assert(this->nDims() == 1);
+		m_data.erase(it);
+		m_shape[getDominantAxis_1d()]--;
+		return *this;
+	}
+
+
 	// erase Axis
 
 	void append(const T value) {
@@ -725,11 +736,11 @@ public:
 		assert(this->nDims() > axis); 
 
 		DynamicArray<T> out;
-		DynamicArray<int> index = this->reconstructIndex(0);
+		iArray index = this->reconstructIndex(0);
 
 		for (int i = 0; i < this->getNonAxisNumberOfElements(axis); i++) {
-			auto nonAxisIndex = getNonAxisIndex(index, axis);
-			DynamicArray<T> axisDiff = extract(axis, nonAxisIndex).adjacentDiff(forwardDiff);
+			iArray nonAxisIndex = getNonAxisIndex(index, axis);
+			DynamicArray<T> axisDiff = extract(axis, nonAxisIndex, 0).adjacentDiff(forwardDiff);
 			out.concatenate(axisDiff, axis);
 			this->incrementExtractionIndex(index, axis, this->nDims() - 1);
 		}
@@ -828,14 +839,6 @@ public:
 			this->incrementExtractionIndex(index, axis, this->nDims() - 1);
 		}
 		return *this;
-	}
-
-	// statics
-	static DynamicArray<int> arange(const int start, const int end)
-	{
-		m_data = std::vector<T>(end - start);
-		m_shape = std::vector<int>{ 1, end - start };
-		std::iota(m_data.begin(), m_data.end(), start);
 	}
 
 	// Boolean checks	
@@ -1008,27 +1011,24 @@ private:
 		return flatIndex;
 	}
 
-	std::vector<int> getNonAxisIndex(int flatIndex, int axis)const {
-
-		auto index = reconstructIndex(flatIndex).raw();
-		index.erase(index.begin() + axis);
+	iArray getNonAxisIndex(int flatIndex, int axis)const {
+		auto index = reconstructIndex(flatIndex).erase(index.begin() + axis);
 		return index;
 
 	}
-	std::vector<int> getNonAxisIndex(DynamicArray<int>& index, int axis)const {
-		auto idx = index.raw();
+	iArray getNonAxisIndex(iArray& index, int axis)const {
+		iArray idx = index;
 		idx.erase(idx.begin() + axis);
 		return idx;
 
 	}
-	DynamicArray<int> reconstructIndex(int index)const 
+	iArray reconstructIndex(int index)const 
 	{
 		if (this->nDims() == 1) {
-			return std::vector<int>{index};
+			return iArray{index};
 		}
 
-		std::vector<int> indices = std::vector<int>(this->nDims(), 0);
-
+		iArray indices = Cnum::ndArray::uniformArray(this->nDims(), 0);
 		for (int i = 0; i < this->nDims(); i++) {
 
 			int stride = getStride(i);
@@ -1165,10 +1165,10 @@ private:
 		}
 		return *this;
 	}
-	DynamicArray<T>& replaceAlong(DynamicArray<T>& newData, int axis, DynamicArray<int>&& nonAxisIndices) {
-		return this->replaceAlong(std::move(newData), axis, std::move(nonAxisIndices));
+	DynamicArray<T>& replaceAlong(DynamicArray<T>& newData, int axis, iArray& nonAxisIndices) {
+		return this->replaceAlong(std::move(newData), axis, nonAxisIndices);
 	}
-	DynamicArray<T>& replaceAlong(DynamicArray<T>&& newData, int axis, DynamicArray<int>&& nonAxisIndices) {
+	DynamicArray<T>& replaceAlong(DynamicArray<T>&& newData, int axis, iArray& nonAxisIndices) {
 
 		//assert(nonAxisIndices.size() == this->nDims() - 1);
 		//assert(newData.size() == this->shapeAlong(axis));
@@ -1176,7 +1176,7 @@ private:
 		int stride = getStride(axis);
 		auto start_stop = determineStartEndIndexForAxis(axis, nonAxisIndices, 0, -1);
 		int j = 0;
-		for (int i = start_stop.first; i <= start_stop.second; i += stride) {
+		for (int i = start_stop.first; i <= start_stop.second - stride; i += stride) {
 			m_data.at(i) = newData[j];
 			j++;
 		}

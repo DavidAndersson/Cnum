@@ -21,7 +21,6 @@
   <ItemGroup>
     <ClInclude Include="Cnum.h" />
     <ClInclude Include="DynamicArray.h" />
-    <ClInclude Include="Exceptions.h" />
     <ClInclude Include="kdTree.h" />
     <ClInclude Include="Meta.h" />
     <ClInclude Include="Quaternion.h" />

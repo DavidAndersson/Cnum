@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include "Cnum.h"
-#include "Exceptions.h"
+#include <assert.h>
 
 template<typename T>
 class Cnum::Rect
@@ -37,14 +37,8 @@ public:
 
 	bool Contains(DynamicArray<T>& point)const
 	{
-		try {
-			Exceptions::EnsureDim(point, 1);
-			Exceptions::EnsureEqual(m_dim, point.size());
-		}
-		catch (const std::invalid_argument& err) {
-			std::cout << err.what() << std::endl;
-			exit(0);
-		}
+		assert(point->nDims() == 1); 
+		assert(m_dim == point.size()); 
 
 		// Goes through the elements of the point, and checks if it is contained by the correct axis in the parent
 		// Note that the method is inclusive at the lower end and exclusive at the upper end
