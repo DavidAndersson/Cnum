@@ -27,8 +27,6 @@ public:
 
 	ndArray() = default;
 
-	// Change all ints - for sizes to size_t
-
 	ndArray(const ArrayLike_1d auto& init)
 	{
 		std::copy(init.begin(), init.end(), std::back_inserter(m_data));
@@ -108,6 +106,7 @@ public:
 		assert(this->sameShapeAs(logicalIndices));
 
 		ndArray<T> data;
+		logicalIndices.flatten();
 		for (int i = 0; i < logicalIndices.size(); i++) {
 			if (logicalIndices.at(i))
 				data.append(m_data[i]);
@@ -436,11 +435,16 @@ public:
 		*this /= this->norm();
 		return *this;
 	}
-
-	template<typename S>
-	ndArray<T>& raiseTo(S exponent)
+	ndArray<T>& raiseTo(T exponent)
 	{
 		return unaryOperation(*this, [exponent](T value) {return std::pow(value, exponent); });
+	}
+	ndArray<T>& round(size_t nDecimals) {
+		auto factor = std::pow(10, nDecimals);
+		*this *= factor;
+		unaryOperation(*this, [](T val) {return std::round(val); });
+		*this /= factor;
+		return *this;
 	}
 
 	ndArray<T>& transpose() {
@@ -587,10 +591,10 @@ public:
 		return *this;
 	}
 
-	ndArray<T>& blend_if(ndArray<T>&& arr, iArray&& condition) {
+	ndArray<T>& blend_if(const ndArray<T>&& arr, const iArray&& condition) {
 		return this->blend_if(arr, condition);
 	}
-	ndArray<T>& blend_if(ndArray<T>& arr, iArray& condition) {
+	ndArray<T>& blend_if(const ndArray<T>& arr, const iArray& condition) {
 		
 		assert(this->sameShapeAs(arr)); 
 		assert(this->sameShapeAs(condition));
@@ -602,10 +606,10 @@ public:
 		}
 		return *this;	
 	}
-	ndArray<T>& blend_if(ndArray<T>&& arr, std::function<bool(T)>&& condition) {
+	ndArray<T>& blend_if(const ndArray<T>&& arr, std::function<bool(T)>&& condition) {
 		return blend_if(arr, std::move(condition));
 	}
-	ndArray<T>& blend_if(ndArray<T>& arr, std::function<bool(T)>&& condition) {
+	ndArray<T>& blend_if(const ndArray<T>& arr, std::function<bool(T)>&& condition) {
 		
 		assert(this->sameShapeAs(arr));
 
@@ -621,13 +625,6 @@ public:
 		return blend_if(ndArray(this->shape(), replacement), std::move(condition));
 	}
 
-	ndArray<T>& erase(int index)
-	{
-		assert(this->nDims() == 1); 
-		m_data.erase(m_data.begin() + index);
-		m_shape[getDominantAxis_1d()]--;
-		return *this;
-	}
 	template<typename iter>
 	ndArray<T>& erase(iter it)
 	{
@@ -636,9 +633,46 @@ public:
 		m_shape[getDominantAxis_1d()]--;
 		return *this;
 	}
-
-
-	// erase Axis
+	ndArray<T>& erase(int index)
+	{
+		assert(this->nDims() == 1); 
+		m_data.erase(m_data.begin() + index);
+		m_shape[getDominantAxis_1d()]--;
+		return *this;
+	}
+	ndArray<T>& erase(int start, int end)
+	{
+		assert(this->nDims() == 1);
+		end = (end < 0) ? m_shape.at(this->getDominantAxis_1d()) + end + 1 : end;
+		assert(end > start);
+		for (; start < end; start++) {
+			m_data.erase(m_data.begin() + start);
+		}
+		m_shape[getDominantAxis_1d()] -= end-start;
+		return *this;
+	}
+	ndArray<T>& erase_if(const iArray&& condition) {
+		assert(this->size() == condition.size());
+		ndArray<T> out;
+		for (int i = 0; i < this->size(); i++) {
+			if (condition.raw()[i] == 0) {
+				out.append(m_data[i]);
+			}
+		}
+		*this = out;
+		return *this;
+	}
+	ndArray<T>& erase_if(std::function<bool(T)>&& pred) {
+		ndArray<T> out;
+		for (int i = 0; i < this->size(); i++) {
+			if (pred(m_data[i]) == false) {
+				out.append(m_data[i]);
+			}
+		}
+		*this = out;
+		return *this;
+	}
+	
 
 	void append(const T value) {
 
@@ -648,13 +682,16 @@ public:
 			return;
 		}
 		assert(this->nDims() == 1); 
-		m_data.push_back(value);
 		if (m_data.size() == 1) {
 			m_shape.at(1)++;
 		}else {
 			m_shape.at(this->getDominantAxis_1d())++;
 		}
-		
+		m_data.push_back(value);
+	}
+	void append(const ndArray<T>& arr) {
+		assert(arr.nDims() == 1);
+		return this->concatenate(arr, 0);
 	}
 
 	// Reductions
@@ -663,25 +700,39 @@ public:
 		return std::accumulate(m_data.begin(), m_data.end(), initVal, op);
 	}
 	T norm() {
+		assert(this->nDims() == 1); 
 		auto copy = *this;
 		return (T)std::pow(copy.raiseTo(2).reduce(0, std::plus<>()), 0.5);
 	}
+	ndArray<T>& norm(int axis) {
+		assert(this->nDims() > 1); 
+		assert(this->nDims() > axis);
+		int i;
+		iArray index = this->reconstructIndex(0);
+		for (i = 0; i < getNonAxisNumberOfElements(axis); i++) {
+			iArray nonAxisIndex = getNonAxisIndex(index, axis);
+			m_data.at(i) = this->extract(axis, nonAxisIndex).norm();
+			this->incrementExtractionIndex(index, axis, this->nDims() - 1);
+		}
+		m_data = std::vector<T>(m_data.begin(), m_data.begin() + i);
+		m_shape[axis] = 1;
+		return *this;
+	}
 
 	template<typename Operation>
-	ndArray<T> reduceAlongAxis(int axis, T initValue, Operation op)const
+	ndArray<T>& reduceAlongAxis(int axis, T initValue, Operation op)
 	{
-		assert(this->nDims() == axis);
-
-		// The axis which the sum is along gets reduced to 1
-		std::vector<int> returnShape = this->shape();
-		returnShape.at(axis) = 1;
-		ndArray<T> returnArray(returnShape, 0);
-
-		for (int i = 0; i < getNumberOfElements(returnShape); i++) {
-			std::vector<int> nonAxisIndex = getNonAxisIndex(i, axis);
-			returnArray[i] = this->extract(axis, nonAxisIndex).reduce(initValue, op);
+		assert(this->nDims() > axis);
+		int i;
+		iArray index = this->reconstructIndex(0);
+		for (i = 0; i < getNonAxisNumberOfElements(axis); i++) {
+			iArray nonAxisIndex = getNonAxisIndex(index, axis);
+			m_data.at(i) = this->extract(axis, nonAxisIndex).reduce(initValue, op);
+			this->incrementExtractionIndex(index, axis, this->nDims() - 1);
 		}
-		return returnArray;
+		m_data = std::vector<T>(m_data.begin(), m_data.begin() + i);
+		m_shape[axis] = 1;
+		return *this;
 	}
 
 	// Extractions
@@ -704,6 +755,9 @@ public:
 		// No need for exception here since they are checked in extract_if()
 		return this->extract_if(axis, nonAxisIndex, [](T t) {return true; }, start, end);
 	}	
+	ndArray<T> extract(int axis, iArray&& nonAxisIndex, int start = 0, int end = -1)const {
+		return this->extract(axis, nonAxisIndex, start, end);
+	}
 	ndArray<T> extract_if(int axis, const iArray& nonAxisIndex, std::function<bool(T)>&& pred, int start=0, int end=-1)const
 	{
 		assert(this->nDims() > axis); 
@@ -735,17 +789,18 @@ public:
 		assert(this->nDims() > 1); 
 		assert(this->nDims() > axis); 
 
-		ndArray<T> out;
+		iArray newShape = this->shape();
+		newShape[axis]--;
+		ndArray<T> out = Cnum::Array::uniformArray(newShape, 0);
 		iArray index = this->reconstructIndex(0);
 
 		for (int i = 0; i < this->getNonAxisNumberOfElements(axis); i++) {
 			iArray nonAxisIndex = getNonAxisIndex(index, axis);
 			ndArray<T> axisDiff = extract(axis, nonAxisIndex, 0).adjacentDiff(forwardDiff);
-			out.concatenate(axisDiff, axis);
+			out.replaceAlong(axisDiff, axis, nonAxisIndex);
 			this->incrementExtractionIndex(index, axis, this->nDims() - 1);
 		}
-		m_shape[axis]--;
-		*this = out.reshape(m_shape);
+		*this = out;
 		return *this; 
 	}
 
@@ -756,9 +811,8 @@ public:
 		int axis = (this->nDims() > 1) ? 0 : 1;
 		iArray outIndices;
 		for (int i = 0; i < condition.size(); i++) {
-			if (condition.at(i)) {
-				auto idx = this->reconstructIndex(i);
-				outIndices.concatenate(idx, axis);
+			if (condition.m_data.at(i)) {
+				outIndices.concatenate(this->reconstructIndex(i), axis);
 			}
 		}
 		return outIndices;
@@ -766,11 +820,10 @@ public:
 	iArray find_if(std::function<bool(T)>&& pred)
 	{
 		int axis = (this->nDims() > 1) ? 0 : 1;
-		ndArray<int> outIndices;
+		iArray outIndices;
 		for (int i = 0; i < this->size(); i++) {
 			if (pred(m_data.at(i))) {
-				auto idx = this->reconstructIndex(i);
-				outIndices.concatenate(idx, axis);
+				outIndices.concatenate(this->reconstructIndex(i), axis);
 			}
 		}
 		return outIndices;
@@ -846,8 +899,12 @@ public:
 	bool sameShapeAs(const ndArray<S>& other)const {
 		return std::equal(m_shape.begin(), m_shape.end(), other.shape().begin());
 	}
-	bool isEqualTo(const ndArray<T>& other)const {
-		return std::equal(m_data.begin(), m_data.end(), other.m_data.begin());
+	bool isEqualTo(const ndArray<T>& other, size_t tol=4)const 
+	{
+		ndArray<T> arr1 = Cnum::Array::round(*this, tol); 
+		ndArray<T> arr2 = Cnum::Array::round(other, tol);
+		auto pred = [tol](T first, T second) {return std::abs(first - second) < std::pow(10, -(int)tol); };
+		return std::equal(arr1.begin(), arr1.end(), arr2.begin(), arr2.end(), pred);
 	}
 	bool isPermutation(const ndArray<T>& other)const {
 		return std::is_permutation(this->begin(), this->end(), other.begin(), other.end());
@@ -857,7 +914,7 @@ public:
 	void print()const {
 		std::cout << "ndArray(";
 		if (this->size() > 0) {
-			ndArray<int> startIndex(this->nDims(), 0);
+			iArray startIndex(this->nDims(), 0);
 			printDim(startIndex, 0);
 		}
 		std::cout << ")" << std::endl;
@@ -866,7 +923,7 @@ public:
 	// Getters
 	const std::vector<int>& shape()const 
 	{ 
-		return m_shape; 
+		return m_shape;
 	}
 	std::vector<int> shape()
 	{
@@ -889,8 +946,10 @@ public:
 		return toString(this->shape()); 
 	};
 	int nDims()const {
-		int dims = (int)std::count_if(m_shape.begin(), m_shape.end(), [](int dim) {return dim > 1; });
+		int dims = (int)std::count_if(m_shape.begin(), m_shape.end(), [](int dim) {return dim >= 1; });
 		if (dims == 0 && m_shape.at(0) == 1)
+			return 1;
+		else if (dims == 2 && (m_shape.at(0) == 1 || m_shape.at(1) == 1))
 			return 1;
 		else
 			return dims;
@@ -968,11 +1027,11 @@ public:
 		return *std::max_element(m_data.begin(), m_data.end());
 	}
 
-	ndArray<T> argMin()const {
+	iArray argMin()const {
 		size_t flatIdx = std::min_element(m_data.begin(), m_data.end()) - m_data.begin();
 		return reconstructIndex((int)flatIdx);
 	}
-	ndArray<T> argMax()const {
+	iArray argMax()const {
 		size_t flatIdx = std::max_element(m_data.begin(), m_data.end()) - m_data.begin();
 		return reconstructIndex((int)flatIdx);
 	}
@@ -988,7 +1047,7 @@ private:
 	{
 		return this->flattenIndex(index, this->shape());
 	}
-	int flattenIndex(const iArrayLike_1d auto& index, std::vector<int> shape)const
+	int flattenIndex(const iArrayLike_1d auto& index, iArray shape)const
 	{
 		/*
 		General Formula:
@@ -1012,7 +1071,7 @@ private:
 	}
 
 	iArray getNonAxisIndex(int flatIndex, int axis)const {
-		auto index = reconstructIndex(flatIndex).erase(index.begin() + axis);
+		auto index = reconstructIndex(flatIndex).erase(axis);
 		return index;
 
 	}

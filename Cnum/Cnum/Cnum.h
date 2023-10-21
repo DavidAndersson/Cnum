@@ -99,6 +99,8 @@ namespace Cnum {
 			return arr;
 		}
 
+
+
 		template<typename T>
 		static ndArray<T> arange(T end) {
 			return arange(0, end, 1);
@@ -197,6 +199,16 @@ namespace Cnum {
 		}
 
 		template<typename T>
+		static T norm(ndArray<T>& arr) {
+			return arr.norm();
+		}
+
+		template<typename T>
+		static ndArray<T> norm(ndArray<T>& arr, int axis) {
+			return arr.norm(axis);
+		}
+
+		template<typename T>
 		static ndArray<T> raiseTo(ndArray<T> arr, T exponent){
 			return arr.raiseTo(exponent);
 		}
@@ -234,6 +246,11 @@ namespace Cnum {
 		template<typename T>
 		static ndArray<T> roll(ndArray<T> arr, int shift, int axis) {
 			return arr.roll(shift, axis);
+		}
+
+		template<typename T>
+		static ndArray<T> round(ndArray<T> arr, size_t nDecimals) {
+			return arr.round(nDecimals);
 		}
 
 		template<typename T>
